@@ -48,13 +48,15 @@ package build run in CI.
 | Tests and coverage | `uv run pytest -q --cov=targetprocess --cov-report=term --cov-fail-under=90` |
 | Hook suite, commit stage | `uv run pre-commit run --all-files --hook-stage pre-commit` |
 | Hook suite, push stage | `uv run pre-commit run --all-files --hook-stage pre-push` |
+| Commit message | `uv run pre-commit run --hook-stage commit-msg --commit-msg-filename <file>` (CI runs it over the pull request title) |
 | Dependency vulnerabilities | `pip-audit` over the locked environment (CI) |
 | Package build | `uv build` and `twine check` (CI) |
 
 Also enforced: a 1000-line / 256 KiB ceiling per tracked file
 (`scripts/check_large_files.py`), issue references on debt markers
 (`scripts/check_todos.py`), no internal references in tracked files
-(`scripts/check_internal_refs.py`), a cyclomatic-complexity ceiling of 10 (ruff
+(`scripts/check_internal_refs.py`) or in commit messages
+(`scripts/check_commit_message.py`), a cyclomatic-complexity ceiling of 10 (ruff
 `C901`), and copy-paste detection above 3% (`.jscpd.json`, CI only).
 
 Coverage is branch coverage over `src/`, gated at 90%. A change that drops
@@ -183,10 +185,42 @@ after it.
    fully ticked before merge; keep the description to what the change does and
    why.
 5. Pull requests are squash-merged, so the title becomes the commit message on
-   `main`: write it as an imperative summary of the change.
+   `main`: write it as a Conventional Commits subject, exactly as below. CI
+   checks the title with the same hooks that check a commit message.
 
-Commit messages use an imperative subject line and, where the change needs
-explaining, a body that says what changed and why.
+## Commit messages
+
+Commit messages follow the
+[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+specification, enforced at the commit-msg stage by the hooks
+`pre-commit install` sets up and described for editor tooling in
+[`.commitlintrc.json`](.commitlintrc.json).
+
+Format: `<type>[optional scope]: <description>`
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`,
+`ci`, `chore`, `revert`. A breaking change carries `!` after the type or scope,
+or a `BREAKING CHANGE:` footer.
+
+```text
+feat(times): add find_for_day
+fix: follow a relative Next link without dropping the query
+docs: describe the write surface in USAGE.md
+feat!: require an explicit mode on the client
+```
+
+- The type in lower case; the description in lower case or sentence case,
+  never Title Case; imperative mood ("add", not "added"); no full stop; first
+  line at most 72 characters.
+- Where the change needs explaining, a body that says what changed and why,
+  separated from the subject by a blank line.
+- Reference an issue on this repository in a footer: `Fixes #123`. A key from
+  any other tracker is refused by the commit-msg hook
+  ([`scripts/check_commit_message.py`](scripts/check_commit_message.py)), for
+  the same reason tracked files carry none.
+- Attribution trailers naming a co-author, including an AI agent and the
+  session that produced the change, are welcome: they say how the change was
+  made.
 
 ## Reporting a vulnerability
 

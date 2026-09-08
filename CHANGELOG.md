@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Initial development towards the first public release, `0.1.0`.
+## [0.1.0] - 2026-09-08
+
+The first public release.
 
 ### Added
 
@@ -95,4 +97,5 @@ Initial development towards the first public release, `0.1.0`.
 - Log scrubbing redacts the `access_token` query parameter and `Authorization`
   header values from the library's own log records.
 
-[Unreleased]: https://github.com/man8/targetprocess-py/commits/main
+[Unreleased]: https://github.com/man8/targetprocess-py/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/man8/targetprocess-py/releases/tag/v0.1.0

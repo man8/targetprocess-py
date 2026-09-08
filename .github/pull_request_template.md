@@ -1,5 +1,7 @@
 <!--
-Thanks for the pull request! Fill in the sections below, then complete the
+Thanks for the pull request! Title it as a Conventional Commits subject
+(`type(scope): description`): squash merge makes it the commit on main, and CI
+checks it as one. Fill in the sections below, then complete the
 checklist. CodeRabbit's "Checklist complete" pre-merge check fails if any
 unticked ("- [ ]") task-list item remains in this description, so tick each
 box as you go (or mark inapplicable items with "[~]").

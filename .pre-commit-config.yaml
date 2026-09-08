@@ -7,7 +7,12 @@
 # uv.lock — one source of truth, and Dependabot's dev-tooling group keeps it
 # current. The pre-commit-hooks repo below is version-pinned and updated by
 # Dependabot's pre-commit ecosystem.
-default_install_hook_types: [pre-commit, pre-push]
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+# Hooks that name no stage run at these two only. Without this line, installing
+# the commit-msg hook type above would run every file check over the commit
+# message file as well, and the tree guard would refuse a message for carrying
+# the attribution trailer it is meant to allow.
+default_stages: [pre-commit, pre-push]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -72,3 +77,21 @@ repos:
         entry: uv run python scripts/check_internal_refs.py
         language: system
         types: [text]
+
+  # Commit messages. Both hooks run at the commit-msg stage, which the install
+  # line above sets up; CI runs the same two over a pull request's title,
+  # since squash merge makes the title the commit on main.
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.3.0
+    hooks:
+      - id: conventional-pre-commit
+        name: commit message follows Conventional Commits
+        stages: [commit-msg]
+
+  - repo: local
+    hooks:
+      - id: check-commit-message
+        name: commit message carries no tracker reference
+        entry: uv run python scripts/check_commit_message.py
+        language: system
+        stages: [commit-msg]
