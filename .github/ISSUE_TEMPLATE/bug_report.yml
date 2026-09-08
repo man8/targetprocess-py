@@ -1,0 +1,80 @@
+name: Bug report
+description: Report something that is not working as expected
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! Please fill in the
+        sections below so we can reproduce and fix it.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A concise description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: |
+        The smallest self-contained example that triggers the bug. Include the
+        code, the command you ran, and any relevant environment details. Redact
+        real tokens — never paste a live `TP_TOKEN`.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: |
+        Include the full traceback or error message if there is one. Redact
+        tokens, credentials, authorisation headers, cookies, and query strings
+        before posting — a traceback often carries the request URL.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Library version, Python version, OS, and anything else relevant.
+      placeholder: |
+        - targetprocess-py: 0.x.y
+        - Python: 3.12.x
+        - OS: ...
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: |
+        How urgent is this? P1 blocks work with no reasonable workaround, P2 has
+        real impact but a workaround exists, P3 is cosmetic or minor. P0 is
+        reserved for security incidents — report those via the security link on
+        the issue chooser instead.
+      options:
+        - "P1 — High"
+        - "P2 — Medium"
+        - "P3 — Low"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else? Links, related issues, screenshots.
+    validations:
+      required: false

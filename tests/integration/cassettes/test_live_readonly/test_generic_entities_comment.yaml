@@ -1,0 +1,88 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/Comments?access_token=REDACTED&format=json&take=2
+  response:
+    body:
+      string: '{"Next": "https://example.tpondemand.com/api/v1/Comments/?format=json&take=2&skip=2",
+        "Items": [{"ResourceType": "Comment", "Id": 111213, "Description": "Sanitised
+        Description", "ParentId": null, "CreateDate": "/Date(1784639085000+0200)/",
+        "DescriptionModifyDate": "/Date(1784639085000+0200)/", "IsPrivate": false,
+        "IsPinned": false, "EntityVersion": 46004869, "General": {"ResourceType":
+        "General", "Id": 74270, "Name": "Sanitised Name"}, "Owner": {"ResourceType":
+        "GeneralUser", "Id": 22, "FirstName": "Sanitised FirstName", "LastName": "Sanitised
+        LastName", "Login": "Sanitised Login", "FullName": "Sanitised FullName"}},
+        {"ResourceType": "Comment", "Id": 111212, "Description": "Sanitised Description",
+        "ParentId": null, "CreateDate": "/Date(1784638677000+0200)/", "DescriptionModifyDate":
+        "/Date(1784638677000+0200)/", "IsPrivate": false, "IsPinned": false, "EntityVersion":
+        46004832, "General": {"ResourceType": "General", "Id": 73849, "Name": "Sanitised
+        Name"}, "Owner": {"ResourceType": "GeneralUser", "Id": 371, "FirstName": "Sanitised
+        FirstName", "LastName": "Sanitised LastName", "Login": "Sanitised Login",
+        "FullName": "Sanitised FullName"}}]}'
+    headers:
+      Cache-Control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 21 Jul 2026 13:21:59 GMT
+      Expires:
+      - Mon, 20 Jul 2026 13:21:59 GMT
+      Server:
+      - nginx
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      Via:
+      - 1.1 kong/3.9.1
+      X-API-V1-WITHOUT-REST:
+      - 'true'
+      X-Content-Type-Options:
+      - nosniff
+      X-CorrelationId:
+      - 7248e516-af7b-494e-a5ab-629ec39790d5
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Kong-Proxy-Latency:
+      - '1'
+      X-Kong-Request-Id:
+      - d8c38e533e511e473fc16268ca888e3e
+      X-Kong-Upstream-Latency:
+      - '23'
+      X-LoadDbReader:
+      - '16'
+      X-LoadResourceDbReaderData:
+      - '0'
+      X-Permitted-Cross-Domain-Policies:
+      - none
+      X-Sql-Stopwatch:
+      - 15;1
+      X-Stopwatch:
+      - '18'
+      X-TP-Handled-By:
+      - tp-next
+      content-length:
+      - '1155'
+      traceparent:
+      - 00-cd6f3ee4c5ed006bc1bc99bcc210506a-a6e6bafea3b67aa5-01
+    status:
+      code: 200
+      message: OK
+version: 1

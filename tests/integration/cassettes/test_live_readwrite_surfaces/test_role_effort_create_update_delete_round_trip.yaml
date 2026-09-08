@@ -1,0 +1,620 @@
+interactions:
+- request:
+    body: '{"Name":"MAN8-9036 recording role effort parent story","Description":"Synthetic
+      record created by an integration recording run.","Project":{"Id":49938}}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '152'
+      content-type:
+      - application/json
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - c07b89d695f0424aaa22fe624503d9a7
+    method: POST
+    uri: https://example.tpondemand.com/api/v1/UserStory?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "UserStory", "Id": 75533, "Name": "Sanitised Name",
+        "Description": "Sanitised Description", "StartDate": null, "EndDate": null,
+        "CreateDate": "/Date(1788584390000+0200)/", "ModifyDate": "/Date(1788584390000+0200)/",
+        "LastCommentDate": null, "Tags": "", "NumericPriority": 63435.387843000004,
+        "EntityVersion": 48888551, "EntityType": {"ResourceType": "EntityType", "Id":
+        4, "Name": "Sanitised Name", "IsUnitInHourOnly": false}, "LastEditor": {"ResourceType":
+        "GeneralUser", "Id": 1, "FirstName": "Sanitised FirstName", "LastName": "Sanitised
+        LastName", "Login": "Sanitised Login", "FullName": "Sanitised FullName"},
+        "Owner": {"ResourceType": "GeneralUser", "Id": 1, "FirstName": "Sanitised
+        FirstName", "LastName": "Sanitised LastName", "Login": "Sanitised Login",
+        "FullName": "Sanitised FullName"}, "Creator": {"ResourceType": "GeneralUser",
+        "Id": 1, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName",
+        "Login": "Sanitised Login", "FullName": "Sanitised FullName"}, "LastCommentedUser":
+        null, "Project": {"ResourceType": "Project", "Id": 49938, "Name": "Sanitised
+        Name", "Process": {"ResourceType": "Process", "Id": 2}}, "LinkedTestPlan":
+        null, "Milestone": null, "Effort": 0.0, "EffortCompleted": 0.0, "EffortToDo":
+        0.0, "Progress": 0.0, "TimeSpent": 0.0, "TimeRemain": 0.0, "LastStateChangeDate":
+        "/Date(1788584390000+0200)/", "PlannedStartDate": null, "PlannedEndDate":
+        null, "Units": "h", "Release": null, "Iteration": null, "TeamIteration": null,
+        "Team": null, "Priority": {"ResourceType": "Priority", "Id": 5, "Name": "Sanitised
+        Name", "Importance": 5}, "EntityState": {"ResourceType": "EntityState", "Id":
+        78, "Name": "Sanitised Name", "NumericPriority": 78.0}, "ResponsibleTeam":
+        null, "InitialEstimate": 0.0, "Feature": null, "Build": null, "CustomFields":
+        []}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '1803'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 04:59:50 GMT
+      expires:
+      - Fri, 04 Sep 2026 04:59:50 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-f3626d0a70108cafb11fb1b25eed721c-5e6bffcec8177209-01
+      via:
+      - 1.1 kong/3.9.1
+      x-accountlockwaittime:
+      - '2'
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 79fe23b1-bfa1-46f3-8dc0-48ce8d80dc66
+      x-diagnostic-tags:
+      - create-resource,get-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - 2e109615cf7f9c3f1dadbe50e1951a6f
+      x-kong-upstream-latency:
+      - '177'
+      x-loaddbreader:
+      - 1;3
+      x-loadresourcedbreaderdata:
+      - 0;0
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - 71;4
+      x-stopwatch:
+      - '168'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 201
+      message: Created
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 9097c101cf1d4d69879a8c30f0e2eb89
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/Role?access_token=REDACTED&format=json&take=25
+  response:
+    body:
+      string: '{"Items": [{"ResourceType": "Role", "Id": 20, "Name": "Sanitised Name",
+        "Description": "Sanitised Description", "HasEffort": true, "CanChangeOwner":
+        false, "CanUsePersonalAccessTokens": true, "CanPrioritize": false, "TimeSheetAccess":
+        true}, {"ResourceType": "Role", "Id": 15, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "HasEffort": true, "CanChangeOwner": true, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": true}, {"ResourceType": "Role",
+        "Id": 24, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": true}, {"ResourceType": "Role",
+        "Id": 18, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": false}, {"ResourceType": "Role",
+        "Id": 17, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": false}, {"ResourceType": "Role",
+        "Id": 1, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": false}, {"ResourceType": "Role",
+        "Id": 21, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": true}, {"ResourceType": "Role",
+        "Id": 16, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": true, "CanUsePersonalAccessTokens": true,
+        "CanPrioritize": true, "TimeSheetAccess": true}, {"ResourceType": "Role",
+        "Id": 8, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": true, "CanUsePersonalAccessTokens": true,
+        "CanPrioritize": true, "TimeSheetAccess": true}, {"ResourceType": "Role",
+        "Id": 9, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": false}, {"ResourceType": "Role",
+        "Id": 7, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": true}, {"ResourceType": "Role",
+        "Id": 13, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": false}, {"ResourceType": "Role",
+        "Id": 19, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": false, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": false}, {"ResourceType": "Role",
+        "Id": 6, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": false}, {"ResourceType": "Role",
+        "Id": 10, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": true, "CanUsePersonalAccessTokens": true,
+        "CanPrioritize": true, "TimeSheetAccess": true}, {"ResourceType": "Role",
+        "Id": 25, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": true, "CanUsePersonalAccessTokens": true,
+        "CanPrioritize": true, "TimeSheetAccess": true}, {"ResourceType": "Role",
+        "Id": 11, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": true}, {"ResourceType": "Role",
+        "Id": 22, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "HasEffort": true, "CanChangeOwner": false, "CanUsePersonalAccessTokens":
+        true, "CanPrioritize": true, "TimeSheetAccess": true}]}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '4150'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 04:59:50 GMT
+      expires:
+      - Fri, 04 Sep 2026 04:59:50 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-b36b0b6ec9ddc6ebc119753606aa2c14-bca35c5dd19d19c4-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 37c80051-1150-4a0d-bdf0-725b226bd372
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - dabf67182b8ea439bf673c6d16700f57
+      x-kong-upstream-latency:
+      - '7'
+      x-loaddbreader:
+      - '0'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '2'
+      x-stopwatch:
+      - '2'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"Assignable":{"Id":75533},"Role":{"Id":1},"Effort":2.0}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '56'
+      content-type:
+      - application/json
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - c6cd1988670943e6aba6a5be9767e09f
+    method: POST
+    uri: https://example.tpondemand.com/api/v1/RoleEffort?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "RoleEffort", "Id": 615111, "InitialEstimate": 0.0,
+        "Effort": 2.0, "EffortCompleted": 0.0, "EffortToDo": 2.0, "TimeSpent": 0.0,
+        "TimeRemain": 0.0, "Assignable": {"ResourceType": "Assignable", "Id": 75533,
+        "Name": "Sanitised Name"}, "Role": {"ResourceType": "Role", "Id": 1, "Name":
+        "Sanitised Name"}}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '317'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 04:59:50 GMT
+      expires:
+      - Fri, 04 Sep 2026 04:59:50 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-7fb8744d7e0815ec470873aebade78d1-b41b2ea909a21198-01
+      via:
+      - 1.1 kong/3.9.1
+      x-accountlockwaittime:
+      - '0'
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - b9656162-36a0-4d44-8c98-6f1872bbbbad
+      x-diagnostic-tags:
+      - create-resource,get-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 7851bd20e06d7e655c07fb3e46c05301
+      x-kong-upstream-latency:
+      - '55'
+      x-loaddbreader:
+      - '5'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '36'
+      x-stopwatch:
+      - '47'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 201
+      message: Created
+- request:
+    body: '{"Effort":5.0}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '14'
+      content-type:
+      - application/json
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 1ce654260ed84aae97a68f15be4aa392
+    method: POST
+    uri: https://example.tpondemand.com/api/v1/RoleEffort/615111?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "RoleEffort", "Id": 615111, "InitialEstimate": 0.0,
+        "Effort": 5.0, "EffortCompleted": 0.0, "EffortToDo": 5.0, "TimeSpent": 0.0,
+        "TimeRemain": 2.0, "Assignable": {"ResourceType": "Assignable", "Id": 75533,
+        "Name": "Sanitised Name"}, "Role": {"ResourceType": "Role", "Id": 1, "Name":
+        "Sanitised Name"}}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '317'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 04:59:51 GMT
+      expires:
+      - Fri, 04 Sep 2026 04:59:51 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-64068488e5abac0ca7aadf32087100ab-804a2f1bed8f0f6b-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - c6d69ecf-b648-4c18-8b07-e2f30a57ec22
+      x-diagnostic-tags:
+      - update-resource,get-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 363db003fb4b47267f7ebc3cf645937d
+      x-kong-upstream-latency:
+      - '36'
+      x-loaddbreader:
+      - '0'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '21'
+      x-stopwatch:
+      - '30'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 7a7fbac793054b7b8859adce52ce9b6a
+    method: DELETE
+    uri: https://example.tpondemand.com/api/v1/RoleEffort/615111?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "RoleEffort", "Id": 615111}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '44'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 04:59:51 GMT
+      expires:
+      - Fri, 04 Sep 2026 04:59:51 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-29d728082b31957e59c0439036377722-351863eaf8ad629b-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 30b11edf-72df-471e-b4ec-2a78905094e6
+      x-diagnostic-tags:
+      - delete-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 6c13f7715e4691670e048d3f1c419d58
+      x-kong-upstream-latency:
+      - '34'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '20'
+      x-stopwatch:
+      - '27'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 1075a4ff66384a8ea590962959d79983
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/RoleEffort/615111?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"Status": "NotFound", "Message": "RoleEffort with Id 615111 not found
+        or access is forbidden.", "Type": "Presentational", "Details": {"Items": [{"Type":
+        "Simple", "Message": {"Token": "{entityKind} with Id {id} not found or access
+        is forbidden.", "Data": {"entityKind": "RoleEffort", "id": "615111"}, "Value":
+        "RoleEffort with Id 615111 not found or access is forbidden."}}]}, "ErrorId":
+        "d5e61075-4747-4f12-a24e-4305002c5144"}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '428'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 04:59:51 GMT
+      expires:
+      - Fri, 04 Sep 2026 04:59:51 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-458e14c64372538de25de8ce24265a3e-f5ca422f5d5216fd-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - df1c750e-6b87-43d0-9df9-18dced2b0f88
+      x-diagnostic-tags:
+      - get-resource
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - e8daf8467fdad46ad74f2e6fba269c5c
+      x-kong-upstream-latency:
+      - '11'
+      x-loaddbreader:
+      - '0'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '3'
+      x-stopwatch:
+      - '1'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 404
+      message: Not Found
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 31c196d9b51a4fe39095d64c410d2135
+    method: DELETE
+    uri: https://example.tpondemand.com/api/v1/UserStory/75533?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "UserStory", "Id": 75533}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '42'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 04:59:51 GMT
+      expires:
+      - Fri, 04 Sep 2026 04:59:51 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-af16a1932726d1d683e2c87a734093c8-e2312628534a8ac1-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - f3f888e2-def0-41b0-9475-85d1cc1033a4
+      x-diagnostic-tags:
+      - delete-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - 5f6a2f1e8aabb619a79a183aed172b17
+      x-kong-upstream-latency:
+      - '90'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '62'
+      x-stopwatch:
+      - '84'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  # GitHub's "report a vulnerability" advisory route needs private vulnerability
+  # reporting, which this private repository does not expose, so the security
+  # contact is e-mail. Switch to the advisories URL if the repo is ever made
+  # public and the feature is enabled.
+  - name: Security report
+    url: mailto:louis@man8.com?subject=targetprocess-py%20security%20report
+    about: Report a security vulnerability privately by e-mail, not as a public issue.

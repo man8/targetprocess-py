@@ -1,0 +1,74 @@
+# Local mirror of the CI gates, so a broken commit is caught before it is pushed
+# rather than a CI run later. Install with `uv run pre-commit install` (both hook
+# types below are installed).
+#
+# The lint/type hooks run through `uv run`, not through the upstream mirror
+# repos, so the ruff and mypy versions here are exactly the ones pinned in
+# uv.lock — one source of truth, and Dependabot's dev-tooling group keeps it
+# current. The pre-commit-hooks repo below is version-pinned and updated by
+# Dependabot's pre-commit ecosystem.
+default_install_hook_types: [pre-commit, pre-push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        # Catches an accidentally committed binary or dump at the point it is
+        # staged, where it is still cheap to undo; once merged it is in every
+        # clone's history forever. The line/size ceilings for text live in
+        # scripts/check_large_files.py.
+        args: [--maxkb=256]
+        exclude: ^(uv\.lock|tests/integration/cassettes/)
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        exclude: ^tests/integration/cassettes/
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --check --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: mypy
+        name: mypy --strict src
+        entry: uv run mypy --strict src
+        language: system
+        types: [python]
+        pass_filenames: false
+        # Whole-package type checking is too slow to sit in front of every
+        # commit, and only meaningful over the whole package anyway, so it gates
+        # the push instead.
+        stages: [pre-push]
+
+      - id: check-large-files
+        name: file size and line-count ceilings
+        entry: uv run python scripts/check_large_files.py
+        language: system
+        pass_filenames: false
+
+      - id: check-debt-markers
+        name: debt markers carry an issue reference
+        entry: uv run python scripts/check_todos.py
+        language: system
+        types: [text]
+
+      - id: check-internal-refs
+        name: tracked files carry no internal references
+        entry: uv run python scripts/check_internal_refs.py
+        language: system
+        types: [text]

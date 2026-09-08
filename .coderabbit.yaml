@@ -1,0 +1,147 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# This file supersedes the CodeRabbit dashboard settings for this repository:
+# once present, dashboard values no longer apply here, so any organisation-wide
+# settings we rely on must be restated in this file.
+
+language: en-ZA
+
+reviews:
+  profile: assertive
+  in_progress_fortune: false
+  # Withhold CodeRabbit's approval until every conversation on the PR is
+  # resolved and no error-mode pre-merge check is failing; approval is then
+  # granted automatically. This makes CodeRabbit re-approve once satisfied
+  # (a first-pass "changes requested" otherwise never clears to approved),
+  # and gives the error-mode pre-merge checks below their merge-blocking teeth.
+  request_changes_workflow: true
+
+  auto_review:
+    # No automatic reviews. Every pull request here is agent-authored and its
+    # coordinator requests each review explicitly ("@coderabbitai review", or
+    # "full review") once the content is final, so no included review or paid
+    # credit is spent on an intermediate push, and draft state gates nothing.
+    # With automatic reviews off CodeRabbit posts a passing "Review skipped"
+    # status on every push, so a required CodeRabbit status check no longer
+    # proves a review ran; the approving-review requirement is the gate.
+    # Bot-authored pull requests (Dependabot and the like) are not auto-reviewed
+    # regardless.
+    enabled: false
+
+  finishing_touches:
+    simplify:
+      enabled: true
+
+  pre_merge_checks:
+    # Only a requested reviewer — never the PR author — may ignore a failing
+    # error-mode check, so the author cannot self-bypass the error-mode gate
+    # defined below.
+    override_requested_reviewers_only: true
+
+    # The built-in docstring-coverage check cannot exclude test code, and test
+    # methods idiomatically carry no docstrings — so it is disabled here and
+    # replaced by the "Docstring coverage (non-test)" custom check below, which
+    # excludes tests by prose.
+    docstrings:
+      mode: "off"
+
+    custom_checks:
+      - name: "Docstring coverage (non-test)"
+        mode: "error"
+        instructions: |
+          Fail if any public function, method, or class ADDED or MODIFIED in
+          this pull request lacks a docstring. Judge each file by intent, not by
+          an exhaustive pattern list. EXCLUDE all test code: any file located in
+          a test directory at any depth (e.g. tests/, test/, __tests__/, spec/)
+          or whose name marks it as a test (test_*, *_test, *.test.*, *.spec.*
+          in any language or extension), and any test function or method (name
+          starting with "test") — test code idiomatically carries no docstrings
+          and must not count against coverage. Also exclude generated or
+          vendored code. Scope the check to languages that have a docstring
+          convention (Python, and JS/TS/JSX/TSX via JSDoc); ignore languages
+          that have none (YAML, shell, JSON).
+
+      - name: "Checklist complete"
+        mode: "error"
+        instructions: |
+          Parse task-list items in THIS pull request's own description only —
+          never in a linked issue, a comment, or any external document. GitHub
+          Flavored Markdown task lists use unordered ("-", "*", "+") or ordered
+          ("1." or "1)") list markers at any indentation level. IGNORE any
+          section whose heading is "Post-merge verification" (or that clearly
+          denotes post-merge / post-deploy checks): those are verified after
+          merge and must not gate this pre-merge check. Of the remaining items,
+          fail if any is unticked ("[ ]"). Treat "[x]" and "[X]" as ticked and
+          "[~]" (inapplicable) as addressed. Pass when no unticked items remain,
+          or the description has no gating task-list items.
+
+      - name: "No committed superpowers artefacts"
+        mode: "error"
+        instructions: |
+          Fail if this pull request ADDS any new file under docs/superpowers/
+          or docs/plans/. These directories hold transient brainstorming and
+          writing-plans working documents (design specs and implementation
+          plans) that are kept on disk for the working session only and must
+          never be committed — the living specification lives in SPEC.md,
+          updated alongside changes. A new file anywhere outside these two
+          directories is fine; the ban is scoped to them.
+
+  path_filters:
+    # Auto-generated lockfiles — reviewing their diffs is noise, not signal.
+    - "!**/package-lock.json"
+    - "!**/*.script.lock"
+    - "!**/poetry.lock"
+    - "!**/bun.lockb"
+    - "!**/uv.lock"
+
+  path_instructions:
+    - path: "src/targetprocess/**"
+      instructions: >
+        Async Python library for the TargetProcess v1 REST API. TP facts that are
+        correct and must not be "fixed": tokens are sent as an access_token query
+        parameter (TP has no header token scheme); dates arrive as /Date(ms±HHMM)/;
+        collection responses are {Next, Items} and pagination follows Next verbatim.
+    - path: "tests/**"
+      instructions: |
+        Pytest suite. New or modified test doubles must be constrained to a
+        real interface: Mock() and MagicMock() require spec= (or spec_set=),
+        and patch()/patch.object() require autospec=True or an explicit
+        spec. An unspecced double accepts any attribute access, hiding
+        exactly the interface-drift bugs a test exists to catch. For
+        TypedDicts and other shapes that spec poorly, use real stub dicts
+        instead of mocks.
+    - path: "tests/integration/cassettes/**"
+      instructions: >
+        Recorded VCR fixtures — flag immediately any unredacted credential,
+        PII (names, logins, emails), real TargetProcess hostname, or real
+        business content (issue titles, descriptions, comments): those must
+        be sanitised placeholder values. Bare numeric Ids are deliberately
+        preserved and must NOT be flagged — neither real entity Ids nor the
+        product-seeded lookup constants every TP tenant shares (Priority
+        1–5, EntityType 4): with names, logins, text and hostname already
+        placeholders, an Id on its own identifies nothing. Structural
+        fields — Id, ResourceType, dates, numeric/boolean fields, the
+        Items/Next/Prev envelope — are kept as recorded so a cassette still
+        exercises real parsing, pagination and filter behaviour
+        (docs/testing.md). On a write-path cassette the REQUEST body is
+        recorded as sent and is deliberately not field-scrubbed: its
+        Name/Description values are synthetic strings the test invented,
+        carrying the recording ticket's reference as a prefix, and must NOT
+        be flagged. Do flag a request body carrying text that reads as
+        having come off the live instance rather than being invented.
+    - path: ".github/workflows/**"
+      instructions: |
+        GitHub Actions CI — high blast radius. Validation jobs run on pull
+        requests; nothing here deploys. Flag changes that loosen branch gating,
+        broaden event triggers, widen permissions, or expose secrets.
+    - path: "**/.env"
+      instructions: |
+        Gitignored credentials file — it must never be committed. Treat any
+        .env appearing in a diff as a critical defect.
+
+chat:
+  art: false
+
+code_generation:
+  docstrings:
+    language: en-ZA

@@ -1,0 +1,106 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    # `.python-version` pins 3.13 for local development. UV_PYTHON takes
+    # precedence over that file for every uv invocation in this job, so each
+    # matrix leg genuinely syncs and runs on its own interpreter rather than
+    # silently on the pinned one.
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --all-extras
+      - name: Assert the synced interpreter is the matrix interpreter
+        run: |
+          uv run python -c 'import os, sys; want = tuple(int(p) for p in os.environ["UV_PYTHON"].split(".")); assert sys.version_info[:2] == want, sys.version'
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy --strict src
+      - run: uv run pytest -q --cov=targetprocess --cov-report=term --cov-fail-under=90
+
+  # Runs the same hooks a developer gets locally from `pre-commit install`, so a
+  # contributor who skipped the install still meets the same bar, and the hook
+  # config itself cannot silently rot. Both stages are invoked explicitly: a hook
+  # only runs for the stage named by `--hook-stage`, so a future hook pinned to
+  # `stages: [pre-commit]` would be skipped if CI asked for pre-push alone.
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - run: uv sync --all-extras
+      - run: uv run pre-commit run --all-files --hook-stage pre-commit --show-diff-on-failure
+      - run: uv run pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure
+
+  # Copy-paste detection. Node-only tooling, so it stays out of the pre-commit
+  # config (which would otherwise need a Node toolchain on every dev machine)
+  # and runs here instead. Thresholds live in .jscpd.json.
+  duplication:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+      - run: npx --yes jscpd@5.0.12 .
+
+  # Known-vulnerability check over exactly the dependency set the test job runs
+  # against: uv.lock exported with every extra (so dev tooling is covered as
+  # well as the runtime dependencies) and with the project itself omitted,
+  # since it is not on PyPI and --strict would fail on the one distribution
+  # pip-audit cannot look up. Auditing the export rather than an installed
+  # environment keeps pip-audit's own dependencies out of the audited set and
+  # stops an install from upgrading a locked package before it is checked;
+  # --no-deps with --disable-pip reads the pinned, hashed export directly
+  # instead of resolving it into a throwaway venv. A finding fails the job;
+  # the fix is a lock bump, never an ignore.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - run: uv export --all-extras --no-emit-project --format requirements-txt --quiet -o requirements-audit.txt
+      - run: uvx pip-audit --strict --no-deps --disable-pip --progress-spinner off -r requirements-audit.txt
+
+  # Proves the package still builds and its metadata still renders on PyPI, on
+  # every change rather than only at release time. The smoke step installs the
+  # freshly built wheel into a clean environment with no project checkout on
+  # the path, so a file missing from the wheel fails here instead of after
+  # publication.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      - run: uv build
+      - run: uvx twine==7.0.0 check --strict dist/*
+      - name: Smoke-test the built wheel in a clean environment
+        run: |
+          set -euo pipefail
+          wheel=$(ls dist/*.whl)
+          uv run --isolated --no-project --with "$wheel" python -c \
+            "import targetprocess; print(targetprocess.__version__)"

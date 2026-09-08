@@ -1,0 +1,14 @@
+# CODEOWNERS for targetprocess-py
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# This is a single-maintainer library. Branch protection on `main` already
+# requires a PR review before merge; this file tells GitHub whom to
+# auto-request when an eligible pull request is opened or updated (draft PRs
+# and owners without write access are exceptions — see the docs link above).
+# Enable "Require review from Code Owners" in branch protection if `@man8`'s
+# specific approval — not merely any review — is mandatory.
+#
+# If additional maintainers or team-based ownership are added later, split this
+# into per-path rules (e.g. `src/targetprocess/  @man8  @someone`, `.github/  @man8`).
+
+*       @man8

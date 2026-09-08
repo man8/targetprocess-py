@@ -1,0 +1,176 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/UserStory?access_token=REDACTED&format=json&take=1
+  response:
+    body:
+      string: '{"Next": "https://example.tpondemand.com/api/v1/UserStories/?format=json&take=1&skip=1",
+        "Items": [{"ResourceType": "UserStory", "Id": 74374, "Name": "Sanitised Name",
+        "Description": "Sanitised Description", "StartDate": "/Date(1784628905000+0200)/",
+        "EndDate": null, "CreateDate": "/Date(1784628814000+0200)/", "ModifyDate":
+        "/Date(1784632632000+0200)/", "LastCommentDate": "/Date(1784634983000+0200)/",
+        "Tags": "", "NumericPriority": 62598.99251683001, "EntityVersion": 46004795,
+        "EntityType": {"ResourceType": "EntityType", "Id": 4, "Name": "Sanitised Name",
+        "IsUnitInHourOnly": false}, "LastEditor": {"ResourceType": "GeneralUser",
+        "Id": 22, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName",
+        "Login": "Sanitised Login", "FullName": "Sanitised FullName"}, "Owner": {"ResourceType":
+        "GeneralUser", "Id": 22, "FirstName": "Sanitised FirstName", "LastName": "Sanitised
+        LastName", "Login": "Sanitised Login", "FullName": "Sanitised FullName"},
+        "Creator": {"ResourceType": "GeneralUser", "Id": 22, "FirstName": "Sanitised
+        FirstName", "LastName": "Sanitised LastName", "Login": "Sanitised Login",
+        "FullName": "Sanitised FullName"}, "LastCommentedUser": {"ResourceType": "GeneralUser",
+        "Id": 18, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName",
+        "Login": "Sanitised Login", "FullName": "Sanitised FullName"}, "Project":
+        {"ResourceType": "Project", "Id": 215, "Name": "Sanitised Name", "Process":
+        {"ResourceType": "Process", "Id": 2}}, "LinkedTestPlan": null, "Milestone":
+        null, "Effort": 0.0, "EffortCompleted": 0.0, "EffortToDo": 0.0, "Progress":
+        0.0, "TimeSpent": 0.0, "TimeRemain": 0.0, "LastStateChangeDate": "/Date(1784632632000+0200)/",
+        "PlannedStartDate": null, "PlannedEndDate": null, "Units": "h", "Release":
+        null, "Iteration": null, "TeamIteration": null, "Team": {"ResourceType": "Team",
+        "Id": 32666, "Name": "Sanitised Name", "EmojiIcon": ":lightning:"}, "Priority":
+        {"ResourceType": "Priority", "Id": 5, "Name": "Sanitised Name", "Importance":
+        5}, "EntityState": {"ResourceType": "EntityState", "Id": 80, "Name": "Sanitised
+        Name", "NumericPriority": 79.734375}, "ResponsibleTeam": {"ResourceType":
+        "TeamAssignment", "Id": 80816}, "InitialEstimate": 0.0, "Feature": null, "Build":
+        null, "CustomFields": []}]}'
+    headers:
+      Cache-Control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 21 Jul 2026 13:21:59 GMT
+      Expires:
+      - Mon, 20 Jul 2026 13:21:58 GMT
+      Server:
+      - nginx
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      Via:
+      - 1.1 kong/3.9.1
+      X-API-V1-WITHOUT-REST:
+      - 'true'
+      X-Content-Type-Options:
+      - nosniff
+      X-CorrelationId:
+      - a1c8472c-0441-4bcc-9ef8-f2fc13601b62
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Kong-Proxy-Latency:
+      - '0'
+      X-Kong-Request-Id:
+      - 6e91bb731fc9836aeec9682cc54c8537
+      X-Kong-Upstream-Latency:
+      - '149'
+      X-LoadDbReader:
+      - 14;3
+      X-LoadResourceDbReaderData:
+      - 0;0
+      X-Permitted-Cross-Domain-Policies:
+      - none
+      X-Sql-Stopwatch:
+      - 13;0;12
+      X-Stopwatch:
+      - '139'
+      X-TP-Handled-By:
+      - tp-next
+      content-length:
+      - '2256'
+      traceparent:
+      - 00-11ceca669cb73b47ade89add721166c8-46738ca56d24a0a1-01
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/UserStory/74374?access_token=REDACTED&format=json&include=%5BId%2CName%5D
+  response:
+    body:
+      string: '{"ResourceType": "UserStory", "Id": 74374, "Name": "Sanitised Name"}'
+    headers:
+      Cache-Control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 21 Jul 2026 13:21:59 GMT
+      Expires:
+      - Mon, 20 Jul 2026 13:21:59 GMT
+      Server:
+      - nginx
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      Via:
+      - 1.1 kong/3.9.1
+      X-API-V1-WITHOUT-REST:
+      - 'true'
+      X-Content-Type-Options:
+      - nosniff
+      X-CorrelationId:
+      - d0cc05d1-81db-43d0-a669-0aa449a43bef
+      X-Diagnostic-Tags:
+      - get-resource
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Kong-Proxy-Latency:
+      - '0'
+      X-Kong-Request-Id:
+      - 525ce1352381ec0afdc09746d218d973
+      X-Kong-Upstream-Latency:
+      - '16'
+      X-LoadDbReader:
+      - '6'
+      X-LoadResourceDbReaderData:
+      - '0'
+      X-Permitted-Cross-Domain-Policies:
+      - none
+      X-Sql-Stopwatch:
+      - '11'
+      X-Stopwatch:
+      - '9'
+      X-TP-Handled-By:
+      - tp-next
+      content-length:
+      - '68'
+      traceparent:
+      - 00-3ba903b355f74e1d9d506273428d85cb-a90cafbb541b4e47-01
+    status:
+      code: 200
+      message: OK
+version: 1

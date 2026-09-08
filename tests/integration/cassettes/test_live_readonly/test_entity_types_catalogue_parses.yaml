@@ -1,0 +1,209 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - e4ae61f8b8ab4cb8b6f450b56c911f26
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/EntityType?access_token=REDACTED&format=json&include=%5BId%2CName%2CIsAssignable%2CIsExtendable%5D&take=25
+  response:
+    body:
+      string: '{"Next": "https://example.tpondemand.com/api/v1/EntityTypes/?include=[Id,Name,IsAssignable,IsExtendable]&format=json&take=25&skip=25",
+        "Items": [{"ResourceType": "EntityType", "Id": 20, "Name": "Sanitised Name",
+        "CustomFieldScope": "None", "IsAssignable": false, "IsExtendable": false},
+        {"ResourceType": "EntityType", "Id": 8, "Name": "Sanitised Name", "CustomFieldScope":
+        "Process", "IsAssignable": true, "IsExtendable": true}, {"ResourceType": "EntityType",
+        "Id": 11, "Name": "Sanitised Name", "CustomFieldScope": "Process", "IsAssignable":
+        false, "IsExtendable": true}, {"ResourceType": "EntityType", "Id": 19, "Name":
+        "Sanitised Name", "CustomFieldScope": "None", "IsAssignable": false, "IsExtendable":
+        false}, {"ResourceType": "EntityType", "Id": 22, "Name": "Sanitised Name",
+        "CustomFieldScope": "None", "IsAssignable": false, "IsExtendable": false},
+        {"ResourceType": "EntityType", "Id": 27, "Name": "Sanitised Name", "CustomFieldScope":
+        "Process", "IsAssignable": true, "IsExtendable": true}, {"ResourceType": "EntityType",
+        "Id": 9, "Name": "Sanitised Name", "CustomFieldScope": "Process", "IsAssignable":
+        true, "IsExtendable": true}, {"ResourceType": "EntityType", "Id": 16, "Name":
+        "Sanitised Name", "CustomFieldScope": "Process", "IsAssignable": false, "IsExtendable":
+        true}, {"ResourceType": "EntityType", "Id": 3, "Name": "Sanitised Name", "CustomFieldScope":
+        "Process", "IsAssignable": false, "IsExtendable": true}, {"ResourceType":
+        "EntityType", "Id": 32, "Name": "Sanitised Name", "CustomFieldScope": "None",
+        "IsAssignable": false, "IsExtendable": false}, {"ResourceType": "EntityType",
+        "Id": 31, "Name": "Sanitised Name", "CustomFieldScope": "Process", "IsAssignable":
+        true, "IsExtendable": true}, {"ResourceType": "EntityType", "Id": 10, "Name":
+        "Sanitised Name", "CustomFieldScope": "Global", "IsAssignable": false, "IsExtendable":
+        true}, {"ResourceType": "EntityType", "Id": 1, "Name": "Sanitised Name", "CustomFieldScope":
+        "Process", "IsAssignable": false, "IsExtendable": true}, {"ResourceType":
+        "EntityType", "Id": 9038, "Name": "Sanitised Name", "CustomFieldScope": "Global",
+        "IsAssignable": true, "IsExtendable": true}, {"ResourceType": "EntityType",
+        "Id": 2, "Name": "Sanitised Name", "CustomFieldScope": "Process", "IsAssignable":
+        false, "IsExtendable": true}, {"ResourceType": "EntityType", "Id": 17, "Name":
+        "Sanitised Name", "CustomFieldScope": "Process", "IsAssignable": true, "IsExtendable":
+        true}, {"ResourceType": "EntityType", "Id": 18, "Name": "Sanitised Name",
+        "CustomFieldScope": "Global", "IsAssignable": false, "IsExtendable": true},
+        {"ResourceType": "EntityType", "Id": 9006, "Name": "Sanitised Name", "CustomFieldScope":
+        "Global", "IsAssignable": true, "IsExtendable": true}, {"ResourceType": "EntityType",
+        "Id": 9025, "Name": "Sanitised Name", "CustomFieldScope": "Global", "IsAssignable":
+        true, "IsExtendable": true}, {"ResourceType": "EntityType", "Id": 5, "Name":
+        "Sanitised Name", "CustomFieldScope": "Process", "IsAssignable": true, "IsExtendable":
+        true}, {"ResourceType": "EntityType", "Id": 23, "Name": "Sanitised Name",
+        "CustomFieldScope": "Global", "IsAssignable": false, "IsExtendable": true},
+        {"ResourceType": "EntityType", "Id": 24, "Name": "Sanitised Name", "CustomFieldScope":
+        "Global", "IsAssignable": false, "IsExtendable": true}, {"ResourceType": "EntityType",
+        "Id": 30, "Name": "Sanitised Name", "CustomFieldScope": "None", "IsAssignable":
+        false, "IsExtendable": false}, {"ResourceType": "EntityType", "Id": 12, "Name":
+        "Sanitised Name", "CustomFieldScope": "Process", "IsAssignable": false, "IsExtendable":
+        true}, {"ResourceType": "EntityType", "Id": 28, "Name": "Sanitised Name",
+        "CustomFieldScope": "None", "IsAssignable": false, "IsExtendable": false}]}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '3717'
+      content-type:
+      - application/json
+      date:
+      - Wed, 02 Sep 2026 20:12:02 GMT
+      expires:
+      - Tue, 01 Sep 2026 20:12:02 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-2a091bee8358cec72d99dd8b2a0a8b3a-3adecdc8e5c14618-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 56df5afc-d567-48a8-90fc-dab220ab695a
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - 9d75720453400c5407d7be16cfac6025
+      x-kong-upstream-latency:
+      - '11'
+      x-loaddbreader:
+      - '2'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - 2;4
+      x-stopwatch:
+      - '4'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - b1a3d5d1d83c4e93bb3badc13deae33a
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/EntityTypes/?access_token=REDACTED&format=json&include=%5BId%2CName%2CIsAssignable%2CIsExtendable%5D&skip=25&take=25
+  response:
+    body:
+      string: '{"Prev": "https://example.tpondemand.com/api/v1/EntityTypes/?include=[Id,Name,IsAssignable,IsExtendable]&format=json&take=25&skip=0",
+        "Items": [{"ResourceType": "EntityType", "Id": 13, "Name": "Sanitised Name",
+        "CustomFieldScope": "Process", "IsAssignable": true, "IsExtendable": true},
+        {"ResourceType": "EntityType", "Id": 14, "Name": "Sanitised Name", "CustomFieldScope":
+        "Process", "IsAssignable": true, "IsExtendable": true}, {"ResourceType": "EntityType",
+        "Id": 25, "Name": "Sanitised Name", "CustomFieldScope": "None", "IsAssignable":
+        false, "IsExtendable": false}, {"ResourceType": "EntityType", "Id": 26, "Name":
+        "Sanitised Name", "CustomFieldScope": "None", "IsAssignable": false, "IsExtendable":
+        false}, {"ResourceType": "EntityType", "Id": 7, "Name": "Sanitised Name",
+        "CustomFieldScope": "Process", "IsAssignable": false, "IsExtendable": true},
+        {"ResourceType": "EntityType", "Id": 6, "Name": "Sanitised Name", "CustomFieldScope":
+        "Global", "IsAssignable": false, "IsExtendable": true}, {"ResourceType": "EntityType",
+        "Id": 29, "Name": "Sanitised Name", "CustomFieldScope": "None", "IsAssignable":
+        false, "IsExtendable": false}, {"ResourceType": "EntityType", "Id": 4, "Name":
+        "Sanitised Name", "CustomFieldScope": "Process", "IsAssignable": true, "IsExtendable":
+        true}]}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '1283'
+      content-type:
+      - application/json
+      date:
+      - Wed, 02 Sep 2026 20:12:02 GMT
+      expires:
+      - Tue, 01 Sep 2026 20:12:02 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-95ae4ffef169d25a395a3a0bb17826cf-40968e6217949a53-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 0cbf0eaa-0f66-4457-ab7e-076dc4c988fc
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - f22b4b65a95ab72f7ed1c376d147fe4f
+      x-kong-upstream-latency:
+      - '24'
+      x-loaddbreader:
+      - '1'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - 0;17
+      x-stopwatch:
+      - '13'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+version: 1

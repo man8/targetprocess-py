@@ -1,0 +1,655 @@
+interactions:
+- request:
+    body: '{"Name":"MAN8-9036 recording attachment parent story","Description":"Synthetic
+      record created by an integration recording run.","Project":{"Id":49938}}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '151'
+      content-type:
+      - application/json
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - d20eacf745334f9783899aff73a143f9
+    method: POST
+    uri: https://example.tpondemand.com/api/v1/UserStory?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "UserStory", "Id": 75540, "Name": "Sanitised Name",
+        "Description": "Sanitised Description", "StartDate": null, "EndDate": null,
+        "CreateDate": "/Date(1788586013000+0200)/", "ModifyDate": "/Date(1788586013000+0200)/",
+        "LastCommentDate": null, "Tags": "", "NumericPriority": 63435.387843000004,
+        "EntityVersion": 48888600, "EntityType": {"ResourceType": "EntityType", "Id":
+        4, "Name": "Sanitised Name", "IsUnitInHourOnly": false}, "LastEditor": {"ResourceType":
+        "GeneralUser", "Id": 1, "FirstName": "Sanitised FirstName", "LastName": "Sanitised
+        LastName", "Login": "Sanitised Login", "FullName": "Sanitised FullName"},
+        "Owner": {"ResourceType": "GeneralUser", "Id": 1, "FirstName": "Sanitised
+        FirstName", "LastName": "Sanitised LastName", "Login": "Sanitised Login",
+        "FullName": "Sanitised FullName"}, "Creator": {"ResourceType": "GeneralUser",
+        "Id": 1, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName",
+        "Login": "Sanitised Login", "FullName": "Sanitised FullName"}, "LastCommentedUser":
+        null, "Project": {"ResourceType": "Project", "Id": 49938, "Name": "Sanitised
+        Name", "Process": {"ResourceType": "Process", "Id": 2}}, "LinkedTestPlan":
+        null, "Milestone": null, "Effort": 0.0, "EffortCompleted": 0.0, "EffortToDo":
+        0.0, "Progress": 0.0, "TimeSpent": 0.0, "TimeRemain": 0.0, "LastStateChangeDate":
+        "/Date(1788586013000+0200)/", "PlannedStartDate": null, "PlannedEndDate":
+        null, "Units": "h", "Release": null, "Iteration": null, "TeamIteration": null,
+        "Team": null, "Priority": {"ResourceType": "Priority", "Id": 5, "Name": "Sanitised
+        Name", "Importance": 5}, "EntityState": {"ResourceType": "EntityState", "Id":
+        78, "Name": "Sanitised Name", "NumericPriority": 78.0}, "ResponsibleTeam":
+        null, "InitialEstimate": 0.0, "Feature": null, "Build": null, "CustomFields":
+        []}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '1803'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 05:26:54 GMT
+      expires:
+      - Fri, 04 Sep 2026 05:26:53 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-9924c613f43f7b572345dac2201d2f5f-96d2dffe055e0d46-01
+      via:
+      - 1.1 kong/3.9.1
+      x-accountlockwaittime:
+      - '5'
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 67004b87-140e-4c0b-801a-631c7a05ec9a
+      x-diagnostic-tags:
+      - create-resource,get-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - df957f52f00f872eec16433cb9db7f29
+      x-kong-upstream-latency:
+      - '354'
+      x-loaddbreader:
+      - 1;3
+      x-loadresourcedbreaderdata:
+      - 0;0
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - 238;3
+      x-stopwatch:
+      - '343'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 201
+      message: Created
+- request:
+    body: "--67e6dd663d79abb5e4550e93dbc44b10\r\nContent-Disposition: form-data; name=\"generalid\"\r\n\r\n75540\r\n--67e6dd663d79abb5e4550e93dbc44b10\r\nContent-Disposition:
+      form-data; name=\"file\"; filename=\"man8-9036-recording.txt\"\r\nContent-Type:
+      text/plain\r\n\r\nSynthetic attachment content for an integration recording
+      run.\n\r\n--67e6dd663d79abb5e4550e93dbc44b10--\r\n"
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '343'
+      content-type:
+      - multipart/form-data; boundary=67e6dd663d79abb5e4550e93dbc44b10
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - b559b3fb1c9d462d8e00df095e91901b
+    method: POST
+    uri: https://example.tpondemand.com/UploadFile.ashx?access_token=REDACTED
+  response:
+    body:
+      string: '{"items": [{"resourceType": "Attachment", "id": 55788, "name": "Sanitised
+        name", "uniqueFileName": "Sanitised uniqueFileName", "description": "Sanitised
+        description", "date": "2026-09-05T07:26:54+02:00", "persistedMimeType": "text/plain",
+        "persistedSize": 63, "isEmpty": false, "uri": "https://example.tpondemand.com/Attachment.aspx?AttachmentID=55788",
+        "thumbnailUri": "https://example.tpondemand.com/AttachmentThumbnail.aspx?AttachmentID=55788&width=100&height=100",
+        "mimeType": "text/plain", "size": 63, "owner": {"resourceType": "GeneralUser",
+        "id": 1, "firstName": "Sanitised firstName", "lastName": "Sanitised lastName",
+        "login": "Sanitised login", "fullName": "Sanitised fullName"}, "general":
+        {"resourceType": "General", "id": 75540, "name": "Sanitised name"}, "message":
+        null, "assignable": {"resourceType": "Assignable", "id": 75540, "name": "Sanitised
+        name"}}]}'
+    headers:
+      cache-control:
+      - no-cache, no-store, must-revalidate
+      connection:
+      - keep-alive
+      content-length:
+      - '872'
+      content-type:
+      - application/json; charset=utf-8
+      date:
+      - Sat, 05 Sep 2026 05:26:54 GMT
+      expires:
+      - '-1'
+      pragma:
+      - no-cache
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-17baf00dbecebbbb16ce007cd5433abc-1e8a142dc1268ecb-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 7acefda2-6b5d-46df-8019-56cf4fb92ef9
+      x-default-route:
+      - 'true'
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 8117214eed4aff29979b9934426da352
+      x-kong-upstream-latency:
+      - '284'
+      x-loaddbreader:
+      - '0'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '55'
+      x-stopwatch:
+      - '237'
+      x-tp-forwarded-to:
+      - tp
+      x-tp-handled-by:
+      - tp
+      x-ua-compatible:
+      - IE=edge
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 68894371c924468cbf9d9841eb13b738
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/Attachment?access_token=REDACTED&format=json&take=25&where=General.Id+eq+75540
+  response:
+    body:
+      string: '{"Items": [{"ResourceType": "Attachment", "Id": 55788, "Name": "Sanitised
+        Name", "UniqueFileName": "Sanitised UniqueFileName", "Description": "Sanitised
+        Description", "Date": "/Date(1788586014000+0200)/", "Owner": {"ResourceType":
+        "GeneralUser", "Id": 1, "FirstName": "Sanitised FirstName", "LastName": "Sanitised
+        LastName", "Login": "Sanitised Login", "FullName": "Sanitised FullName"},
+        "General": {"ResourceType": "General", "Id": 75540, "Name": "Sanitised Name"},
+        "Message": null}]}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '485'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 05:26:54 GMT
+      expires:
+      - Fri, 04 Sep 2026 05:26:54 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-ce97f1e74530a419bf738c3b2ff6a5ff-6d3339b4fe81e891-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - b2f8cfb4-4a10-4b7e-8eb0-8000ccb9af38
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - b0f8e54c7a009639d752c267349dc326
+      x-kong-upstream-latency:
+      - '7'
+      x-loaddbreader:
+      - '0'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '2'
+      x-stopwatch:
+      - '2'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 9790607e90694a73a7efb41d0d016a5a
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/Attachment/55788?access_token=REDACTED&format=json&include=%5BUri%2CMimeType%2CSize%5D
+  response:
+    body:
+      string: '{"ResourceType": "Attachment", "Id": 55788, "UniqueFileName": "Sanitised
+        UniqueFileName", "PersistedMimeType": "text/plain", "PersistedSize": 63, "Uri":
+        "https://example.tpondemand.com/Attachment.aspx?AttachmentID=55788", "MimeType":
+        "text/plain", "Size": 63}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '259'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 05:26:54 GMT
+      expires:
+      - Fri, 04 Sep 2026 05:26:54 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-15a54278b49252f5cbd73b397f21e74f-1c4a885c680f2b53-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 6f9fae61-3569-4077-8455-3128ee656f4c
+      x-diagnostic-tags:
+      - get-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - d773097cb3f991230cc6bc51f6babf37
+      x-kong-upstream-latency:
+      - '10'
+      x-loaddbreader:
+      - '1'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '5'
+      x-stopwatch:
+      - '4'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - e2ece018e9004ec7b86072b16df76b74
+    method: GET
+    uri: https://example.tpondemand.com/Attachment.aspx?AttachmentID=55788&access_token=REDACTED
+  response:
+    body:
+      string: 'Synthetic attachment content for an integration recording run.
+
+        '
+    headers:
+      accept-ranges:
+      - 0-63
+      cache-control:
+      - private, max-age=31536000, s-maxage=0
+      connection:
+      - keep-alive
+      content-disposition:
+      - attachment; filename="man8-9036-recording.txt"; filename*=UTF-8''man8-9036-recording.txt
+      content-length:
+      - '63'
+      content-range:
+      - bytes 0-62/63
+      content-type:
+      - text/plain; charset=UTF-8
+      date:
+      - Sat, 05 Sep 2026 05:26:55 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-87e6c714934452973b509e18b092377b-6a72bc66b80def0d-01
+      transfer-encoding:
+      - chunked
+      via:
+      - 1.1 kong/3.9.1
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 58f48caa-6eeb-467d-aee9-39b39bab22cd
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - cd1e90204766b506d841817f3d423575
+      x-kong-upstream-latency:
+      - '166'
+      x-permitted-cross-domain-policies:
+      - none
+      x-tp-forwarded-to:
+      - tp
+      x-tp-handled-by:
+      - tp
+      x-ua-compatible:
+      - IE=edge
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - aaee138925a748e9b5155e0938ee8d66
+    method: DELETE
+    uri: https://example.tpondemand.com/api/v1/Attachment/55788?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "Attachment", "Id": 55788}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '43'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 05:26:55 GMT
+      expires:
+      - Fri, 04 Sep 2026 05:26:55 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-75c0e30a32a0f8aa2c8a1a8989272050-bdc501d274a0522e-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 4561e3c6-5f3f-483e-a5bf-f0abadd5bda2
+      x-diagnostic-tags:
+      - delete-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 46d3910412fe41212becb23547161408
+      x-kong-upstream-latency:
+      - '41'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '26'
+      x-stopwatch:
+      - '34'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 7940093577c8490d9d95066b69282a2a
+    method: DELETE
+    uri: https://example.tpondemand.com/api/v1/UserStory/75540?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "UserStory", "Id": 75540}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '42'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 05:26:55 GMT
+      expires:
+      - Fri, 04 Sep 2026 05:26:55 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-eb02c0c35dccbeab8c8413f5190cad6c-bd5dc8582663f9ec-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - e2a3ee21-1e4b-40e6-bf73-1d9150010308
+      x-diagnostic-tags:
+      - delete-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 0c724d0a5360b87f269a3e1430d54826
+      x-kong-upstream-latency:
+      - '144'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '110'
+      x-stopwatch:
+      - '137'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - a9f3323d295446eba48767a71a808765
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/UserStory/75540?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"Status": "NotFound", "Message": "UserStory with Id 75540 not found
+        or access is forbidden.", "Type": "Presentational", "Details": {"Items": [{"Type":
+        "Simple", "Message": {"Token": "{entityKind} with Id {id} not found or access
+        is forbidden.", "Data": {"entityKind": "UserStory", "id": "75540"}, "Value":
+        "UserStory with Id 75540 not found or access is forbidden."}}]}, "ErrorId":
+        "12cc2ff2-1194-4a96-85b3-ce681afad94f"}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '422'
+      content-type:
+      - application/json
+      date:
+      - Sat, 05 Sep 2026 05:26:55 GMT
+      expires:
+      - Fri, 04 Sep 2026 05:26:55 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-2decf6dbe51bde78dbca11755fee2500-b3b48475eb5d6837-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 90f39773-c588-4c70-8cba-07b7b2ba3823
+      x-diagnostic-tags:
+      - get-resource
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 76bdf33df474bb10cf0955020fb10f3c
+      x-kong-upstream-latency:
+      - '71'
+      x-loaddbreader:
+      - '2'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '5'
+      x-stopwatch:
+      - '62'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 404
+      message: Not Found
+version: 1

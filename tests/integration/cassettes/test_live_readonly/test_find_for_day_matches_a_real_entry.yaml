@@ -1,0 +1,159 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 340d9c53248b4ab9b473f628c7f2984a
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/Time?access_token=REDACTED&format=json&include=%5BId%2CDate%2CSpent%2CAssignable%2CUser%5D&take=1
+  response:
+    body:
+      string: '{"Next": "https://example.tpondemand.com/api/v1/Times/?include=[Id,Date,Spent,Assignable,User]&format=json&take=1&skip=1",
+        "Items": [{"ResourceType": "Time", "Id": 900001, "Spent": 2.1, "Date": "/Date(1786060800000+0200)/",
+        "Assignable": {"ResourceType": "Assignable", "Id": 900002, "Name": "Sanitised
+        Name"}, "User": {"ResourceType": "User", "Id": 900003, "FirstName": "Sanitised
+        FirstName", "LastName": "Sanitised LastName", "Login": "Sanitised Login",
+        "FullName": "Sanitised FullName", "Kind": "User"}}]}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '507'
+      content-type:
+      - application/json
+      date:
+      - Sun, 09 Aug 2026 09:26:09 GMT
+      expires:
+      - Sat, 08 Aug 2026 09:26:09 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-94817e96e2f26f14125198bb2005d4a7-73243876dcea2395-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 2d60a6f0-a7af-4946-865f-f46b91193583
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - 7713c34cc9d2a737a02467048e5fff74
+      x-kong-upstream-latency:
+      - '46'
+      x-loaddbreader:
+      - '38'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '41'
+      x-stopwatch:
+      - '40'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 1297998d67cd4bdfa309359468ef916e
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/Time?access_token=REDACTED&format=json&include=%5BId%2CDate%2CSpent%2CRemain%2CIsEstimation%2CDescription%5D&take=25&where=%28Assignable.Id+eq+900002%29and%28User.Id+eq+900003%29and%28Date+gte+%272026-08-06%27%29and%28Date+lt+%272026-08-09%27%29
+  response:
+    body:
+      string: '{"Items": [{"ResourceType": "Time", "Id": 900001, "Description": "Sanitised
+        Description", "Spent": 2.1, "Remain": 0.0, "IsEstimation": false, "Date":
+        "/Date(1786060800000+0200)/"}, {"ResourceType": "Time", "Id": 900004, "Description":
+        "Sanitised Description", "Spent": 0.1, "Remain": 0.0, "IsEstimation": false,
+        "Date": "/Date(1785974400000+0200)/"}]}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '351'
+      content-type:
+      - application/json
+      date:
+      - Sun, 09 Aug 2026 09:26:10 GMT
+      expires:
+      - Sat, 08 Aug 2026 09:26:10 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-9b315b4591b1d7088e77ef2ad0295b2c-0ccff2bbc452256d-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 87c53f3f-342b-49cb-8a63-249b29fd3571
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - a9b18054e54cee2f5dda4929b92f3471
+      x-kong-upstream-latency:
+      - '23'
+      x-loaddbreader:
+      - '7'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '15'
+      x-stopwatch:
+      - '12'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+version: 1

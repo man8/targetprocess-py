@@ -1,0 +1,87 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 9b9fba4d2b6643cf8f7e15b45ac7ff61
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/Priority?access_token=REDACTED&format=json&take=25&where=EntityType.Name+eq+%27UserStory%27
+  response:
+    body:
+      string: '{"Items": [{"ResourceType": "Priority", "Id": 1, "Name": "Sanitised
+        Name", "Importance": 1, "IsDefault": false, "EntityType": {"ResourceType":
+        "EntityType", "Id": 4, "Name": "Sanitised Name"}}, {"ResourceType": "Priority",
+        "Id": 2, "Name": "Sanitised Name", "Importance": 2, "IsDefault": false, "EntityType":
+        {"ResourceType": "EntityType", "Id": 4, "Name": "Sanitised Name"}}, {"ResourceType":
+        "Priority", "Id": 3, "Name": "Sanitised Name", "Importance": 3, "IsDefault":
+        false, "EntityType": {"ResourceType": "EntityType", "Id": 4, "Name": "Sanitised
+        Name"}}, {"ResourceType": "Priority", "Id": 4, "Name": "Sanitised Name", "Importance":
+        4, "IsDefault": false, "EntityType": {"ResourceType": "EntityType", "Id":
+        4, "Name": "Sanitised Name"}}, {"ResourceType": "Priority", "Id": 5, "Name":
+        "Sanitised Name", "Importance": 5, "IsDefault": false, "EntityType": {"ResourceType":
+        "EntityType", "Id": 4, "Name": "Sanitised Name"}}]}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '926'
+      content-type:
+      - application/json
+      date:
+      - Sun, 09 Aug 2026 08:25:55 GMT
+      expires:
+      - Sat, 08 Aug 2026 08:25:55 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-3961e561f6f2c9cc63e8df6b6dba9eb8-0b0876a241dae67a-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - dc52bc15-e0e4-406f-b8bc-cdc1df28223a
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - c8f38527496292545b14ae503e6f5818
+      x-kong-upstream-latency:
+      - '16'
+      x-loaddbreader:
+      - '5'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '12'
+      x-stopwatch:
+      - '8'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+version: 1

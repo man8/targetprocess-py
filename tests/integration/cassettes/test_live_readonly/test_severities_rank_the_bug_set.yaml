@@ -1,0 +1,82 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 6243704040e34d1691c0a17186af9e2b
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/Severity?access_token=REDACTED&format=json&include=%5BId%2CName%2CImportance%2CIsDefault%5D&take=25
+  response:
+    body:
+      string: '{"Items": [{"ResourceType": "Severity", "Id": 1, "Name": "Sanitised
+        Name", "Importance": 1, "IsDefault": false}, {"ResourceType": "Severity",
+        "Id": 2, "Name": "Sanitised Name", "Importance": 2, "IsDefault": false}, {"ResourceType":
+        "Severity", "Id": 3, "Name": "Sanitised Name", "Importance": 3, "IsDefault":
+        false}, {"ResourceType": "Severity", "Id": 4, "Name": "Sanitised Name", "Importance":
+        4, "IsDefault": false}, {"ResourceType": "Severity", "Id": 5, "Name": "Sanitised
+        Name", "Importance": 5, "IsDefault": false}]}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '521'
+      content-type:
+      - application/json
+      date:
+      - Wed, 02 Sep 2026 20:12:03 GMT
+      expires:
+      - Tue, 01 Sep 2026 20:12:03 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-3edcd011629d827a054d15b5ef7f12e2-5f5e96f3a6bd6262-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 4a616633-9ae3-49c3-ad3d-44aa5c51a954
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 779872039c76255ab5888a44f7e32b1c
+      x-kong-upstream-latency:
+      - '8'
+      x-loaddbreader:
+      - '2'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '3'
+      x-stopwatch:
+      - '2'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+version: 1

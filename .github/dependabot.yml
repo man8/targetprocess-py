@@ -1,0 +1,107 @@
+# Automated dependency updates. Two ecosystems are in play here:
+#
+#   uv             — the locked Python environment (pyproject.toml + uv.lock).
+#                    versioning-strategy: lockfile-only keeps Dependabot out of
+#                    pyproject.toml entirely, so the declared floors stay
+#                    deliberate while the resolved versions CI installs stay
+#                    current. See the strategy note on that key below.
+#   github-actions — the SHA-pinned actions in .github/workflows/. Pinning to a
+#                    commit is the supply-chain-safe form but it never floats, so
+#                    without Dependabot those pins silently rot.
+#   pre-commit     — the hook repos pinned by `rev:` in .pre-commit-config.yaml.
+#                    Same rot problem as the action pins. The ruff/mypy hooks are
+#                    not listed there: they run via `uv run`, so the uv ecosystem
+#                    above already keeps them current.
+#
+# Every update lands as a pull request, so the existing gates (ruff, ruff-format,
+# mypy --strict, pytest with --cov-fail-under=90, the pre-commit hook suite,
+# duplication detection, CodeQL, CodeRabbit review) decide whether a bump is safe
+# before it reaches main.
+version: 2
+
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    # Explicit rather than the default "auto", which guesses app-vs-library and
+    # would rewrite pyproject.toml: "increase" raises the floor to the newest
+    # release, and "widen" adds an upper bound. Neither is right for a published
+    # library — an upper cap propagates into every downstream resolution, and a
+    # raised floor drops support for versions that still work. lockfile-only
+    # confines Dependabot to uv.lock. Because the constraints here are open-ended
+    # (httpx>=0.27.0, pydantic>=2.0.0, easylimit>=0.3.4), the manifest already
+    # permits new releases, so this forgoes no upgrades: majors still land, they
+    # just arrive as a lock change plus a green/red CI signal, and widening the
+    # declared floor stays a deliberate human decision.
+    versioning-strategy: "lockfile-only"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Africa/Johannesburg"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    groups:
+      # Test/lint/type tooling moves together: a mypy or ruff bump is judged by
+      # whether CI still passes, so batching them keeps review cost proportional.
+      dev-tooling:
+        patterns:
+          - "pytest*"
+          - "mypy*"
+          - "ruff"
+          - "coverage*"
+          - "vcrpy"
+          - "pre-commit"
+      # Runtime dependencies are batched only for minor/patch. Majors are
+      # deliberately left ungrouped so each arrives as its own PR — httpx,
+      # pydantic and easylimit are the library's public surface (pydantic v2
+      # models and httpx types leak into user code), so a major needs to be
+      # reviewed and released on its own.
+      runtime-minor-patch:
+        patterns:
+          - "httpx"
+          - "pydantic*"
+          - "easylimit"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Africa/Johannesburg"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      pre-commit:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Africa/Johannesburg"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

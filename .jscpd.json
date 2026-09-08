@@ -1,0 +1,15 @@
+{
+  "threshold": 3,
+  "minLines": 10,
+  "minTokens": 70,
+  "format": ["python"],
+  "reporters": ["console", "threshold"],
+  "absolute": true,
+  "gitignore": true,
+  "ignore": [
+    "**/uv.lock",
+    "**/tests/integration/cassettes/**",
+    "**/.venv/**",
+    "**/node_modules/**"
+  ]
+}

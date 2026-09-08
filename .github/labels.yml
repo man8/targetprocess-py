@@ -1,0 +1,56 @@
+# Issue and pull-request label set for targetprocess-py.
+#
+# GitHub's 9 default labels plus the two Dependabot labels
+# (`dependencies`, `python:uv`) are already present; this file defines the
+# project-specific priority and area labels that sit on top of them.
+#
+# To (re)apply this set to the repository, run:
+#
+#   scripts/apply_labels.sh
+#
+# which calls `gh label create` (or `--force` to update colours/descriptions).
+# Existing labels are left untouched unless they appear below.
+#
+# The priority and area dropdowns in the issue forms record the reporter's
+# choice in the issue body only — GitHub applies just the form's own top-level
+# `labels:` key, so the P#/area labels below still have to be applied by hand
+# (or by a future labeler workflow) during triage.
+
+# --- Priority ---------------------------------------------------------------
+# P0 is reserved for security incidents and outages and is not exposed in the
+# issue-template dropdowns; file those via the Security report contact link.
+- name: "P0 — Critical"
+  color: "b60205"
+  description: "Security incident or outage; drop everything."
+- name: "P1 — High"
+  color: "d93f0b"
+  description: "Blocks work, no reasonable workaround."
+- name: "P2 — Medium"
+  color: "fbca04"
+  description: "Real impact, a workaround exists."
+- name: "P3 — Low"
+  color: "0e8a16"
+  description: "Cosmetic or minor; nice to have."
+
+# --- Area -------------------------------------------------------------------
+- name: "area: client"
+  color: "1d76db"
+  description: "Client layer and resource managers."
+- name: "area: models"
+  color: "5319e7"
+  description: "Pydantic entity and reference models."
+- name: "area: transport"
+  color: "006b75"
+  description: "HTTP transport, auth, retry, rate limiting."
+- name: "area: observability"
+  color: "0052cc"
+  description: "Logging, scrubbing, request-id propagation."
+- name: "area: docs"
+  color: "0075ca"
+  description: "README, usage guide, examples, SPEC."
+- name: "area: ci"
+  color: "6f42c1"
+  description: "GitHub Actions, pre-commit, Dependabot, CodeRabbit."
+- name: "area: testing"
+  color: "a2eeef"
+  description: "pytest suite, VCR cassettes, coverage."

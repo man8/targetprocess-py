@@ -1,0 +1,154 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/UserStory?access_token=REDACTED&format=json&take=3
+  response:
+    body:
+      string: '{"Next": "https://example.tpondemand.com/api/v1/UserStories/?format=json&take=3&skip=3",
+        "Items": [{"ResourceType": "UserStory", "Id": 74374, "Name": "Sanitised Name",
+        "Description": "Sanitised Description", "StartDate": "/Date(1784628905000+0200)/",
+        "EndDate": null, "CreateDate": "/Date(1784628814000+0200)/", "ModifyDate":
+        "/Date(1784632632000+0200)/", "LastCommentDate": "/Date(1784634983000+0200)/",
+        "Tags": "", "NumericPriority": 62598.99251683001, "EntityVersion": 46004795,
+        "EntityType": {"ResourceType": "EntityType", "Id": 4, "Name": "Sanitised Name",
+        "IsUnitInHourOnly": false}, "LastEditor": {"ResourceType": "GeneralUser",
+        "Id": 22, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName",
+        "Login": "Sanitised Login", "FullName": "Sanitised FullName"}, "Owner": {"ResourceType":
+        "GeneralUser", "Id": 22, "FirstName": "Sanitised FirstName", "LastName": "Sanitised
+        LastName", "Login": "Sanitised Login", "FullName": "Sanitised FullName"},
+        "Creator": {"ResourceType": "GeneralUser", "Id": 22, "FirstName": "Sanitised
+        FirstName", "LastName": "Sanitised LastName", "Login": "Sanitised Login",
+        "FullName": "Sanitised FullName"}, "LastCommentedUser": {"ResourceType": "GeneralUser",
+        "Id": 18, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName",
+        "Login": "Sanitised Login", "FullName": "Sanitised FullName"}, "Project":
+        {"ResourceType": "Project", "Id": 215, "Name": "Sanitised Name", "Process":
+        {"ResourceType": "Process", "Id": 2}}, "LinkedTestPlan": null, "Milestone":
+        null, "Effort": 0.0, "EffortCompleted": 0.0, "EffortToDo": 0.0, "Progress":
+        0.0, "TimeSpent": 0.0, "TimeRemain": 0.0, "LastStateChangeDate": "/Date(1784632632000+0200)/",
+        "PlannedStartDate": null, "PlannedEndDate": null, "Units": "h", "Release":
+        null, "Iteration": null, "TeamIteration": null, "Team": {"ResourceType": "Team",
+        "Id": 32666, "Name": "Sanitised Name", "EmojiIcon": ":lightning:"}, "Priority":
+        {"ResourceType": "Priority", "Id": 5, "Name": "Sanitised Name", "Importance":
+        5}, "EntityState": {"ResourceType": "EntityState", "Id": 80, "Name": "Sanitised
+        Name", "NumericPriority": 79.734375}, "ResponsibleTeam": {"ResourceType":
+        "TeamAssignment", "Id": 80816}, "InitialEstimate": 0.0, "Feature": null, "Build":
+        null, "CustomFields": []}, {"ResourceType": "UserStory", "Id": 74370, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "StartDate": "/Date(1784625789000+0200)/",
+        "EndDate": null, "CreateDate": "/Date(1784625718000+0200)/", "ModifyDate":
+        "/Date(1784626011000+0200)/", "LastCommentDate": null, "Tags": "Sanitised
+        Tags", "NumericPriority": 62473.950872916976, "EntityVersion": 46004599, "EntityType":
+        {"ResourceType": "EntityType", "Id": 4, "Name": "Sanitised Name", "IsUnitInHourOnly":
+        false}, "LastEditor": {"ResourceType": "GeneralUser", "Id": 342, "FirstName":
+        "Sanitised FirstName", "LastName": "Sanitised LastName", "Login": "Sanitised
+        Login", "FullName": "Sanitised FullName"}, "Owner": {"ResourceType": "GeneralUser",
+        "Id": 342, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName",
+        "Login": "Sanitised Login", "FullName": "Sanitised FullName"}, "Creator":
+        {"ResourceType": "GeneralUser", "Id": 342, "FirstName": "Sanitised FirstName",
+        "LastName": "Sanitised LastName", "Login": "Sanitised Login", "FullName":
+        "Sanitised FullName"}, "LastCommentedUser": null, "Project": {"ResourceType":
+        "Project", "Id": 51568, "Name": "Sanitised Name", "Process": {"ResourceType":
+        "Process", "Id": 2}}, "LinkedTestPlan": null, "Milestone": null, "Effort":
+        0.0, "EffortCompleted": 0.0, "EffortToDo": 0.0, "Progress": 0.0, "TimeSpent":
+        0.25, "TimeRemain": 0.0, "LastStateChangeDate": "/Date(1784625789000+0200)/",
+        "PlannedStartDate": null, "PlannedEndDate": null, "Units": "h", "Release":
+        null, "Iteration": null, "TeamIteration": null, "Team": {"ResourceType": "Team",
+        "Id": 33091, "Name": "Sanitised Name", "EmojiIcon": ":calling:"}, "Priority":
+        {"ResourceType": "Priority", "Id": 5, "Name": "Sanitised Name", "Importance":
+        5}, "EntityState": {"ResourceType": "EntityState", "Id": 79, "Name": "Sanitised
+        Name", "NumericPriority": 79.0}, "ResponsibleTeam": {"ResourceType": "TeamAssignment",
+        "Id": 80812}, "InitialEstimate": 0.0, "Feature": null, "Build": null, "CustomFields":
+        []}, {"ResourceType": "UserStory", "Id": 74366, "Name": "Sanitised Name",
+        "Description": "Sanitised Description", "StartDate": "/Date(1784613522000+0200)/",
+        "EndDate": null, "CreateDate": "/Date(1784612343000+0200)/", "ModifyDate":
+        "/Date(1784613776000+0200)/", "LastCommentDate": "/Date(1784623103000+0200)/",
+        "Tags": "", "NumericPriority": 62349.159, "EntityVersion": 46004512, "EntityType":
+        {"ResourceType": "EntityType", "Id": 4, "Name": "Sanitised Name", "IsUnitInHourOnly":
+        false}, "LastEditor": {"ResourceType": "GeneralUser", "Id": 286, "FirstName":
+        "Sanitised FirstName", "LastName": "Sanitised LastName", "Login": "Sanitised
+        Login", "FullName": "Sanitised FullName"}, "Owner": {"ResourceType": "GeneralUser",
+        "Id": 286, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName",
+        "Login": "Sanitised Login", "FullName": "Sanitised FullName"}, "Creator":
+        {"ResourceType": "GeneralUser", "Id": 286, "FirstName": "Sanitised FirstName",
+        "LastName": "Sanitised LastName", "Login": "Sanitised Login", "FullName":
+        "Sanitised FullName"}, "LastCommentedUser": {"ResourceType": "GeneralUser",
+        "Id": 265, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName",
+        "Login": "Sanitised Login", "FullName": "Sanitised FullName"}, "Project":
+        {"ResourceType": "Project", "Id": 33758, "Name": "Sanitised Name", "Process":
+        {"ResourceType": "Process", "Id": 21}}, "LinkedTestPlan": null, "Milestone":
+        null, "Effort": 0.0, "EffortCompleted": 0.0, "EffortToDo": 0.0, "Progress":
+        0.0, "TimeSpent": 0.0, "TimeRemain": 0.0, "LastStateChangeDate": "/Date(1784613522000+0200)/",
+        "PlannedStartDate": null, "PlannedEndDate": null, "Units": "h", "Release":
+        null, "Iteration": null, "TeamIteration": null, "Team": {"ResourceType": "Team",
+        "Id": 32849, "Name": "Sanitised Name", "EmojiIcon": ":sos:"}, "Priority":
+        {"ResourceType": "Priority", "Id": 5, "Name": "Sanitised Name", "Importance":
+        5}, "EntityState": {"ResourceType": "EntityState", "Id": 864, "Name": "Sanitised
+        Name", "NumericPriority": 1.0}, "ResponsibleTeam": {"ResourceType": "TeamAssignment",
+        "Id": 80807}, "InitialEstimate": 0.0, "Feature": null, "Build": null, "CustomFields":
+        []}]}'
+    headers:
+      Cache-Control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 21 Jul 2026 13:21:56 GMT
+      Expires:
+      - Mon, 20 Jul 2026 13:21:56 GMT
+      Server:
+      - nginx
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      Via:
+      - 1.1 kong/3.9.1
+      X-API-V1-WITHOUT-REST:
+      - 'true'
+      X-Content-Type-Options:
+      - nosniff
+      X-CorrelationId:
+      - bc6873e2-1675-400d-875e-fac1d4ba3712
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Kong-Proxy-Latency:
+      - '1'
+      X-Kong-Request-Id:
+      - 4b0bee325b66834564494e703650b76e
+      X-Kong-Upstream-Latency:
+      - '154'
+      X-LoadDbReader:
+      - 28;18;7
+      X-LoadResourceDbReaderData:
+      - 0;0;0
+      X-Permitted-Cross-Domain-Policies:
+      - none
+      X-Sql-Stopwatch:
+      - 38;17;2
+      X-Stopwatch:
+      - '148'
+      X-TP-Handled-By:
+      - tp-next
+      content-length:
+      - '6379'
+      traceparent:
+      - 00-be265a504400fff2742d2635902b1044-4fb29e3b6b292643-01
+    status:
+      code: 200
+      message: OK
+version: 1
