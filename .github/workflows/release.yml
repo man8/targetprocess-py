@@ -16,6 +16,11 @@
 # Until the publisher exists the workflow is inert: nothing triggers it without
 # a `v*` tag, and if one were pushed the publish step would be refused at
 # PyPI's door with no upload. Uploads go to PyPI only; TestPyPI is not wired.
+#
+# Once the publish has succeeded, a GitHub Release is created for the tag with
+# the CHANGELOG section for that version as its notes and the built
+# distributions attached, so the release page never exists for a version PyPI
+# refused.
 name: Release
 on:
   push:
@@ -76,3 +81,44 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      # Creating the release and uploading its assets; nothing else here writes.
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist/
+      # The notes are the CHANGELOG section for this version, verbatim: from
+      # its `## [x.y.z]` heading (exclusive) to the next section heading or
+      # the link references at the foot of the file. A version with no section
+      # gets a placeholder rather than a failed job: by this point the package
+      # is on PyPI, and the fix is a follow-up commit, not a re-run.
+      - name: Extract the CHANGELOG section for this version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          awk -v v="$version" '
+            BEGIN { gsub(/\./, "\\.", v) }
+            $0 ~ "^## \\[" v "\\]" { keep = 1; next }
+            /^## \[/ { keep = 0 }
+            /^\[[^]]+\]: / { keep = 0 }
+            keep { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/notes.md"; then
+            printf 'Release %s. See CHANGELOG.md for the changes.\n' "$version" > "$RUNNER_TEMP/notes.md"
+          fi
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" --verify-tag --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" dist/*
