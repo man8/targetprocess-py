@@ -21,32 +21,65 @@ git's scissors line are ignored, as git ignores them.
 from __future__ import annotations
 
 import argparse
+import subprocess
 import sys
 from pathlib import Path
 
 from check_internal_refs import EXCLUDED_PREFIXES, REFERENCE
 
-# git discards this line and everything after it when it reads the message
-# back from the editor (`git commit --verbose` places the diff below it).
-SCISSORS = "# ------------------------ >8 ------------------------"
+DEFAULT_COMMENT_PREFIX = "#"
+
+# git discards the scissors line and everything after it when it reads the
+# message back from the editor (`git commit --verbose` places the diff below
+# it). The line starts with the comment prefix, whatever that is configured as.
+SCISSORS_RULE = " ------------------------ >8 ------------------------"
 
 
-def message_lines(text: str) -> list[str]:
-    """Return the lines git would keep: nothing below the scissors, no comment lines."""
-    kept: list[str] = []
-    for line in text.splitlines():
-        if line == SCISSORS:
+def comment_prefix() -> str:
+    """Return git's effective comment prefix for this repository, `#` by default.
+
+    `core.commentString` (any string) supersedes `core.commentChar` (one
+    character); `auto` makes git pick a character per message, which cannot be
+    known here, so it falls back to the default like an unset value does.
+    """
+    for key in ("core.commentString", "core.commentChar"):
+        try:
+            result = subprocess.run(
+                ["git", "config", "--get", key],
+                capture_output=True,
+                check=False,
+                text=True,
+            )
+        except OSError:
+            return DEFAULT_COMMENT_PREFIX
+        value = result.stdout.strip()
+        if value and value != "auto":
+            return value
+    return DEFAULT_COMMENT_PREFIX
+
+
+def message_lines(text: str, prefix: str = DEFAULT_COMMENT_PREFIX) -> list[tuple[int, str]]:
+    """Return the lines git would keep, each with its physical line number.
+
+    Nothing below the scissors line is kept, and no comment line is; the
+    numbers are those of the original message, so a report points at the line
+    the author sees.
+    """
+    scissors = prefix + SCISSORS_RULE
+    kept: list[tuple[int, str]] = []
+    for number, line in enumerate(text.splitlines(), start=1):
+        if line == scissors:
             break
-        if line.startswith("#"):
+        if line.startswith(prefix):
             continue
-        kept.append(line)
+        kept.append((number, line))
     return kept
 
 
-def violations(text: str) -> list[str]:
+def violations(text: str, prefix: str = DEFAULT_COMMENT_PREFIX) -> list[str]:
     """Return one message per tracker reference in the commit message."""
     messages = []
-    for number, line in enumerate(message_lines(text), start=1):
+    for number, line in message_lines(text, prefix):
         for match in REFERENCE.finditer(line):
             if match.group("key") in EXCLUDED_PREFIXES:
                 continue
@@ -68,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         parser.error("give the commit message file, or --stdin")
 
-    messages = violations(text)
+    messages = violations(text, comment_prefix())
     if not messages:
         return 0
 

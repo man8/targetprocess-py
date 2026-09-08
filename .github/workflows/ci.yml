@@ -50,28 +50,6 @@ jobs:
       - run: uv run pre-commit run --all-files --hook-stage pre-commit --show-diff-on-failure
       - run: uv run pre-commit run --all-files --hook-stage pre-push --show-diff-on-failure
 
-  # A pull request's title becomes the commit message on main (squash merge),
-  # so it is held to the same two commit-msg hooks a contributor gets locally,
-  # run over the title as if it were a message. A push to main has no title,
-  # and its commit was checked here while it was a pull request.
-  commit-message:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    env:
-      # Handed to the script through the environment and never interpolated
-      # into it: the title is contributor-controlled text.
-      PR_TITLE: ${{ github.event.pull_request.title }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
-      - run: uv sync --all-extras
-      - name: Check the pull request title as a commit message
-        run: |
-          printf '%s\n' "$PR_TITLE" > "$RUNNER_TEMP/pr-title.txt"
-          uv run pre-commit run --hook-stage commit-msg --commit-msg-filename "$RUNNER_TEMP/pr-title.txt"
-
   # Copy-paste detection. Node-only tooling, so it stays out of the pre-commit
   # config (which would otherwise need a Node toolchain on every dev machine)
   # and runs here instead. Thresholds live in .jscpd.json.

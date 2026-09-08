@@ -209,8 +209,9 @@ docs: describe the write surface in USAGE.md
 feat!: require an explicit mode on the client
 ```
 
-- Lower case for the type and the description, imperative mood ("add", not
-  "added"), no full stop, first line at most 72 characters.
+- The type in lower case; the description in lower case or sentence case,
+  never Title Case; imperative mood ("add", not "added"); no full stop; first
+  line at most 72 characters.
 - Where the change needs explaining, a body that says what changed and why,
   separated from the subject by a blank line.
 - Reference an issue on this repository in a footer: `Fixes #123`. A key from

@@ -20,7 +20,8 @@
 # Once the publish has succeeded, a GitHub Release is created for the tag with
 # the CHANGELOG section for that version as its notes and the built
 # distributions attached, so the release page never exists for a version PyPI
-# refused.
+# refused. A re-run after a partial failure repairs the existing release rather
+# than failing on it.
 name: Release
 on:
   push:
@@ -117,8 +118,20 @@ jobs:
           if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/notes.md"; then
             printf 'Release %s. See CHANGELOG.md for the changes.\n' "$version" > "$RUNNER_TEMP/notes.md"
           fi
-      - name: Create the GitHub Release
+      # `gh release create` creates the release and then uploads each asset in
+      # separate calls, so a failed upload leaves a release with missing assets
+      # and a plain re-run would fail on the create. A release that already
+      # exists is repaired instead: assets re-uploaded (--clobber replaces the
+      # ones that did land), notes and title reasserted, draft cleared.
+      - name: Create or repair the GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" --verify-tag --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" dist/*
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --draft=false
+          else
+            gh release create "$TAG" --verify-tag --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" dist/*
+          fi

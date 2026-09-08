@@ -5,6 +5,7 @@ runtime: the tree guard scans this module like any other tracked file.
 """
 
 import importlib
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -75,11 +76,57 @@ def test_comment_lines_and_the_scissors_block_are_ignored() -> None:
     text = (
         "feat: add a thing\n"
         f"# {_ref('1')} in a comment line\n"
-        f"{guard.SCISSORS}\n"
+        f"#{guard.SCISSORS_RULE}\n"
         f"{_ref('2')} below the scissors\n"
     )
 
     assert guard.violations(text) == []
+
+
+def test_reported_line_numbers_are_physical() -> None:
+    """A comment line before the reference does not shift the number reported."""
+    text = f"feat: add a thing\n# a comment\n\nSee {_ref('7')}.\n"
+
+    messages = guard.violations(text)
+
+    assert len(messages) == 1
+    assert "line 4" in messages[0]
+
+
+def test_a_configured_comment_prefix_is_honoured() -> None:
+    """With `;` as the prefix, `;` lines are comments and `#` lines are message text."""
+    text = f"feat: add a thing\n; {_ref('1')} in a comment line\n# {_ref('2')} kept by git\n"
+
+    messages = guard.violations(text, prefix=";")
+
+    assert len(messages) == 1
+    assert _ref("2") in messages[0]
+    assert "line 3" in messages[0]
+
+
+def _isolated_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A fresh repository with no global or system git config in reach."""
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", os.devnull)
+    monkeypatch.setenv("GIT_CONFIG_SYSTEM", os.devnull)
+    monkeypatch.chdir(tmp_path)
+
+
+def test_the_comment_prefix_defaults_to_hash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _isolated_repo(tmp_path, monkeypatch)
+
+    assert guard.comment_prefix() == "#"
+
+
+def test_the_comment_prefix_follows_git_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _isolated_repo(tmp_path, monkeypatch)
+    subprocess.run(["git", "config", "core.commentChar", ";"], check=True)
+
+    assert guard.comment_prefix() == ";"
 
 
 @pytest.mark.parametrize(
