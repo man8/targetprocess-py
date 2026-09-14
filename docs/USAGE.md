@@ -70,7 +70,9 @@ TargetProcessClient(
 ```
 
 Because the token is carried in the URL, it can appear in server and proxy
-logs. Do not enable httpx request-URL logging in production.
+logs, and a copied request URL carries it too. Do not enable httpx request-URL
+logging in production, and never copy or share a request URL that includes
+`access_token`.
 
 ### Client lifecycle
 
@@ -281,8 +283,9 @@ v2 API narrow a payload with `select={…}`; v1 answers that with HTTP 200 and
 returns the payload unchanged, so narrow a v1 response with `result_include`.
 The 200 is TargetProcess's general answer to a query parameter it does not act
 on: when trying a parameter against a raw URL, judge it by the change it makes
-to the response, never by the status - confirm a sort, for example, by
-comparing its ascending and descending results.
+to the response, not by a 200 alone - a non-2xx answer is still a failed
+request. Confirm a sort, for example, by comparing its ascending and
+descending results.
 
 ### Resolving a priority
 
@@ -502,7 +505,10 @@ the first two.
 ### Reading an item's inbound relations
 
 An item's inbound relations - those naming it as the Slave - can be read in
-the same request as the item, through two collections hydrated by `include=`:
+the same request as the item, through two collections hydrated by `include=`.
+Each hydrated collection is bounded separately by the server's inner-collection
+size, so the example below reads every relation only while an item's relations
+fit within that size; pass `innertake=` when an item can carry more:
 
 ```python
 story = await client.user_stories.get(
@@ -530,9 +536,7 @@ these are the wire names of the pair the `Relation` model also exposes as
 `inbound` and `outbound`, which SPEC.md recommends for new code. `EntityState`
 is observed not to expand under `Master`, a polymorphic reference, so the
 related items' states come from `InboundAssignables` (the same items, where
-they are assignables, with `EntityState` expanded), joined on `Id`. Each
-hydrated collection is bounded separately by the server's inner-collection
-size, so pass `innertake=` when an item can carry many relations; a `None`
+they are assignables, with `EntityState` expanded), joined on `Id`. A `None`
 from `state_by_id.get` means the related item was absent from
 `InboundAssignables`.
 
