@@ -17,6 +17,14 @@
 # mypy --strict, pytest with --cov-fail-under=90, the pre-commit hook suite,
 # duplication detection, CodeQL, CodeRabbit review) decide whether a bump is safe
 # before it reaches main.
+#
+# Every commit-message prefix below (prefix and prefix-development alike) must
+# be a type the commit-msg hooks accept — the type-enum in .commitlintrc.json,
+# enforced by conventional-pre-commit — because CI lints each pull request's
+# title as a commit message and squash merge makes that title the commit on
+# main, so a prefix outside that set leaves every update from that ecosystem
+# unmergeable. The uv ecosystem uses build; pre-commit and github-actions both
+# use ci.
 version: 2
 
 updates:
@@ -42,8 +50,8 @@ updates:
     labels:
       - "dependencies"
     commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
+      prefix: "build"
+      prefix-development: "build"
       include: "scope"
     groups:
       # Test/lint/type tooling moves together: a mypy or ruff bump is judged by
