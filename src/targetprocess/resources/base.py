@@ -1,7 +1,8 @@
 """Base resource class for all TargetProcess entity resources."""
 
 import builtins
-from collections.abc import AsyncIterator, Sequence
+import re
+from collections.abc import AsyncIterator, Mapping, Sequence
 from typing import TYPE_CHECKING, Any, Literal
 
 from targetprocess.exceptions import AmbiguousMatchError, NotFoundError, ReadOnlyViolation
@@ -128,6 +129,57 @@ def _resolve_by_name[N: NamedEntity](candidates: Sequence[N], name: str, *, what
     return matches[0]
 
 
+# The where= paths TargetProcess accepts and silently ignores on every collection
+# whose entity type is an Assignable, keyed by the path's leading collection
+# segment and mapped to the reason and the route to use instead. This is the one
+# place the known set is declared: the assignable managers reference it and the
+# generic entities path mirrors it. An entry is added only with live evidence -
+# an unfiltered control returning the same rows.
+ASSIGNABLE_IGNORED_FILTER_PATHS: dict[str, str] = {
+    "Assignments": (
+        "TargetProcess accepts a filter on the Assignments collection and "
+        "ignores it, answering HTTP 200 with the unfiltered rows; query the "
+        "join entity instead - client.assignments.list("
+        'where="GeneralUser.Id eq <id>", include=["Assignable"]) - and read '
+        "the work item off each assignment's assignable"
+    ),
+}
+
+
+# A quoted value in a where= expression is data rather than a path, so it is
+# blanked before matching: a literal such as 'Assignments.cs' never reads as one.
+_QUOTED_VALUE = re.compile(r"'[^']*'|\"[^\"]*\"")
+
+
+def check_filter_paths(where: str | None, ignored: Mapping[str, str], *, resource: str) -> None:
+    """Refuse a ``where=`` filter naming a path TargetProcess is known to ignore.
+
+    A name in ``ignored`` matches only as the leading segment of a dotted
+    path, in any casing: never preceded by a word character or a dot, and
+    followed by a dot. Quoted values are data, not paths, and are skipped.
+    So ``(Assignments.GeneralUser.Id eq 5)`` is caught by the key
+    ``Assignments``, while ``TeamAssignments.Team.Id``, ``Assignment.Id``,
+    ``Owner.Assignments.Id`` and ``Name contains 'Assignments.cs'`` are not.
+
+    Args:
+        where: The ``where=`` expression a caller passed, if any
+        ignored: Leading path segment -> why TargetProcess ignores a filter
+            on it, and the route to use instead
+        resource: The entity type name to report - the class's own for a
+            typed resource, the caller's spelling on the generic path
+
+    Raises:
+        ValueError: ``where`` names a path in ``ignored``; the message says
+            why and what to use instead.
+    """
+    if not where or not ignored:
+        return
+    paths = _QUOTED_VALUE.sub("''", where)
+    for name, reason in ignored.items():
+        if re.search(rf"(?<![\w.]){re.escape(name)}\.", paths, re.IGNORECASE):
+            raise ValueError(f"where={where!r} is not supported on {resource}: {reason}")
+
+
 class BaseResource[T: Entity]:
     """Base class for all resource managers.
 
@@ -156,6 +208,10 @@ class BaseResource[T: Entity]:
             TP serves in a shape the model cannot hold, each mapped to the
             reason and the route to use instead; ``get`` and ``list`` refuse
             them with ``ValueError`` before any request is sent.
+        ignored_filter_paths: Leading ``where=`` path segments TP accepts
+            and silently ignores on this collection, each mapped to the
+            reason and the route to use instead; ``list`` refuses them with
+            ``ValueError`` before any request is sent.
     """
 
     entity_type: str  # Override in subclass
@@ -165,6 +221,11 @@ class BaseResource[T: Entity]:
     # before any request is sent, because TP would answer with a shape the
     # model cannot parse. Empty on every collection but the ones that collide.
     unhydratable_includes: dict[str, str] = {}
+    # Leading where= path segment -> why TP accepts a filter on it and ignores
+    # it (and the route to use instead). list() refuses a where= naming one
+    # before any request is sent, because TP would answer HTTP 200 with the
+    # unfiltered rows. Empty on every collection but the assignable ones.
+    ignored_filter_paths: dict[str, str] = {}
     server_read_only: bool = False  # Override in server-side read-only subclasses
     # Per-operation server capability, from the collection's /meta. A
     # collection TP declares partially writable (CustomRules: update only)
@@ -213,6 +274,23 @@ class BaseResource[T: Entity]:
                 raise ValueError(
                     f"include={field!r} is not supported on {cls.entity_type}: {reason}"
                 )
+
+    @classmethod
+    def check_where(cls, where: str | None) -> None:
+        """Refuse a ``where=`` naming a path this collection silently ignores.
+
+        Applies :func:`check_filter_paths` with ``ignored_filter_paths``. A
+        collection with nothing declared there accepts every filter, as
+        before.
+
+        Args:
+            where: The ``where=`` expression a caller passed, if any
+
+        Raises:
+            ValueError: ``where`` names a path in ``ignored_filter_paths``;
+                the message says why and what to use instead.
+        """
+        check_filter_paths(where, cls.ignored_filter_paths, resource=cls.entity_type)
 
     @classmethod
     def server_permits(cls, operation: WriteOperation) -> bool:
@@ -366,9 +444,10 @@ class BaseResource[T: Entity]:
 
         Raises:
             ValueError: Both ``order_by`` and ``order_by_desc`` were passed,
-                ``skip`` is negative, ``innertake`` is negative, or
-                ``include`` names a field this collection cannot hydrate
-                (raised when iteration begins)
+                ``skip`` is negative, ``innertake`` is negative, ``include``
+                names a field this collection cannot hydrate, or ``where``
+                names a path TP silently ignores on it (see
+                ``ignored_filter_paths``) (raised when iteration begins)
             AuthenticationError: Invalid credentials
             ForbiddenError: Insufficient permissions
             NetworkError: Transport-level failure
@@ -376,6 +455,7 @@ class BaseResource[T: Entity]:
             APIError: API errors
         """
         self.check_include(include)
+        self.check_where(where)
         async for item_data in self._request_handler.list(
             self.entity_type,
             where=where,

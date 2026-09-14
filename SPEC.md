@@ -84,6 +84,13 @@ itself.
   query state) and must be followed **verbatim** - never recomputed from a
   local `skip` counter, since that can silently skip or repeat records if TP
   ever returns a non-linear continuation URL.
+- **Unrecognised query input**: TP answers a query parameter it does not
+  recognise, and a `where=` naming a nested collection path it does not
+  filter on, with HTTP 200 and the unfiltered, unsorted rows -
+  indistinguishable from success. The confirmed case is a filter on the
+  `Assignments` collection of an assignable, which returns the same rows as
+  the unfiltered request, while the `Assignment` entity's own
+  `GeneralUser.Id` filter applies.
 - **Bulk endpoint**: writable collections expose
   `POST /api/v1/{collection}/bulk`, taking a JSON array of entity objects -
   an object carrying an `Id` updates that entity, an object without one
@@ -549,7 +556,8 @@ All library exceptions extend `TargetProcessError`:
 itself) takes:
 
 - `where`: a TP `where=` filter expression, passed through verbatim with no
-  client-side transformation.
+  client-side transformation once the refusal under *Silently ignored
+  queries* below has passed.
 - `include`: optional field list, rendered as `include=[Field1,Field2]`.
 - `exclude`: optional field list, rendered as `exclude=[Field1,Field2]` -
   server-side removal of fields from each item (the complement of
@@ -609,6 +617,38 @@ but it only pretty-prints the JSON wire payload for human inspection;
 through this library's parsed-model API it has no observable effect, so it
 earns no API surface. Anyone debugging raw HTTP can append `prettify` to a
 URL by hand.
+
+### Silently ignored queries
+
+**Query parameters.** `QUERY_PARAMETERS` in `request_handler.py` names every
+parameter the handler sends - `format`, `take`, `skip`, `where`, `orderBy`,
+`orderByDesc`, `include`, `exclude`, `resultInclude`, `append` and
+`innertake` - and `RequestHandler.get` and `RequestHandler.list` refuse a built
+parameter set carrying any other name with `ValueError` before the URL is
+formed. Every parameter reaches the wire through a typed keyword, so the check
+guards the builders themselves. `access_token` is the transport's, merged in
+at send time, and outside the set; `prettify` stays deliberately absent (see
+above).
+
+**Filter paths.** `BaseResource.ignored_filter_paths` maps the leading segment
+of a `where=` path TP silently ignores on a collection to the reason and the
+route to use instead. The known set is declared once, as
+`ASSIGNABLE_IGNORED_FILTER_PATHS` in `resources/base.py`, and referenced by the
+six assignable managers (`UserStory`, `Bug`, `Task`, `Feature`, `Epic`,
+`Request`). `check_where` applies it on `list()` only - never on `get()`,
+`order_by` or `include` - matching a path's leading segment in any casing
+outside quoted values, and refuses with a `ValueError` naming the collection
+and the route. `entities` mirrors the refusal for every spelling of those six
+collections and for the polymorphic `Assignable` / `Assignables` collection.
+
+| Ignored path | Route instead |
+| --- | --- |
+| `Assignments.*` on the assignable collections | query `assignments` by `GeneralUser.Id` with `include=["Assignable"]` |
+
+An entry is added only with live evidence: an unfiltered control returning the
+same rows. `RequestHandler.list` itself still passes `where` verbatim; the
+refusal is the resource layer's, as the include refusal is.
+
 ### Bulk write semantics
 
 `create_many` / `update_many` (on every typed resource and, with a leading
