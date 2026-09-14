@@ -16,9 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `entities`), which answer HTTP 200 with the unfiltered rows. The
   `ValueError` names the join-entity route: query `assignments` by
   `GeneralUser.Id`.
-- Every query-parameter name the request handler sends is declared in one
-  allowlist (`QUERY_PARAMETERS`), and a name outside it is refused before
-  the request is built rather than sent for TargetProcess to ignore.
+- Every query-parameter name the request handler puts on an entity-API
+  request is declared in one allowlist (`QUERY_PARAMETERS`), and a name
+  outside it is refused before the request is built rather than sent for
+  TargetProcess to ignore. The `access_token` the transport merges in at
+  send time is not part of the allowlist.
 
 ## [0.1.0] - 2026-09-08
 
