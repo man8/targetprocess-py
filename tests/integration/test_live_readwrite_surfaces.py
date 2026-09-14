@@ -55,18 +55,18 @@ from targetprocess.exceptions import NotFoundError
 pytestmark = [pytest.mark.vcr, pytest.mark.integration]
 
 # Deliberately duplicated from ``test_live_readwrite.py`` rather than
-# imported: which project a recording writes to, and which reference its
-# entities are named for, are properties of *this* module's recording run.
+# imported: which project a recording writes to, and which prefix its
+# entities are named with, are properties of *this* module's recording run.
 # Importing them would let a later edit to one module silently retarget the
 # other's live writes.
 _SANDBOX_PROJECT_ID = 49938
 
 # One prefix for the whole module, fixed by the recording that established
-# it. A re-record of a *single* cassette keeps it rather than adopting its
-# own reference: the string's job is to make everything this module has ever
+# it. A re-record of a *single* cassette keeps it rather than adopting one of
+# its own: the string's job is to make everything this module has ever
 # created findable in one search, and a second prefix would mean the sweep
 # after a partial re-record no longer covers the cassettes it did not touch.
-_NAME_PREFIX = "MAN8-9036 recording"
+_NAME_PREFIX = "Synthetic recording"
 
 _CREATED_DESCRIPTION = "Synthetic record created by an integration recording run."
 _UPDATED_DESCRIPTION = "Synthetic record updated by an integration recording run."
@@ -80,9 +80,9 @@ _CREATED_EFFORT = 2.0
 _UPDATED_EFFORT = 5.0
 
 # The attachment this module uploads: a few bytes of text invented here, and
-# a filename that is the recording reference and nothing else. Never a real
+# a filename that is the recording prefix and nothing else. Never a real
 # document, and never a real filename - a request body is recorded as sent.
-_UPLOAD_FILENAME = "man8-9036-recording.txt"
+_UPLOAD_FILENAME = "synthetic-recording.txt"
 _UPLOAD_CONTENT = b"Synthetic attachment content for an integration recording run.\n"
 _UPLOAD_MIME_TYPE = "text/plain"
 
@@ -407,7 +407,7 @@ async def test_attachment_upload_list_download_and_delete(live_credentials) -> N
     with, and that the transfer works under token auth after all.
 
     The file is a few bytes invented in this module under a filename that is
-    the recording reference: a request body is recorded as sent, so a real
+    the recording prefix: a request body is recorded as sent, so a real
     document or a real filename would land in the fixture verbatim.
     """
     domain, token = live_credentials

@@ -156,23 +156,25 @@ def test_the_guard_and_its_own_tests_carry_no_references() -> None:
     assert guard.violations([_SCRIPT, Path(__file__).resolve()]) == []
 
 
-@pytest.mark.parametrize("allowed_path", guard.ALLOWED_PATHS, ids=lambda entry: entry)
-def test_every_allowed_path_still_needs_its_entry(allowed_path: str) -> None:
+def test_every_allowed_path_still_needs_its_entry() -> None:
     """A stale entry is a hole: it must go when the file stops carrying a reference.
 
     Checked by shape rather than by the reference itself, so nothing about the
     reference is written down here either. Excluded prefixes do not count - a
     cassette whose only match is a charset header has stopped earning its entry.
+    Iterates the tuple rather than parametrising over it, so an empty allow-list
+    is a pass with nothing to check rather than a skipped test.
     """
-    path = _REPO_ROOT / allowed_path
-    assert path.is_file(), f"{path} no longer exists; drop the entry"
+    for allowed_path in guard.ALLOWED_PATHS:
+        path = _REPO_ROOT / allowed_path
+        assert path.is_file(), f"{path} no longer exists; drop the entry"
 
-    matches = [
-        match
-        for match in guard.REFERENCE.finditer(path.read_text(encoding="utf-8"))
-        if match.group("key") not in guard.EXCLUDED_PREFIXES
-    ]
-    assert matches, f"{path} no longer carries a reference; drop the entry"
+        matches = [
+            match
+            for match in guard.REFERENCE.finditer(path.read_text(encoding="utf-8"))
+            if match.group("key") not in guard.EXCLUDED_PREFIXES
+        ]
+        assert matches, f"{path} no longer carries a reference; drop the entry"
 
 
 def test_main_succeeds_on_a_clean_path(tmp_path: Path) -> None:

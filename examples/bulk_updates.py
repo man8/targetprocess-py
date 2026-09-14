@@ -6,12 +6,12 @@ the bugs in a project with ``list(where=...)`` and ``update()`` each one. The
 built-in rate limiter paces the requests automatically.
 
 This is a WRITE example, so it guards the destination two independent ways: the
-target project must be named on the command line (``--project-id``, required, no
-default) AND allow-listed in the ``TP_WRITE_ALLOWED_PROJECT_IDS`` environment
-variable, and the write must be confirmed with ``--yes``. The double entry
-defends the realistic accident — copy the documented command, edit the id. Point
-it at a throwaway/sandbox project, never production; for man8's TargetProcess the
-API-testing sandbox project id is ``49938``.
+target project must be named (``--project-id``, or the ``TP_SANDBOX_PROJECT_ID``
+environment variable it defaults to) AND allow-listed in the
+``TP_WRITE_ALLOWED_PROJECT_IDS`` environment variable, and the write must be
+confirmed with ``--yes``. The double entry defends the realistic accident — copy
+the documented exports, edit one id. Point both at a throwaway/sandbox project on
+your own instance, never production.
 
 The update sets ``Description`` to a fixed marker, so re-running is idempotent
 (it does not accumulate).
@@ -20,15 +20,18 @@ Configuration comes from the environment:
 
 - ``TP_DOMAIN`` — instance domain, e.g. ``example.tpondemand.com``
 - ``TP_TOKEN``  — API token (sent as the ``access_token`` query parameter)
+- ``TP_SANDBOX_PROJECT_ID`` — the project this script writes to when
+  ``--project-id`` is not given
 - ``TP_WRITE_ALLOWED_PROJECT_IDS`` — comma-separated project ids this script may
-  write to (e.g. ``49938``)
+  write to
 
 Run (against the sandbox project):
 
     export TP_DOMAIN=example.tpondemand.com
     export TP_TOKEN=your-api-token
-    export TP_WRITE_ALLOWED_PROJECT_IDS=49938
-    python examples/bulk_updates.py --project-id 49938 --limit 10 --yes
+    export TP_SANDBOX_PROJECT_ID=your-sandbox-project-id
+    export TP_WRITE_ALLOWED_PROJECT_IDS=your-sandbox-project-id
+    python examples/bulk_updates.py --limit 10 --yes
 """
 
 from __future__ import annotations
@@ -76,13 +79,16 @@ def _env(name: str) -> str:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Bulk-update bugs (write; requires --project-id and --yes)."
+        description="Bulk-update bugs (write; requires a target project and --yes)."
     )
     parser.add_argument(
         "--project-id",
         type=int,
-        required=True,
-        help="target project id — use a sandbox project (man8 sandbox: 49938), never production",
+        default=os.environ.get("TP_SANDBOX_PROJECT_ID") or None,
+        help=(
+            "target project id — use a sandbox project, never production "
+            "(default: the TP_SANDBOX_PROJECT_ID environment variable)"
+        ),
     )
     parser.add_argument("--limit", type=int, default=10, help="max bugs to update (default: 10)")
     parser.add_argument(
@@ -90,13 +96,17 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="confirm the write — required, since this mutates data in --project-id",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.project_id is None:
+        parser.error("--project-id is required when TP_SANDBOX_PROJECT_ID is not set")
+    return args
 
 
 def _require_write_allowed(project_id: int, yes: bool) -> None:
     """Refuse the write unless the project is allow-listed and confirmed.
 
-    The destination must appear both on the command line (``project_id``) and in
+    The destination (``project_id``, from ``--project-id`` or
+    ``TP_SANDBOX_PROJECT_ID``) must also appear in
     ``TP_WRITE_ALLOWED_PROJECT_IDS``, and ``--yes`` must be given.
     """
     raw = os.environ.get("TP_WRITE_ALLOWED_PROJECT_IDS", "")
@@ -112,7 +122,7 @@ def _require_write_allowed(project_id: int, yes: bool) -> None:
     if not allowed:
         sys.exit(
             "refusing to write: set TP_WRITE_ALLOWED_PROJECT_IDS to the sandbox/throwaway "
-            "project id(s) you permit (man8 sandbox: 49938), never a production id"
+            "project id(s) you permit, never a production id"
         )
     if project_id not in allowed:
         sys.exit(
