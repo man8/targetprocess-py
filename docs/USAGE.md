@@ -55,7 +55,7 @@ URL. The alternative is HTTP Basic auth using real user credentials. A token
 does not work as a Basic credential: TargetProcess answers
 `Authorization: Basic <token>` with HTTP 401, so `basic_auth` takes a username
 and password and a token always goes in `token=`. Provide exactly one;
-supplying neither or both raises `ValueError` at construction.
+supplying both or neither raises `ValueError` at construction.
 
 ```python
 # Token (recommended): sent as ?access_token=...
