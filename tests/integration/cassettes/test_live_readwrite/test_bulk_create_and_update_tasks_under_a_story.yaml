@@ -1,6 +1,6 @@
 interactions:
 - request:
-    body: '{"Name":"MAN8-9036 recording bulk parent story","Description":"Synthetic
+    body: '{"Name":"Synthetic recording bulk parent story","Description":"Synthetic
       record created by an integration recording run.","Project":{"Id":49938}}'
     headers:
       accept:
@@ -102,7 +102,7 @@ interactions:
       code: 201
       message: Created
 - request:
-    body: '[{"Name":"MAN8-9036 recording bulk task one","UserStory":{"Id":75485}},{"Name":"MAN8-9036
+    body: '[{"Name":"Synthetic recording bulk task one","UserStory":{"Id":75485}},{"Name":"Synthetic
       recording bulk task two","UserStory":{"Id":75485}}]'
     headers:
       accept:
@@ -229,7 +229,7 @@ interactions:
       code: 200
       message: OK
 - request:
-    body: '[{"Id":75486,"Name":"MAN8-9036 recording bulk task 1 (updated)","Effort":3.0},{"Id":75487,"Name":"MAN8-9036
+    body: '[{"Id":75486,"Name":"Synthetic recording bulk task 1 (updated)","Effort":3.0},{"Id":75487,"Name":"Synthetic
       recording bulk task 2 (updated)","Effort":3.0}]'
     headers:
       accept:

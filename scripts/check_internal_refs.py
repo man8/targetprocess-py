@@ -54,38 +54,14 @@ PATTERNS = (
 )
 
 
-# Recorded names in these files spell a tracker reference. Renaming them means
-# re-recording the cassettes under the fixed-point guard, which needs a
-# read-write token window against a live instance, so they are permitted until
-# that window comes.
-#
-# An entry is a path and nothing more: no reference, and no part of one, is
-# written down here. The cost is that an entry exempts a whole file's
-# references rather than one of them; what limits it is that an entry lapses
-# as soon as the file stops carrying any reference at all, which the
-# accompanying test asserts, and that it exempts references only - a session
-# URL or trailer is refused in these files exactly as anywhere else.
-ALLOWED_PATHS = (
-    "tests/integration/test_live_readwrite.py",
-    "tests/integration/test_live_readwrite_surfaces.py",
-    "tests/integration/cassettes/test_live_readwrite/"
-    "test_bulk_create_and_update_tasks_under_a_story.yaml",
-    "tests/integration/cassettes/test_live_readwrite/"
-    "test_request_create_update_delete_round_trip.yaml",
-    "tests/integration/cassettes/test_live_readwrite/"
-    "test_user_story_create_update_delete_round_trip.yaml",
-    "tests/integration/cassettes/test_live_readwrite_surfaces/"
-    "test_assignment_create_and_delete.yaml",
-    "tests/integration/cassettes/test_live_readwrite_surfaces/"
-    "test_attachment_upload_list_download_and_delete.yaml",
-    "tests/integration/cassettes/test_live_readwrite_surfaces/"
-    "test_comment_create_update_delete_round_trip.yaml",
-    "tests/integration/cassettes/test_live_readwrite_surfaces/test_relation_create_and_delete.yaml",
-    "tests/integration/cassettes/test_live_readwrite_surfaces/"
-    "test_role_effort_create_update_delete_round_trip.yaml",
-    "tests/integration/cassettes/test_live_readwrite_surfaces/"
-    "test_team_assignment_create_and_delete.yaml",
-)
+# Paths whose tracker references are permitted. An entry is a path and nothing
+# more: no reference, and no part of one, is written down here. The cost is
+# that an entry exempts a whole file's references rather than one of them;
+# what limits it is that an entry lapses as soon as the file stops carrying
+# any reference at all, which the accompanying test asserts, and that it
+# exempts references only - a session URL or trailer is refused in an allowed
+# file exactly as anywhere else.
+ALLOWED_PATHS: tuple[str, ...] = ()
 
 
 def _tracked_files() -> list[Path]:

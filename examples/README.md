@@ -42,13 +42,13 @@ python examples/readonly_reporting.py --limit 500
 ## Write examples (allow-listed project only)
 
 These build a `READWRITE` client and **create/update** data, so each guards the
-destination two independent ways: the target project must be named on the
-command line (`--project-id`, required, no default) **and** allow-listed in the
-`TP_WRITE_ALLOWED_PROJECT_IDS` environment variable (comma-separated), and the
-write must be confirmed with `--yes`. The double entry defends the realistic
-accident — copy the documented command, edit the id. Point it at a
-throwaway/sandbox project, **never production**; for man8's TargetProcess, the
-API-testing sandbox project id is **`49938`**.
+destination two independent ways: the target project must be named
+(`--project-id`, or the `TP_SANDBOX_PROJECT_ID` environment variable it
+defaults to) **and** allow-listed in the `TP_WRITE_ALLOWED_PROJECT_IDS`
+environment variable (comma-separated), and the write must be confirmed with
+`--yes`. The double entry defends the realistic accident — copy the documented
+exports, edit one id. Point both at a throwaway/sandbox project on your own
+instance, **never production**.
 
 | Script | What it shows |
 | --- | --- |
@@ -56,7 +56,8 @@ API-testing sandbox project id is **`49938`**.
 | `bulk_updates.py` | The list-then-`update()` pattern (idempotent) with automatic rate limiting |
 
 ```bash
-export TP_WRITE_ALLOWED_PROJECT_IDS=49938
-python examples/create_bug.py  --project-id 49938 --name "Example bug" --yes
-python examples/bulk_updates.py --project-id 49938 --limit 10 --yes
+export TP_SANDBOX_PROJECT_ID=your-sandbox-project-id
+export TP_WRITE_ALLOWED_PROJECT_IDS=your-sandbox-project-id
+python examples/create_bug.py  --name "Example bug" --yes
+python examples/bulk_updates.py --limit 10 --yes
 ```

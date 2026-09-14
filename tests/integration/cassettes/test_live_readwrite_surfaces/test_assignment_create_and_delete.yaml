@@ -1,6 +1,6 @@
 interactions:
 - request:
-    body: '{"Name":"MAN8-9036 recording assignment parent story","Description":"Synthetic
+    body: '{"Name":"Synthetic recording assignment parent story","Description":"Synthetic
       record created by an integration recording run.","Project":{"Id":49938}}'
     headers:
       accept:
