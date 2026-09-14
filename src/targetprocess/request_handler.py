@@ -2,7 +2,7 @@
 
 import asyncio
 import builtins
-from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
+from collections.abc import AsyncIterator, Awaitable, Callable, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from typing import Any, cast
@@ -29,12 +29,34 @@ _BACKOFF_BASE_SECONDS = 0.5
 _BACKOFF_FACTOR = 2
 _MAX_DELAY_SECONDS = 30.0
 
+# Every query-parameter name this handler puts on an entity-API request, in the
+# casing the API is verified to honour. TargetProcess answers a parameter it
+# does not recognise with HTTP 200 and the unfiltered, unsorted rows, so a
+# misspelt name would read as success; _check_query_parameters refuses any name
+# outside this set before a request is built. The transport's access_token is
+# merged in at send time and is not part of this set.
+QUERY_PARAMETERS: frozenset[str] = frozenset(
+    {
+        "format",
+        "take",
+        "skip",
+        "where",
+        "orderBy",
+        "orderByDesc",
+        "include",
+        "exclude",
+        "resultInclude",
+        "append",
+        "innertake",
+    }
+)
+
 
 class RequestHandler:
     """Handle API requests with rate limiting, retry/backoff, and response parsing.
 
     Orchestrates:
-    - URL construction with query parameters
+    - URL construction with query parameters, against a declared allowlist
     - Write-permission enforcement (defense in depth alongside the
       resource layer)
     - Rate limiting (100 requests/minute), applied once per attempt
@@ -227,6 +249,30 @@ class RequestHandler:
             params["innertake"] = str(innertake)
         return params
 
+    @staticmethod
+    def _check_query_parameters(params: Mapping[str, str]) -> None:
+        """Refuse a built query-parameter set naming anything outside ``QUERY_PARAMETERS``.
+
+        Every parameter reaches the wire through a typed keyword, so this
+        guards the builders themselves: an undeclared or mis-cased name
+        emitted by ``_shaping_params`` or ``_list_params`` raises here instead
+        of being sent for TargetProcess to ignore.
+
+        Args:
+            params: The query parameters about to be sent
+
+        Raises:
+            ValueError: ``params`` names a parameter outside
+                ``QUERY_PARAMETERS``.
+        """
+        unknown = sorted(set(params) - QUERY_PARAMETERS)
+        if unknown:
+            raise ValueError(
+                f"unknown query parameter(s) {', '.join(unknown)}: TargetProcess ignores a "
+                "parameter it does not recognise and answers with the unfiltered rows; "
+                f"the declared parameters are {', '.join(sorted(QUERY_PARAMETERS))}"
+            )
+
     async def get(
         self,
         entity_type: str,
@@ -257,7 +303,8 @@ class RequestHandler:
             Raw entity data dict
 
         Raises:
-            ValueError: ``innertake`` is negative.
+            ValueError: ``innertake`` is negative, or a built query parameter
+                is outside ``QUERY_PARAMETERS``.
 
         Example:
             >>> data = await handler.get("UserStories", 123, include=["Name", "EntityState"])
@@ -277,6 +324,7 @@ class RequestHandler:
                 innertake=innertake,
             )
         )
+        self._check_query_parameters(params)
 
         # Add query string to URL
         url = f"{url}?{urlencode(params)}"
@@ -393,9 +441,10 @@ class RequestHandler:
 
         Raises:
             ValueError: Both ``order_by`` and ``order_by_desc`` were passed,
-                ``skip`` is negative, or ``innertake`` is negative. Raised
-                when iteration begins (this is an async generator), not at
-                the call itself.
+                ``skip`` is negative, ``innertake`` is negative, or a built
+                query parameter is outside ``QUERY_PARAMETERS``. Raised when
+                iteration begins (this is an async generator), not at the
+                call itself.
 
         Example:
             >>> async for item in handler.list(
@@ -419,6 +468,7 @@ class RequestHandler:
             limit=limit,
             page_size=page_size,
         )
+        self._check_query_parameters(params)
         if limit is not None and limit <= 0:
             return
 

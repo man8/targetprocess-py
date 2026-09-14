@@ -7,17 +7,25 @@ from typing import TYPE_CHECKING, Any
 from targetprocess._entity_types import require_entity_type
 from targetprocess.models import NamedEntity
 from targetprocess.resources.base import (
+    ASSIGNABLE_IGNORED_FILTER_PATHS,
     BaseResource,
     WriteOperation,
     _require_ids,
     _require_no_ids,
     _with_canonical_id,
+    check_filter_paths,
 )
+from targetprocess.resources.bugs import BugsResource
 from targetprocess.resources.custom_rules import CustomRulesResource
 from targetprocess.resources.entity_types import EntityTypesResource
+from targetprocess.resources.epics import EpicsResource
+from targetprocess.resources.features import FeaturesResource
 from targetprocess.resources.processes import ProcessesResource
 from targetprocess.resources.relation_types import RelationTypesResource
+from targetprocess.resources.requests import RequestsResource
+from targetprocess.resources.tasks import TasksResource
 from targetprocess.resources.terms import TermsResource
+from targetprocess.resources.user_stories import UserStoriesResource
 from targetprocess.response_parser import ResponseParser
 
 if TYPE_CHECKING:
@@ -78,6 +86,35 @@ def _check_include(entity_type: str, include: list[str] | None) -> None:
     guarded = _UNHYDRATABLE_RESOURCES.get(entity_type.casefold())
     if guarded is not None:
         guarded.check_include(include)
+
+
+# The where= counterpart: the ignored-filter declaration of every assignable
+# collection (``BaseResource.ignored_filter_paths``), keyed by each spelling the
+# caller may use, so the generic path refuses the same filters before any
+# request rather than returning the unfiltered rows TP answers with. Keyed
+# spelling -> reasons rather than spelling -> class, because the polymorphic
+# ``Assignables`` collection has no typed manager and is the same server
+# behaviour on a superset of the same rows. The walk test in
+# ``tests/test_resources/test_ignored_filter_paths.py`` covers this map.
+_IGNORED_FILTER_PATHS: dict[str, dict[str, str]] = {
+    spelling: resource.ignored_filter_paths
+    for resource in (
+        UserStoriesResource,
+        BugsResource,
+        TasksResource,
+        FeaturesResource,
+        EpicsResource,
+        RequestsResource,
+    )
+    for spelling in _spellings(resource.entity_type)
+} | dict.fromkeys(_spellings("Assignable"), ASSIGNABLE_IGNORED_FILTER_PATHS)
+
+
+def _check_where(entity_type: str, where: str | None) -> None:
+    """Apply the ignored-filter refusal to a generic list, reporting the caller's spelling."""
+    check_filter_paths(
+        where, _IGNORED_FILTER_PATHS.get(entity_type.casefold(), {}), resource=entity_type
+    )
 
 
 class EntitiesResource:
@@ -250,9 +287,11 @@ class EntitiesResource:
 
         Raises:
             ValueError: Both ``order_by`` and ``order_by_desc`` were passed,
-                ``skip`` is negative, ``innertake`` is negative, or
+                ``skip`` is negative, ``innertake`` is negative,
                 ``include`` names a field the typed resource for this
-                collection refuses to hydrate (raised when iteration begins)
+                collection refuses to hydrate, or ``where`` names a path TP
+                silently ignores on an assignable collection (raised when
+                iteration begins)
             AuthenticationError: Invalid credentials
             ForbiddenError: Insufficient permissions
             NetworkError: Transport-level failure
@@ -260,6 +299,7 @@ class EntitiesResource:
             APIError: API errors
         """
         _check_include(entity_type, include)
+        _check_where(entity_type, where)
         async for item_data in self._request_handler.list(
             entity_type,
             where=where,

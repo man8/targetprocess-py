@@ -1,13 +1,17 @@
 """UserStory resource manager."""
 
 from targetprocess.models import UserStory
-from targetprocess.resources.base import BaseResource
+from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
 
 
 class UserStoriesResource(BaseResource[UserStory]):
     """Resource manager for UserStory entities.
 
     Provides type-safe CRUD operations for user stories.
+
+    A ``where=`` on the ``Assignments`` collection is refused before any
+    request, since TargetProcess ignores it - query ``client.assignments``
+    instead.
 
     Example:
         client = TargetProcessClient(...)
@@ -18,3 +22,4 @@ class UserStoriesResource(BaseResource[UserStory]):
 
     entity_type = "UserStory"
     model_class = UserStory
+    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS

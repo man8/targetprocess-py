@@ -1,13 +1,17 @@
 """Bug resource manager."""
 
 from targetprocess.models import Bug
-from targetprocess.resources.base import BaseResource
+from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
 
 
 class BugsResource(BaseResource[Bug]):
     """Resource manager for Bug entities.
 
     Provides type-safe CRUD operations for bugs.
+
+    A ``where=`` on the ``Assignments`` collection is refused before any
+    request, since TargetProcess ignores it - query ``client.assignments``
+    instead.
 
     Example:
         client = TargetProcessClient(...)
@@ -18,3 +22,4 @@ class BugsResource(BaseResource[Bug]):
 
     entity_type = "Bug"
     model_class = Bug
+    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS
