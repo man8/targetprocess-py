@@ -320,6 +320,7 @@ in [`.env.example`](.env.example) (the committed template) and the
 | --- | --- |
 | `TP_DOMAIN` | TargetProcess instance domain |
 | `TP_TOKEN` | API token (sent as the `access_token` query parameter) |
+| `TP_SANDBOX_PROJECT_ID` | Default target project for the write examples |
 | `TP_WRITE_ALLOWED_PROJECT_IDS` | Project id allow-list for the write examples |
 
 For local development, copy the template to `.env` (which is gitignored) and

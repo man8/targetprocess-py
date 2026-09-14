@@ -50,11 +50,10 @@ pytestmark = [pytest.mark.vcr, pytest.mark.integration]
 _SANDBOX_PROJECT_ID = 49938
 
 # Prefix on every entity name these tests create, so anything a failed
-# recording strands on the live instance is findable in one search. It is a
-# ticket reference and nothing else - a later re-recording should carry its
-# own, for the same reason. Scrubbed out of the response side of a cassette,
-# recorded verbatim on the request side.
-_NAME_PREFIX = "MAN8-9036 recording"
+# recording strands on the live instance is findable in one search. It is
+# invented text and nothing else. Scrubbed out of the response side of a
+# cassette, recorded verbatim on the request side.
+_NAME_PREFIX = "Synthetic recording"
 
 _CREATED_DESCRIPTION = "Synthetic record created by an integration recording run."
 _UPDATED_DESCRIPTION = "Synthetic record updated by an integration recording run."
