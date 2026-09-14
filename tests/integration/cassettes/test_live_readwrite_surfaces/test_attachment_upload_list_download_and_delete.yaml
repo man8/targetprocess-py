@@ -1,6 +1,6 @@
 interactions:
 - request:
-    body: '{"Name":"MAN8-9036 recording attachment parent story","Description":"Synthetic
+    body: '{"Name":"Synthetic recording attachment parent story","Description":"Synthetic
       record created by an integration recording run.","Project":{"Id":49938}}'
     headers:
       accept:
@@ -103,7 +103,7 @@ interactions:
       message: Created
 - request:
     body: "--67e6dd663d79abb5e4550e93dbc44b10\r\nContent-Disposition: form-data; name=\"generalid\"\r\n\r\n75540\r\n--67e6dd663d79abb5e4550e93dbc44b10\r\nContent-Disposition:
-      form-data; name=\"file\"; filename=\"man8-9036-recording.txt\"\r\nContent-Type:
+      form-data; name=\"file\"; filename=\"synthetic-recording.txt\"\r\nContent-Type:
       text/plain\r\n\r\nSynthetic attachment content for an integration recording
       run.\n\r\n--67e6dd663d79abb5e4550e93dbc44b10--\r\n"
     headers:
@@ -387,7 +387,7 @@ interactions:
       connection:
       - keep-alive
       content-disposition:
-      - attachment; filename="man8-9036-recording.txt"; filename*=UTF-8''man8-9036-recording.txt
+      - attachment; filename="synthetic-recording.txt"; filename*=UTF-8''synthetic-recording.txt
       content-length:
       - '63'
       content-range:

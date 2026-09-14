@@ -1,6 +1,6 @@
 interactions:
 - request:
-    body: '{"Name":"MAN8-9036 recording user story","Description":"Synthetic record
+    body: '{"Name":"Synthetic recording user story","Description":"Synthetic record
       created by an integration recording run.","Project":{"Id":49938}}'
     headers:
       accept:
@@ -102,7 +102,7 @@ interactions:
       code: 201
       message: Created
 - request:
-    body: '{"Name":"MAN8-9036 recording user story (updated)","Description":"Synthetic
+    body: '{"Name":"Synthetic recording user story (updated)","Description":"Synthetic
       record updated by an integration recording run.","Effort":3.0}'
     headers:
       accept:
