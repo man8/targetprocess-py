@@ -1,13 +1,17 @@
 """Feature resource manager."""
 
 from targetprocess.models import Feature
-from targetprocess.resources.base import BaseResource
+from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
 
 
 class FeaturesResource(BaseResource[Feature]):
     """Resource manager for Feature entities.
 
     Provides type-safe CRUD operations for features.
+
+    A ``where=`` on the ``Assignments`` collection is refused before any
+    request, since TargetProcess ignores it - query ``client.assignments``
+    instead.
 
     Example:
         client = TargetProcessClient(...)
@@ -18,3 +22,4 @@ class FeaturesResource(BaseResource[Feature]):
 
     entity_type = "Feature"
     model_class = Feature
+    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS

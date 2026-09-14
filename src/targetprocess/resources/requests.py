@@ -1,13 +1,17 @@
 """Request resource manager."""
 
 from targetprocess.models import Request
-from targetprocess.resources.base import BaseResource
+from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
 
 
 class RequestsResource(BaseResource[Request]):
     """Resource manager for Request entities.
 
     Provides type-safe CRUD operations for requests.
+
+    A ``where=`` on the ``Assignments`` collection is refused before any
+    request, since TargetProcess ignores it - query ``client.assignments``
+    instead.
 
     Example:
         client = TargetProcessClient(...)
@@ -18,3 +22,4 @@ class RequestsResource(BaseResource[Request]):
 
     entity_type = "Request"
     model_class = Request
+    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS
