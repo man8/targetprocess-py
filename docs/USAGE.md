@@ -15,6 +15,8 @@ hard-coded.
 - [Filtering and querying](#filtering-and-querying)
 - [Pagination](#pagination)
 - [Logging time](#logging-time)
+- [Relations](#relations)
+- [Rich-text descriptions and comments](#rich-text-descriptions-and-comments)
 - [Attachments](#attachments)
 - [Error handling](#error-handling)
 - [Async vs sync usage](#async-vs-sync-usage)
@@ -49,8 +51,11 @@ asyncio.run(main())
 
 TargetProcess accepts a token **only** as an `access_token` query parameter —
 there is no header-based token scheme — so the token travels in the request
-URL. The alternative is HTTP Basic auth using real user credentials. Provide
-exactly one; supplying neither or both raises `ValueError` at construction.
+URL. The alternative is HTTP Basic auth using real user credentials. A token
+does not work as a Basic credential: TargetProcess answers
+`Authorization: Basic <token>` with HTTP 401, so `basic_auth` takes a username
+and password and a token always goes in `token=`. Provide exactly one;
+supplying neither or both raises `ValueError` at construction.
 
 ```python
 # Token (recommended): sent as ?access_token=...
@@ -177,6 +182,20 @@ await client.entities.update("Objective", objective.id, Name="Q3 goal (revised)"
 await client.entities.delete("Objective", objective.id)
 ```
 
+### Finding the collections an instance exposes
+
+`client.entity_types.list()` yields the instance's entity-type catalogue, which
+is narrower than the set of collections the API routes. Lookup, join and
+polymorphic-base collections such as `Roles`, `Relations`, `Assignments`,
+`Assignables` and `Generals` are observed to answer on their own routes without
+appearing in `/api/v1/EntityTypes`, so find out whether a collection exists by
+requesting it:
+
+```python
+async for assignable in client.entities.list("Assignables", limit=1):
+    print(assignable.resource_type, assignable.id)
+```
+
 ## Filtering and querying
 
 `where=` is a TargetProcess filter expression, passed through verbatim with no
@@ -198,6 +217,12 @@ async for story in client.user_stories.list(
 ):
     print(story.id, story.name, story.effort)
 ```
+
+Set membership takes parentheses, not brackets: `where="(Id in (123,456))"`.
+The bracketed form, `(Id in [123,456])`, is refused with HTTP 400
+(`RequestValidationError`) and a message that names neither the field nor the
+offending token - although `include=` renders its list in brackets on the same
+request.
 
 Field access on returned models is snake_case (`bug.entity_state`,
 `story.effort`). The six base `Entity`/`NamedEntity` fields (`Id`,
@@ -250,6 +275,14 @@ async for bug in client.bugs.list(
 ):
     print(bug.id, bug.name)
 ```
+
+The library sends only v1 query parameters. Vendor examples written for the
+v2 API narrow a payload with `select={…}`; v1 answers that with HTTP 200 and
+returns the payload unchanged, so narrow a v1 response with `result_include`.
+The 200 is TargetProcess's general answer to a query parameter it does not act
+on: when trying a parameter against a raw URL, judge it by the change it makes
+to the response, never by the status - confirm a sort, for example, by
+comparing its ascending and descending results.
 
 ### Resolving a priority
 
@@ -413,6 +446,133 @@ entries = await client.times.find_for_day(
 
 If the day already holds more than one entry for that assignable and user,
 `upsert` raises `AmbiguousMatchError` rather than guessing which to update.
+
+### Time against a custom activity
+
+`upsert` and `find_for_day` key on an assignable, so an entry logged against a
+custom activity goes through the ordinary `create` and `list`. Send
+`CustomActivity` and leave `Assignable` out of the payload altogether - omit
+the key rather than sending it as `None`:
+
+```python
+from targetprocess.models import format_tp_date
+
+entry = await client.times.create(
+    CustomActivity={"Id": 42},
+    User={"Id": 7},
+    Date=format_tp_date(datetime(2026, 8, 9, 9, 0, tzinfo=sast)),
+    Spent=0.5,
+    Description="Weekly planning",
+)
+```
+
+The entry reads back with a null `assignable` and its `custom_activity`
+back-reference set (see [SPEC.md](../SPEC.md#models)). To read a day's entries
+against an activity, filter on the window `find_for_day` uses, a day wider on
+each side, then keep the exact day by projecting each `date` into the zone the
+entries were written in:
+
+```python
+day = date(2026, 8, 9)
+where = (
+    "(CustomActivity.Id eq 42) and (User.Id eq 7)"
+    f" and (Date gte '{day - timedelta(days=1)}')"
+    f" and (Date lt '{day + timedelta(days=2)}')"
+)
+entries = [
+    entry
+    async for entry in client.times.list(where=where)
+    if entry.date is not None and entry.date.astimezone(sast).date() == day
+]
+```
+
+## Relations
+
+`client.relations` reads and writes `Relation` records directly: a
+`RelationType` linking a `Master` to a `Slave`, where the Master is the source
+of the dependency (see [SPEC.md](../SPEC.md#resources)). Relation-type Ids are
+instance-specific, so resolve a type by name as under
+[Resolving other lookups by name](#resolving-other-lookups-by-name).
+
+Among relation types, `Blocker` and `Dependency` mean the Slave waits on the
+Master, while `Relation`, `Link` and `Duplicate` associate two items without
+either waiting. A check for whether anything still blocks an item counts only
+the first two.
+
+### Reading an item's inbound relations
+
+An item's inbound relations - those naming it as the Slave - can be read in
+the same request as the item, through two collections hydrated by `include=`:
+
+```python
+story = await client.user_stories.get(
+    123,
+    include=[
+        "MasterRelations[Master,RelationType]",
+        "InboundAssignables[Id,Name,EntityState[Name]]",
+    ],
+)
+extra = story.model_extra or {}
+state_by_id = {
+    item["Id"]: item["EntityState"]["Name"]
+    for item in extra["InboundAssignables"]["Items"]
+}
+for relation in extra["MasterRelations"]["Items"]:
+    related_id = relation["Master"]["Id"]
+    kind = relation["RelationType"]["Name"]
+    print(kind, related_id, state_by_id.get(related_id))
+```
+
+Both arrive as `Items` envelopes in `model_extra`, like every collection
+property. In `MasterRelations` each relation's `Master` is the related item and
+its `Slave` the item that was read, with `RelationType` on the relation itself;
+these are the wire names of the pair the `Relation` model also exposes as
+`inbound` and `outbound`, which SPEC.md recommends for new code. `EntityState`
+is observed not to expand under `Master`, a polymorphic reference, so the
+related items' states come from `InboundAssignables` (the same items, where
+they are assignables, with `EntityState` expanded), joined on `Id`. Each
+hydrated collection is bounded separately by the server's inner-collection
+size, so pass `innertake=` when an item can carry many relations; a `None`
+from `state_by_id.get` means the related item was absent from
+`InboundAssignables`.
+
+Read the item through its typed collection rather than through `General`. The
+`General` collection omits the fields only an `Assignable` carries, so
+`client.entities.get("General", 123, include=["EntityState"])` is refused with
+HTTP 400 (`RequestValidationError`) where
+`client.user_stories.get(123, include=["EntityState"])` succeeds.
+
+## Rich-text descriptions and comments
+
+The library passes a `Description` - a work item's, or a comment's body - to
+TargetProcess exactly as given, adding nothing. How TargetProcess stores it
+depends on a marker, `<!--markdown-->`, at the very start of the text:
+
+- **Marker at position 0**: the body is stored verbatim as Markdown, tables and
+  fenced code blocks included. Read back through this library it arrives
+  stripped of leading and trailing whitespace, like every string field, so a
+  sync compares against the stripped text.
+- **No marker**: the body goes through the HTML pipeline at storage time. Tags
+  are preserved and text is entity-encoded, so `**bold**` is stored as
+  `&#42;&#42;bold&#42;&#42;`.
+- **Marker after leading whitespace**: not honoured. The marker is stripped
+  and the body entity-encoded as HTML.
+
+These rules are observed on comment bodies on user stories and requests, and
+on a user story's `Description`, where a Markdown body carrying a table and a
+fenced code block is stored unchanged. To write Markdown, prefix the marker
+yourself:
+
+```python
+MARKDOWN = "<!--markdown-->"
+
+await client.user_stories.update(
+    123, Description=MARKDOWN + "## Scope\n\nThe export runs **nightly**."
+)
+await client.comments.create(
+    General={"Id": 123}, Description=MARKDOWN + "Waiting on `review`."
+)
+```
 
 ## Attachments
 
