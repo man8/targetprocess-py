@@ -82,7 +82,7 @@ repos:
   # line above sets up; CI runs the same two over a pull request's title,
   # since squash merge makes the title the commit on main.
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.3.0
+    rev: v4.4.0
     hooks:
       - id: conventional-pre-commit
         name: commit message follows Conventional Commits
