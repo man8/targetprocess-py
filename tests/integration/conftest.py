@@ -338,24 +338,34 @@ def _scrub_custom_field_names(entries: list[Any]) -> bool:
     return changed
 
 
+def _scrub_entity_custom_field_names(entity: object) -> bool:
+    """Scrub the names in an entity object's top-level ``CustomFields`` list; report a change."""
+    if not isinstance(entity, dict):
+        return False
+    changed = False
+    for key, value in entity.items():
+        if key.lower() == _REQUEST_CUSTOM_FIELDS_KEY and isinstance(value, list):
+            changed = _scrub_custom_field_names(value) or changed
+    return changed
+
+
 def _scrub_request_body_json(body: bytes) -> bytes:
     """Scrub custom-field names out of a JSON request body, leaving everything else as sent.
 
-    Only a body that parses as a JSON object carrying a ``CustomFields`` list
-    (any casing) at its top level is touched, and only when a name actually
+    A write body is one entity object, or - on a bulk write - a JSON array of
+    them. Only an entity object carrying a ``CustomFields`` list (any casing)
+    at its top level is touched, and the body only when a name actually
     changes; it is then re-serialised the way httpx sends JSON. Any other body
-    - not JSON, not an object, no such list - is returned unchanged.
+    - not JSON, no such list - is returned unchanged.
     """
     try:
         parsed = json.loads(body)
     except ValueError:
         return body
-    if not isinstance(parsed, dict):
-        return body
+    entities = parsed if isinstance(parsed, list) else [parsed]
     changed = False
-    for key, value in parsed.items():
-        if key.lower() == _REQUEST_CUSTOM_FIELDS_KEY and isinstance(value, list):
-            changed = _scrub_custom_field_names(value) or changed
+    for entity in entities:
+        changed = _scrub_entity_custom_field_names(entity) or changed
     if not changed:
         return body
     return json.dumps(parsed, ensure_ascii=False, separators=(",", ":")).encode("utf-8")

@@ -197,12 +197,42 @@ def test_request_scrubs_custom_field_names_whatever_their_casing() -> None:
 
 
 @pytest.mark.usefixtures("recording")
+def test_request_scrubs_custom_field_names_in_every_item_of_a_bulk_body() -> None:
+    """A bulk write is a JSON array of entity objects; each item's names are scrubbed."""
+    body = json.dumps(
+        [
+            {"Id": 5, "CustomFields": [{"Name": REAL_FIELD_NAME, "Value": "Invented value"}]},
+            {"Id": 6, "Effort": 3.0},
+            {"Id": 7, "customfields": [{"name": "Another tenant field", "value": None}]},
+        ],
+        separators=(",", ":"),
+    ).encode()
+    request = Request(
+        "POST",
+        f"https://{REAL_DOMAIN}/api/v1/UserStory/bulk",
+        body,
+        {"host": REAL_DOMAIN, "content-length": str(len(body))},
+    )
+
+    scrubbed = sanitiser._scrub_request(request)
+
+    assert json.loads(scrubbed.body) == [
+        {"Id": 5, "CustomFields": [{"Name": "Sanitised Name", "Value": "Invented value"}]},
+        {"Id": 6, "Effort": 3.0},
+        {"Id": 7, "customfields": [{"name": "Sanitised name", "value": None}]},
+    ]
+    assert REAL_FIELD_NAME.encode() not in scrubbed.body
+    assert scrubbed.headers["content-length"] == str(len(scrubbed.body))
+
+
+@pytest.mark.usefixtures("recording")
 def test_request_body_without_custom_fields_is_left_alone() -> None:
     """Any other body - and an already-scrubbed one - comes back byte-for-byte."""
     bodies = [
         b'{"Name":"Invented story name","Effort":3.0}',
-        b'[{"Id":5,"CustomFields":[{"Name":"Nested in a bulk item","Value":1}]}]',
+        b'[{"Id":5,"Effort":3.0},"not an object"]',
         b'{"CustomFields":[{"Name":"Sanitised Name","Value":null}]}',
+        b'[{"Id":5,"CustomFields":[{"Name":"Sanitised Name","Value":1}]}]',
         b'{"CustomFields":"not a list"}',
         b'--boundary\r\nContent-Disposition: form-data; name="file"\r\n\r\nabc',
         '{"Name": "caf\u00e9"}'.encode("latin-1"),
