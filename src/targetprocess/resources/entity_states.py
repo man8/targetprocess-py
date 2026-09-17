@@ -56,8 +56,9 @@ class EntityStatesResource(BaseResource[EntityState]):
             The workflow's states, in API order.
 
         Raises:
-            ValueError: ``workflow_id`` is not an integer (it is interpolated
-                into the ``where=`` filter, so nothing else is sent).
+            ValueError: ``workflow_id`` is not exactly an ``int`` (a ``bool``,
+                float, string or ``None``); nothing is sent, since the Id is
+                interpolated into the ``where=`` filter.
             RequestValidationError: TP rejected the resulting filter.
             AuthenticationError: Invalid credentials
             ForbiddenError: Insufficient permissions
@@ -65,7 +66,9 @@ class EntityStatesResource(BaseResource[EntityState]):
             ParseError: Response failed model validation
             APIError: Other API errors
         """
-        where = f"Workflow.Id eq {int(workflow_id)}"
+        if type(workflow_id) is not int:
+            raise ValueError(f"workflow_id must be an int, got {workflow_id!r}")
+        where = f"Workflow.Id eq {workflow_id}"
         return [state async for state in self.list(where=where, include=_STATE_INCLUDE)]
 
     async def resolve(self, name: str, *, workflow_id: int) -> EntityState:
@@ -99,7 +102,7 @@ class EntityStatesResource(BaseResource[EntityState]):
             APIError: Other API errors
         """
         candidates = await self.for_workflow(workflow_id)
-        return _resolve_by_name(candidates, name, what=f"workflow {int(workflow_id)} state")
+        return _resolve_by_name(candidates, name, what=f"workflow {workflow_id} state")
 
     async def final_states(self, workflow_id: int) -> list[EntityState]:
         """Return the final states of one workflow, in API order.

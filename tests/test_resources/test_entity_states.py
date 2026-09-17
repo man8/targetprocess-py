@@ -123,11 +123,12 @@ async def test_for_workflow_filters_on_the_workflow_and_asks_for_the_state_field
     assert all(s.workflow is not None and s.workflow.id == 7 for s in states)
 
 
-async def test_for_workflow_refuses_a_workflow_id_that_is_not_an_integer():
+@pytest.mark.parametrize("workflow_id", ["7 or 1 eq 1", True, 7.9, "7", None])
+async def test_for_workflow_refuses_a_workflow_id_that_is_not_an_integer(workflow_id: Any):
     resource, seen = _resource(WORKFLOW_STATES)
 
-    with pytest.raises(ValueError):
-        await resource.for_workflow("7 or 1 eq 1")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="workflow_id"):
+        await resource.for_workflow(workflow_id)
 
     assert seen == {}
 

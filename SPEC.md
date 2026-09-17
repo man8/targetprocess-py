@@ -771,7 +771,9 @@ Levels whose workflow Ids are equal are collapsed: one write, and `team_to`
 absent or naming the same state. A distinct team level without `team_to`
 raises `SplitTransitionError` naming both workflows, before any write; more
 than one team assignment raises `AmbiguousMatchError`. Writes go item then
-team, unlocked; `verify` re-reads each level, a collapsed team level included.
+team, unlocked; `verify` re-reads each level after its own write (a collapsed
+team level after the item's), so an item write that did not apply raises
+`VerificationError` before the team level is written.
 
 ### Retry policy
 

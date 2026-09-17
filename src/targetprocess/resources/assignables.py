@@ -152,15 +152,19 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
 
         A single-level advance is refused rather than sent: with a distinct
         team level and no ``team_to``, the error names both workflows before
-        any write. Nothing locks the two writes together, so a failure between
-        them leaves the item moved and its team level not.
+        any write.
 
-        ``verify=True`` re-reads each level after the writes - the item, and
-        the team assignment whether its state was written or, collapsed, moved
-        by the item's write - and raises when one does not show its target, so
-        a transition TP answered with a success status and did not apply is
-        not silent; the levels returned are those re-reads. With
-        ``verify=False`` the levels are read again once the writes are sent.
+        ``verify=True`` re-reads each level as it is written, in order: the
+        item after its write, then the team assignment after its own write
+        or, collapsed, after the item's write moved it. A level not showing
+        its target raises ``VerificationError``, so a transition TP answered
+        with a success status and did not apply is not silent, and an item
+        write that did not apply raises before the team level is written,
+        leaving both levels where they were. Nothing locks the two writes
+        together, so a failure after the item's write - the team write, or a
+        re-read - leaves the item moved and its team level not. The levels
+        returned are those re-reads. With ``verify=False`` both writes are
+        sent and the levels are read again afterwards.
 
         Args:
             id: The work item's Id
@@ -168,11 +172,11 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
                 ``EntityState`` read with its ``Workflow``
             team_to: The team-level target, in the same forms; required when
                 the team level is in a workflow of its own
-            verify: Re-read each level after the writes and raise when one
+            verify: Re-read each level after its own write and raise when it
                 does not show its target (default True)
 
         Returns:
-            The levels as read back after the writes.
+            The levels as read back once written.
 
         Raises:
             SplitTransitionError: The team level is distinct and ``team_to``
@@ -188,7 +192,8 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
             AmbiguousMatchError: A target name matched several states, or the
                 item carries more than one team assignment.
             VerificationError: ``verify`` is True and a level did not show its
-                target after the writes.
+                target after its write; for the item, before the team level is
+                written.
             ReadOnlyViolation: Client is in readonly mode (after the reads,
                 before any write).
             ParseError: A record came back without its ``EntityState`` or

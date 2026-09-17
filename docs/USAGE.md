@@ -643,11 +643,14 @@ share one workflow `team_to` may be left out, and if given must name the same
 state as `to`. An item with more than one team assignment raises
 `AmbiguousMatchError`; move each through `client.team_assignments.update`.
 
-`verify` defaults to `True`: after the writes the item and its team assignment
-are each re-read, a level not showing its target raises `VerificationError`,
-and the levels returned are those re-reads. The item's write goes first and the
-two are not locked together, so a failure between them leaves the item moved
-and its team level not.
+`verify` defaults to `True`: each level is re-read as it is written - the item
+after its write, then the team assignment after its own write (or, collapsed,
+after the item's write moved it) - and a level not showing its target raises
+`VerificationError`. An item write that did not apply therefore raises before
+the team level is written, leaving both levels where they were, and the levels
+returned are those re-reads. The two writes are not locked together, so a
+failure after the item's write - the team write, or a re-read - leaves the item
+moved and its team level not.
 
 ## Relations
 

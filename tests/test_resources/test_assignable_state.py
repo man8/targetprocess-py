@@ -4,8 +4,8 @@ Each scenario runs a real client over an ``httpx.MockTransport`` answering from 
 small in-memory instance: one story, its team assignments, and two workflows -
 the project workflow 5 (states 51, 52, 53) and a team workflow 9 (61, 62, 63).
 Writes change the instance, so a read after a write shows what the write did,
-and a team assignment can be told to ignore its writes to stand in for a
-transition TargetProcess accepted and did not apply.
+and the story or a team assignment can be told to ignore its writes to stand in
+for a transition TargetProcess accepted and did not apply.
 """
 
 import json
@@ -81,8 +81,9 @@ class _Instance:
     ``team_states`` holds one state Id per team assignment (Ids 700, 701, ...).
     With ``mirrors_item`` the first assignment has no state of its own and
     reads back the item's - the collapsed case, where both levels are one
-    state object. With ``team_ignores_writes`` a team-assignment write echoes
-    the requested state and leaves the stored one unchanged.
+    state object. With ``item_ignores_writes`` a story write, and with
+    ``team_ignores_writes`` a team-assignment write, echoes the requested state
+    and leaves the stored one unchanged.
     """
 
     def __init__(
@@ -91,11 +92,13 @@ class _Instance:
         item_state: int = 51,
         team_states: tuple[int, ...] = (61,),
         mirrors_item: bool = False,
+        item_ignores_writes: bool = False,
         team_ignores_writes: bool = False,
     ) -> None:
         self.item_state = item_state
         self.team_states = {700 + n: state for n, state in enumerate(team_states)}
         self.mirrors_item = mirrors_item
+        self.item_ignores_writes = item_ignores_writes
         self.team_ignores_writes = team_ignores_writes
         self.log: list[httpx.Request] = []
 
@@ -132,13 +135,12 @@ class _Instance:
     def _answer(self, request: httpx.Request) -> dict[str, Any] | None:
         path, where = request.url.path, request.url.params.get("where")
         if path == _STORY:
+            state = self.item_state
             if request.method == "POST":
-                self.item_state = json.loads(request.content)["EntityState"]["Id"]
-            return {
-                "ResourceType": "UserStory",
-                "Id": 123,
-                "EntityState": _reference(self.item_state),
-            }
+                state = json.loads(request.content)["EntityState"]["Id"]
+                if not self.item_ignores_writes:
+                    self.item_state = state
+            return {"ResourceType": "UserStory", "Id": 123, "EntityState": _reference(state)}
         if path == "/api/v1/EntityState":
             workflow_id = int(str(where).removeprefix("Workflow.Id eq "))
             ids = [s for s, (_, workflow, _) in _STATES.items() if workflow == workflow_id]
@@ -321,6 +323,20 @@ async def test_advance_raises_when_the_team_level_did_not_move() -> None:
     assert caught.value.entity_type == "TeamAssignment"
     assert caught.value.entity_id == 700
     assert instance.item_state == 53  # the item moved; the error reports the level that did not
+
+
+async def test_advance_raises_before_the_team_write_when_the_item_did_not_move() -> None:
+    instance = _Instance(item_ignores_writes=True)
+
+    with pytest.raises(VerificationError) as caught:
+        await instance.client().user_stories.advance_state(123, to=53, team_to=63)
+
+    assert caught.value.entity_type == "UserStory"
+    assert caught.value.entity_id == 123
+    # The item's re-read raised before the team write was sent, so neither level moved.
+    assert instance.posts() == [(_STORY, {"EntityState": {"Id": 53}})]
+    assert instance.item_state == 51
+    assert instance.team_states == {700: 61}
 
 
 async def test_advance_unverified_reads_both_levels_back() -> None:
