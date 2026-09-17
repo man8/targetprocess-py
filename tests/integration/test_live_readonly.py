@@ -121,8 +121,8 @@ async def test_severities_rank_the_bug_set(live_credentials) -> None:
 
 
 @pytest.mark.asyncio
-async def test_whoami_resolves_the_acting_user(live_credentials) -> None:
-    """Context supplies the acting user's Id; the User record hydrates it.
+async def test_logged_user_resolves_the_acting_user(live_credentials) -> None:
+    """The LoggedUser route returns the acting user's User record, cached per client.
 
     Recorded against a live instance through the record-time hooks, so every
     identity field is a placeholder; the Id is structural and asserted only
@@ -130,8 +130,8 @@ async def test_whoami_resolves_the_acting_user(live_credentials) -> None:
     """
     domain, token = live_credentials
     async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READONLY) as client:
-        user = await client.whoami()
-        again = await client.current_user()
+        user = await client.users.logged_user()
+        again = await client.users.logged_user()
     assert user.id > 0 and user.resource_type == "User"
-    assert user.login is not None  # hydrated: Context carries no Login
+    assert user.login is not None
     assert again is user

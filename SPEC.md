@@ -124,7 +124,12 @@ itself.
   heavy payload for an identity lookup. `Terms` and `GlobalTerms` hold the
   instance's renamed entity terms, `Term` records carrying `WordKey` and
   `Value`. Whether a non-administrator token can read Context, and whether the
-  endpoint honours `include=`, are unverified; the client requests it whole.
+  endpoint honours `include=`, are unverified; the client does not request it.
+- **LoggedUser**: `GET /api/v1/Users/LoggedUser?format=json` returns the
+  `User` entity of the request's credential. Verified against a live
+  TargetProcess instance with an administrator token (HTTP 200): the same
+  top-level fields as `GET /api/v1/User/{id}` - every `User` model field but
+  `AvatarUri`, `Login` included. Non-administrator access is unverified.
 
 ## Public API Surface
 
@@ -148,16 +153,11 @@ or supplying both, raises `ValueError` at the transport layer.
 
 ### Acting user
 
-`whoami() -> User` resolves the user the client's credential authenticates
-as: one `GET /api/v1/Context` supplies `LoggedUser.Id`, then `users.get(id)`
-hydrates it, so the result is the full `User` model - `login` included,
-which Context itself does not carry. `current_user()` is an alias. The
-result is cached on the client for its lifetime and a second call makes no
-request: the credential is constructor-only, so the answer cannot change.
-A Context body with no usable `LoggedUser.Id` raises `ParseError`; an error
-from either request propagates as it would from any read, and nothing is
-cached on failure. There is no lock - concurrent first calls may each fetch,
-and each caches the same user. Both work on a `READONLY` client.
+`users.logged_user() -> User` returns the user the credential authenticates as
+from one `GET /api/v1/Users/LoggedUser`, parsed as `users.get` parses a record
+(the same `ParseError`). It is cached on the client's one `users` resource, so
+a second call makes no request; a failure caches nothing, there is no lock,
+and it works on a `READONLY` client.
 
 ### Resources
 

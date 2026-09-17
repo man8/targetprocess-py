@@ -76,17 +76,17 @@ logging in production, and never copy or share a request URL that includes
 
 ### Resolving the acting user
 
-`whoami()` returns the full `User` model for the user the client's credential
-authenticates as, so a caller that needs its own user Id for per-user queries
-need not carry it as configuration beside the token. The result is cached for
-the client's lifetime, so a later call makes no request. It works on a
-`READONLY` client, and `current_user()` is an alias.
+`users.logged_user()` returns the full `User` model for the user the client's
+credential authenticates as, so a caller that needs its own user Id for
+per-user queries need not carry it as configuration beside the token. The
+result is cached for the client's lifetime, so a later call makes no request,
+and it works on a `READONLY` client.
 
 ```python
 async with TargetProcessClient(
     domain="example.tpondemand.com", token="…", mode=ClientMode.READONLY
 ) as client:
-    user = await client.whoami()
+    user = await client.users.logged_user()
     print(user.id, user.login)
 ```
 

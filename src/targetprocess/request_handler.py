@@ -333,20 +333,18 @@ class RequestHandler:
         response = await self._request("GET", url)
         return cast(dict[str, Any], response.json())
 
-    async def context(self) -> dict[str, Any]:
-        """Get the authenticated context (``GET /api/v1/Context``).
+    async def logged_user(self) -> dict[str, Any]:
+        """Get the user the credential authenticates as (``GET /api/v1/Users/LoggedUser``).
 
-        Context describes the credential the request is made with - the
-        acting user as ``LoggedUser``, alongside the processes, projects and
-        teams in scope - rather than a collection: it has no ``Items``
-        envelope and no per-record Id, so the entity methods, which address a
-        collection by name, cannot reach it. The path is a fixed literal and
-        never caller-supplied, so neither the entity-type check nor the
-        instance-path guard ``download_file`` applies. It sends ``format=json``
-        and nothing else - no response shaping.
+        TargetProcess answers this route with the ``User`` entity for the
+        request's own credential, so it has no Id for ``get`` to address. The
+        path is a fixed literal and never caller-supplied, so neither the
+        entity-type check nor the instance-path guard ``download_file``
+        applies. It sends ``format=json`` and nothing else - no response
+        shaping, as ``get`` sends none by default.
 
         Returns:
-            The decoded JSON object.
+            The decoded JSON object of the ``User`` entity.
 
         Raises:
             AuthenticationError: Invalid credentials (401).
@@ -361,10 +359,10 @@ class RequestHandler:
                 not occur.
 
         Example:
-            >>> data = await handler.context()
-            >>> data["LoggedUser"]["Id"]
+            >>> data = await handler.logged_user()
+            >>> data["Id"]
         """
-        url = f"{self._transport.base_url}/Context"
+        url = f"{self._transport.base_url}/Users/LoggedUser"
         params = {"format": "json"}
         self._check_query_parameters(params)
         url = f"{url}?{urlencode(params)}"

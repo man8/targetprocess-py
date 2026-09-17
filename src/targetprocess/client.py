@@ -3,10 +3,8 @@
 from typing import Any
 
 import httpx
-import pydantic
 
-from targetprocess.exceptions import ParseError, ReadOnlyViolation
-from targetprocess.models import User, UserRef
+from targetprocess.exceptions import ReadOnlyViolation
 from targetprocess.request_handler import RequestHandler
 from targetprocess.resources import (
     AssignmentsResource,
@@ -45,29 +43,6 @@ from targetprocess.resources import (
 )
 from targetprocess.transport import HTTPTransport
 from targetprocess.types import ClientMode
-
-
-def _logged_user(data: dict[str, Any]) -> UserRef:
-    """Read the acting user's reference out of a Context body.
-
-    ``UserRef`` requires only ``Id`` and ignores the fields it does not
-    declare, so ``LoggedUser`` parses as TargetProcess sends it.
-
-    Args:
-        data: The decoded ``GET /api/v1/Context`` body
-
-    Returns:
-        The ``LoggedUser`` object as a ``UserRef``.
-
-    Raises:
-        ParseError: The body has no ``LoggedUser`` object, or it carries no
-            usable ``Id``.
-    """
-    logged_user = data.get("LoggedUser") if isinstance(data, dict) else None
-    try:
-        return UserRef.model_validate(logged_user)
-    except pydantic.ValidationError as exc:
-        raise ParseError(f"failed to parse LoggedUser from the Context body: {exc}") from exc
 
 
 class TargetProcessClient:
@@ -144,9 +119,6 @@ class TargetProcessClient:
         self._request_handler = RequestHandler(
             self._transport, check_write=self._check_write_permission
         )
-
-        # The user the credential authenticates as, resolved by whoami()
-        self._acting_user: User | None = None
 
         # Freeze mode after initialization
         self._mode_frozen = True
@@ -429,56 +401,6 @@ class TargetProcessClient:
         if not hasattr(self, "_entities"):
             self._entities = EntitiesResource(self, self._request_handler)
         return self._entities
-
-    async def whoami(self) -> User:
-        """Resolve the user the client's credential authenticates as.
-
-        One ``GET /api/v1/Context`` supplies ``LoggedUser.Id``, then
-        ``users.get`` hydrates it into the full ``User`` model - Context
-        carries no ``Login``, so the second read is what supplies it. Both
-        requests are reads, so this works on a ``READONLY`` client.
-
-        The result is cached on the client for its lifetime and a second call
-        makes no request: the credential is fixed at construction, so the
-        answer cannot change. Nothing is cached when either request fails, so
-        a later call issues both again. There is no lock - concurrent first
-        calls may each make both requests, and each caches the same user.
-
-        Returns:
-            The acting user.
-
-        Raises:
-            ParseError: The Context body has no usable ``LoggedUser.Id``, or
-                the User record failed model validation.
-            NotFoundError: The User record was not found.
-            AuthenticationError: Invalid credentials.
-            ForbiddenError: Insufficient permissions.
-            RateLimitError: A 429 persisted after the retries a read receives.
-            NetworkError: Transport-level failure.
-            APIError: Other API errors.
-
-        Example:
-            user = await client.whoami()
-            print(user.id, user.login)
-        """
-        if self._acting_user is not None:
-            return self._acting_user
-        logged_user = _logged_user(await self._request_handler.context())
-        user = await self.users.get(logged_user.id)
-        self._acting_user = user
-        return user
-
-    async def current_user(self) -> User:
-        """Resolve the user the client's credential authenticates as; an alias of ``whoami``.
-
-        It shares ``whoami``'s cache, so whichever of the two is called first
-        makes the requests and the other returns the same object. It raises
-        what ``whoami`` raises.
-
-        Returns:
-            The acting user.
-        """
-        return await self.whoami()
 
     async def aclose(self) -> None:
         """Close the underlying HTTP client.
