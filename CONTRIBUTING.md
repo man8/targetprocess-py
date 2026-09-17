@@ -22,15 +22,16 @@ unacceptable behaviour to louis@man8.com.
 
 ## Development setup
 
-Requires [uv](https://docs.astral.sh/uv/). `.python-version` pins the
-development interpreter (3.13); the library itself supports 3.12 and 3.13, and
-CI runs the test suite on both.
+Requires [uv](https://docs.astral.sh/uv/). `.python-version` and
+`.tool-versions` both pin the development interpreter (3.13); the library
+itself supports 3.12 and 3.13 (`requires-python >=3.12` in `pyproject.toml`),
+and CI runs the test suite on both.
 
 ```bash
 git clone https://github.com/man8/targetprocess-py.git
 cd targetprocess-py
 uv sync --all-extras
-uv run pre-commit install   # installs both the pre-commit and pre-push hooks
+uv run pre-commit install   # installs the pre-commit, commit-msg and pre-push hooks
 ```
 
 ## Quality gates
@@ -52,16 +53,82 @@ package build run in CI.
 | Dependency vulnerabilities | `pip-audit` over the locked environment (CI) |
 | Package build | `uv build` and `twine check` (CI) |
 
-Also enforced: a 1000-line / 256 KiB ceiling per tracked file
-(`scripts/check_large_files.py`), issue references on debt markers
-(`scripts/check_todos.py`), no internal references in tracked files
-(`scripts/check_internal_refs.py`) or in commit messages
-(`scripts/check_commit_message.py`), a cyclomatic-complexity ceiling of 10 (ruff
-`C901`), and copy-paste detection above 3% (`.jscpd.json`, CI only).
+Every hook that names no stage — `ruff-check`, `ruff-format`, the three
+repository checks (file size, debt markers, internal references) and the
+upstream `pre-commit-hooks` set (large added files, YAML and TOML validity,
+merge-conflict markers, private keys, end-of-file and trailing whitespace) —
+runs at both the commit and the push stage. `mypy --strict src` is pinned to
+the push stage alone, being too slow to gate every commit and meaningful only
+over the whole package. Ruff and mypy run through `uv run`, so the hook
+versions are exactly the ones pinned in `uv.lock`, with no second pin to
+drift.
+
+Also enforced:
+
+- A 1000-line / 256 KiB ceiling per tracked file
+  (`scripts/check_large_files.py`). `uv.lock` and the integration cassettes
+  are exempt, as generated artefacts whose size is not a design decision.
+- An issue reference on every debt marker (`scripts/check_todos.py`): a
+  `TODO`, `FIXME`, `HACK` or `XXX` with no reference is debt nobody owns,
+  since it never reaches a board. Markdown is not scanned — a marker in
+  prose is documentation about markers, not debt in a code path.
+- No internal references in tracked files (`scripts/check_internal_refs.py`)
+  or in commit messages (`scripts/check_commit_message.py`).
+- A cyclomatic-complexity ceiling of 10 (ruff `C901`).
+- Copy-paste detection above 3% duplication over Python sources
+  (`.jscpd.json`). Node-only tooling, so it runs in CI rather than requiring
+  a Node toolchain on every dev machine.
+
+The internal-references check matches a generic shape — an upper-case key of
+two to six characters, a dash, and up to six digits — rather than a list of
+keys, since publishing that list would leak the very thing the check exists to
+keep out. Matching is case-sensitive: lower-cased, the same shape also matches
+a locked dependency version and a GUID fragment. `EXCLUDED_PREFIXES` excuses
+the public standards designations that share the shape. Prose is scanned
+here, unlike the debt-marker check above, because the hook runs over every
+tracked text file. `ALLOWED_PATHS` permits a file by path alone — an entry
+exempts references only, so a session URL or trailer is refused there too —
+and it lapses as soon as the file stops carrying a reference, which
+`tests/test_internal_refs.py` asserts. The commit-message hook refuses the
+same shape with the same exclusions.
 
 Coverage is branch coverage over `src/`, gated at 90%. A change that drops
 coverage below the gate is not mergeable; add tests with the change rather than
 after it.
+
+`.github/workflows/ci.yml` runs five job definitions — six job runs, since
+`test` is a two-value matrix — on every push to `main` and every pull
+request: `test` (`uv sync`, `ruff check`, `ruff format --check`,
+`mypy --strict`, `pytest` with the coverage gate, over a Python 3.12/3.13
+matrix with `UV_PYTHON` overriding the `.python-version` pin per leg);
+`quality` (`pre-commit run --all-files` at both the `pre-commit` and
+`pre-push` stages, which also proves the hook configuration itself still
+works); `duplication` (jscpd); `audit` (`pip-audit` over `uv.lock` exported
+with every extra and its hashes, failing the job on any known
+vulnerability); and `build` (`uv build`, `twine check --strict`, and an
+import of the built wheel from a clean environment).
+
+`.github/workflows/release.yml` builds the distributions on a `v*` tag,
+refuses a tag whose commit is not on `main` or whose name disagrees with the
+wheel's version, and publishes to PyPI by trusted publishing (OIDC) under the
+`pypi` GitHub environment. No token is stored; the environment's protection
+rules are the manual gate on a publish.
+
+One check runs outside CI, since it needs a live instance and a real token
+that CI has neither of: `scripts/check_model_coverage.py` diffs each model's
+declared aliases against its type's `/api/v1/{collection}/meta` and reports
+coverage per model in both directions — a field TP declares that the model
+does not, and a field the model declares that TP does not. It is GET-only;
+`--fail-under` turns it into a gate for a caller who does have both a live
+instance and a token. Three further conditions fail a run besides a coverage
+shortfall: a declared field absent from `/meta`; a dead `EXCLUDED` or
+`KNOWN_DEVIATIONS` entry — recorded to keep a decision visible, and stale as
+soon as that decision changes; and a `/meta` body reporting no properties at
+all, which is a failed measurement rather than full coverage. `--validate`
+additionally fetches real records and parses them through each model — the
+check `/meta` alone cannot make, since it says which properties exist and
+not what TP puts in them — and a model whose sample cannot be fetched is
+reported as not checked and fails the run.
 
 ## Tests
 
@@ -160,9 +227,10 @@ after it.
 
 - Ruff enforces PEP 8, pep8-naming, Google-convention docstrings on the public
   API, and the complexity ceiling. There are two documented naming exceptions:
-  the PascalCase accessors in `models.py` (a per-file ignore in
-  `pyproject.toml`) and the `ReadOnlyViolation` name (a `noqa` at its
-  declaration). Add a third only with the same kind of justification.
+  the PascalCase accessors in `_base.py` (a per-file ignore in
+  `pyproject.toml`; `models.py` is the re-export surface) and the
+  `ReadOnlyViolation` name (a `noqa` at its declaration). Add a third only
+  with the same kind of justification.
 - Prose (docs, comments, docstrings) uses British English, and identifiers
   follow suit where a spelling choice exists. Field names that mirror the
   TargetProcess wire format keep TP's spelling and casing.
