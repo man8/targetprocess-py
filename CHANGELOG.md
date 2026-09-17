@@ -58,6 +58,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Inbound`/`Outbound` names in place of the deprecated `Master`/`Slave`: the
   create, the `Outbound.Id` filter and the include.
 
+### Fixed
+
+- `ReadOnlyViolation` raised with an operation and a resource now survives a
+  pickle round trip with its message and attributes; it used to come back
+  with the generic readonly-mode message. Every library exception now pickles
+  through one mechanism on `TargetProcessError`.
+
 ## [0.1.0] - 2026-09-08
 
 The first public release.

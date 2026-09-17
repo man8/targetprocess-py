@@ -4,6 +4,16 @@ The comparison behind ``update(..., verify=True)``. Each requested field is
 matched against the raw re-read, by these rules in order:
 
 - Keys match case-insensitively, as the ``Id`` guards on the bulk path do.
+- A requested ``CustomFields`` sequence (any but a string, bytes or
+  bytearray) is routed entry by entry before any other rule applies, each
+  entry matched by name (case-insensitively). A cleared entry (``Value``
+  ``None``) matches an observed null or empty string, any other value is
+  compared by the rules below, and an entry of that name missing from the
+  re-read is a mismatch keyed ``CustomFields[<name>]``. An entry that is not
+  a mapping carrying a string ``Name`` cannot be looked up, so it is a
+  mismatch too, keyed by its zero-based position
+  (``CustomFields[#<position>]``) and observed as
+  ``VerificationError.ABSENT``.
 - A requested key the re-read does not carry at all is a mismatch, observed
   as ``VerificationError.ABSENT`` - unless the request was ``None``, which an
   absent key satisfies. A field TargetProcess never returns (``Password``)
@@ -19,14 +29,6 @@ matched against the raw re-read, by these rules in order:
   they denote, since the offset echoed can differ from the one sent.
 - Other strings compare with surrounding whitespace stripped, as the models
   store them.
-- A requested ``CustomFields`` sequence (any but a string, bytes or
-  bytearray) matches entry by entry, each by name (case-insensitively); a
-  cleared entry (``Value`` ``None``) matches an observed null or empty
-  string, and an entry of that name missing from the re-read is a mismatch
-  keyed ``CustomFields[<name>]``. An entry that is not a mapping carrying a
-  string ``Name`` cannot be looked up, so it is a mismatch too, keyed by its
-  zero-based position (``CustomFields[#<position>]``) and observed as
-  ``VerificationError.ABSENT``.
 - Anything else, other lists included, compares by equality.
 """
 

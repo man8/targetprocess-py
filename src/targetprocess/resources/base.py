@@ -340,7 +340,8 @@ class BaseResource[T: Entity]:
 
         Args:
             fields: The fields a verified write would send
-            item: The fields' zero-based position in a bulk batch, if any
+            item: The fields' zero-based position in an ``update_many``
+                batch, if any
 
         Raises:
             ValueError: A ``CustomFields`` entry is not a mapping carrying a
@@ -352,7 +353,7 @@ class BaseResource[T: Entity]:
                 continue
             for position, entry in enumerate(value):
                 if custom_field_name(entry) is None:
-                    where = "" if item is None else f"item {item} "
+                    where = "" if item is None else f"update_many item {item}: "
                     raise ValueError(
                         f"{where}{key} entry {position} ({entry!r}) is not a mapping carrying "
                         "a string Name, so a verified write cannot check it"

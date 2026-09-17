@@ -6,7 +6,28 @@ from typing import Any, ClassVar
 
 
 class TargetProcessError(Exception):
-    """Base exception for all targetprocess-py errors."""
+    """Base exception for all targetprocess-py errors.
+
+    Every library error survives a pickle round trip with its type, message,
+    ``args`` and attributes, so it can be shipped across processes.
+    """
+
+    def __reduce__(self) -> tuple[Any, ...]:
+        """Pickle without calling ``__init__``, whose parameters ``args`` need not match."""
+        return (_unpickle_error, (type(self), self.args), self.__dict__)
+
+
+def _unpickle_error(cls: type[TargetProcessError], args: tuple[Any, ...]) -> TargetProcessError:
+    """Recreate an error from its ``args`` alone, for pickle to restore its attributes onto.
+
+    By default an exception unpickles by calling its class with ``args``. That
+    fails for a constructor with required keyword-only arguments, and rebuilds
+    the wrong message for one that formats its message from its arguments.
+    Creating the instance without running ``__init__`` sidesteps both: ``args``,
+    and so the message, are set exactly as they were, and pickle then restores
+    every attribute from the instance's ``__dict__``.
+    """
+    return cls.__new__(cls, *args)
 
 
 class APIError(TargetProcessError):
@@ -148,19 +169,6 @@ class AmbiguousMatchError(TargetProcessError):
         self.count = count
 
 
-def _unpickle_error(cls: type[TargetProcessError], args: tuple[Any, ...]) -> TargetProcessError:
-    """Recreate an error from its ``args`` alone, for pickle to restore its attributes onto.
-
-    An error whose constructor takes required keyword-only arguments cannot
-    be rebuilt by calling the class with ``args``, which is how an exception
-    unpickles by default. Creating the instance without running ``__init__``
-    sidesteps that: ``args``, and so the message, are set exactly as they
-    were, and pickle then restores every attribute from the instance's
-    ``__dict__``.
-    """
-    return cls.__new__(cls, *args)
-
-
 class _Absent:
     """The observed side of a requested field the re-read did not carry."""
 
@@ -225,10 +233,6 @@ class VerificationError(TargetProcessError):
         self.mismatches = {entity: dict(fields) for entity, fields in mismatches.items()}
         self.verified_ids = list(verified_ids)
 
-    def __reduce__(self) -> tuple[Any, ...]:
-        """Pickle without calling ``__init__``, whose keyword-only arguments ``args`` lacks."""
-        return (_unpickle_error, (type(self), self.args), self.__dict__)
-
 
 class SplitTransitionError(TargetProcessError):
     """An entity-state advance that would leave a work item's two levels apart.
@@ -266,7 +270,3 @@ class SplitTransitionError(TargetProcessError):
         self.entity_id = entity_id
         self.project_workflow_id = project_workflow_id
         self.team_workflow_id = team_workflow_id
-
-    def __reduce__(self) -> tuple[Any, ...]:
-        """Pickle without calling ``__init__``, whose keyword-only arguments ``args`` lacks."""
-        return (_unpickle_error, (type(self), self.args), self.__dict__)

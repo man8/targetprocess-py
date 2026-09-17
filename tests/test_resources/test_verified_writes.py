@@ -417,7 +417,9 @@ async def test_verified_update_many_refuses_an_unhydratable_include_before_the_w
 async def test_verified_update_many_refuses_a_custom_field_entry_naming_item_and_entry() -> None:
     client, log = _client({})
 
-    with pytest.raises(ValueError, match=r"item 1 CustomFields entry 0 .*cannot check"):
+    with pytest.raises(
+        ValueError, match=r"^update_many item 1: CustomFields entry 0 .*cannot check"
+    ):
         await client.user_stories.update_many(
             [
                 {"Id": 5, "CustomFields": [{"Name": "Ticket", "Value": "v"}]},
