@@ -1,6 +1,10 @@
 """Tests for targetprocess exception classes."""
 
+import pickle
 from datetime import date
+from typing import Any
+
+import pytest
 
 from targetprocess.exceptions import (
     AmbiguousMatchError,
@@ -174,3 +178,65 @@ def test_split_transition_error_carries_both_workflows() -> None:
     assert (error.entity_id, error.project_workflow_id, error.team_workflow_id) == (123, 5, 9)
     assert "SplitTransitionError" in targetprocess.__all__
     assert targetprocess.SplitTransitionError is SplitTransitionError
+
+
+# Every protocol this interpreter can write, so an error shipped across processes
+# round-trips whichever one the sending side picks.
+_PROTOCOLS = pytest.mark.parametrize("protocol", range(pickle.HIGHEST_PROTOCOL + 1))
+
+
+def _round_trip(value: object, protocol: int) -> Any:
+    return pickle.loads(pickle.dumps(value, protocol))
+
+
+@_PROTOCOLS
+def test_absent_stays_the_one_absent_across_pickling(protocol: int) -> None:
+    assert _round_trip(VerificationError.ABSENT, protocol) is VerificationError.ABSENT
+
+
+@_PROTOCOLS
+@pytest.mark.parametrize(
+    ("entity_id", "verified_ids"), [(123, []), (None, [3])], ids=["single", "bulk"]
+)
+def test_verification_error_survives_a_pickle_round_trip(
+    protocol: int, entity_id: int | None, verified_ids: list[int]
+) -> None:
+    error = VerificationError(
+        "did not verify",
+        entity_type="Task",
+        entity_id=entity_id,
+        mismatches={4: {"Effort": (1, VerificationError.ABSENT), "Name": ("a", "b")}},
+        verified_ids=verified_ids,
+    )
+
+    loaded = _round_trip(error, protocol)
+
+    assert type(loaded) is VerificationError
+    assert str(loaded) == str(error)
+    assert loaded.args == error.args
+    assert loaded.entity_type == "Task"
+    assert loaded.entity_id == entity_id
+    assert loaded.mismatches == {4: {"Effort": (1, VerificationError.ABSENT), "Name": ("a", "b")}}
+    assert loaded.mismatches[4]["Effort"][1] is VerificationError.ABSENT
+    assert loaded.verified_ids == verified_ids
+    assert loaded.__dict__ == error.__dict__
+
+
+@_PROTOCOLS
+def test_split_transition_error_survives_a_pickle_round_trip(protocol: int) -> None:
+    from targetprocess.exceptions import SplitTransitionError
+
+    error = SplitTransitionError(
+        "UserStory 123 has a team level in workflow 9",
+        entity_id=123,
+        project_workflow_id=5,
+        team_workflow_id=9,
+    )
+
+    loaded = _round_trip(error, protocol)
+
+    assert type(loaded) is SplitTransitionError
+    assert str(loaded) == str(error)
+    assert loaded.args == error.args
+    assert (loaded.entity_id, loaded.project_workflow_id, loaded.team_workflow_id) == (123, 5, 9)
+    assert loaded.__dict__ == error.__dict__

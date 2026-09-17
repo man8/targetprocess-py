@@ -148,6 +148,19 @@ class AmbiguousMatchError(TargetProcessError):
         self.count = count
 
 
+def _unpickle_error(cls: type[TargetProcessError], args: tuple[Any, ...]) -> TargetProcessError:
+    """Recreate an error from its ``args`` alone, for pickle to restore its attributes onto.
+
+    An error whose constructor takes required keyword-only arguments cannot
+    be rebuilt by calling the class with ``args``, which is how an exception
+    unpickles by default. Creating the instance without running ``__init__``
+    sidesteps that: ``args``, and so the message, are set exactly as they
+    were, and pickle then restores every attribute from the instance's
+    ``__dict__``.
+    """
+    return cls.__new__(cls, *args)
+
+
 class _Absent:
     """The observed side of a requested field the re-read did not carry."""
 
@@ -155,14 +168,21 @@ class _Absent:
         """Render as ``<absent>``, the form a mismatch message uses."""
         return "<absent>"
 
+    def __reduce__(self) -> str:
+        """Pickle by reference, so a round trip yields ``VerificationError.ABSENT`` itself."""
+        return "VerificationError.ABSENT"
+
 
 class VerificationError(TargetProcessError):
     """An independent re-read after a write did not show the requested fields.
 
     Raised by ``update(..., verify=True)``, ``update_many(..., verify=True)``
     and ``set_custom_field`` when the entity read back after the write does
-    not carry what the write asked for. The write itself was sent and answered with a success status;
-    this error is the evidence that the status was not proof the change landed.
+    not carry what the write asked for. The write itself was sent and
+    answered with a success status; this error is the evidence that the
+    status was not proof the change landed. It survives a pickle round trip
+    with its message, ``args`` and attributes, and :attr:`ABSENT` stays
+    :attr:`ABSENT` across one.
 
     Attributes:
         entity_type: The entity type written (e.g. ``"UserStory"``).
@@ -171,7 +191,10 @@ class VerificationError(TargetProcessError):
         mismatches: Entity Id -> field -> ``(requested, observed)`` for every
             field that did not verify. A field the re-read did not carry at
             all is observed as :attr:`ABSENT`; a custom field is keyed
-            ``CustomFields[<name>]``.
+            ``CustomFields[<name>]``. A ``CustomFields`` entry without a
+            string name, which a verified write refuses before sending, is
+            keyed by its zero-based position, ``CustomFields[#<position>]``,
+            when the comparison meets one.
         verified_ids: The entities of a bulk update whose re-read matched;
             empty for a single-entity update.
     """
@@ -202,6 +225,10 @@ class VerificationError(TargetProcessError):
         self.mismatches = {entity: dict(fields) for entity, fields in mismatches.items()}
         self.verified_ids = list(verified_ids)
 
+    def __reduce__(self) -> tuple[Any, ...]:
+        """Pickle without calling ``__init__``, whose keyword-only arguments ``args`` lacks."""
+        return (_unpickle_error, (type(self), self.args), self.__dict__)
+
 
 class SplitTransitionError(TargetProcessError):
     """An entity-state advance that would leave a work item's two levels apart.
@@ -210,7 +237,8 @@ class SplitTransitionError(TargetProcessError):
     state on its team assignment. Raised by ``advance_state`` before any write
     when the call would move one level without the other - a team level in a
     workflow of its own with no ``team_to`` given - or would ask one shared
-    workflow to hold two different targets.
+    workflow to hold two different targets. It survives a pickle round trip
+    with its message, ``args`` and attributes.
 
     Attributes:
         entity_id: The work item the advance targeted.
@@ -238,3 +266,7 @@ class SplitTransitionError(TargetProcessError):
         self.entity_id = entity_id
         self.project_workflow_id = project_workflow_id
         self.team_workflow_id = team_workflow_id
+
+    def __reduce__(self) -> tuple[Any, ...]:
+        """Pickle without calling ``__init__``, whose keyword-only arguments ``args`` lacks."""
+        return (_unpickle_error, (type(self), self.args), self.__dict__)

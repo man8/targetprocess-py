@@ -17,8 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   after the write each entity is re-read with one independent GET narrowed to
   the requested keys, the re-read model is returned instead of TargetProcess's
   own echo, and a requested field that is not observed raises the new
-  `VerificationError`, which carries every mismatch. The default path is
-  unchanged.
+  `VerificationError`, which carries every mismatch and survives a pickle
+  round trip. A verified write refuses, before sending, a `CustomFields` entry
+  that is not a mapping with a string `Name`. The default path is unchanged.
 - `set_custom_field(id, name, value)` on every typed manager sets a
   custom-field value by name, or clears it when `value` is `None`, sending
   `{"CustomFields": [{"Name": ..., "Value": ...}]}`. It re-reads the entity by
@@ -35,8 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   entity states read together as `StateLevels` (of two `LevelState`s), and
   moved as one transition - each target resolved within its own level's
   workflow, one write where both levels share a workflow, and the new
-  `SplitTransitionError` raised before any write when a distinct team level
-  would be left behind.
+  `SplitTransitionError`, which survives a pickle round trip, raised before
+  any write when a distinct team level would be left behind.
 
 ### Changed
 

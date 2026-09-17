@@ -12,7 +12,12 @@ from targetprocess.exceptions import (
     VerificationError,
 )
 from targetprocess.models import Entity, NamedEntity
-from targetprocess.resources._verify import compare_fields, describe
+from targetprocess.resources._verify import (
+    compare_fields,
+    custom_field_name,
+    describe,
+    is_entry_sequence,
+)
 from targetprocess.response_parser import ResponseParser
 
 if TYPE_CHECKING:
@@ -109,7 +114,8 @@ def _verification_ids(items: Sequence[dict[str, Any]]) -> list[int]:
 
     A verified ``update_many`` keys every mismatch, and every verified Id, by the
     entity's integer Id, so a string of ASCII digits such as ``"5"`` and the
-    integer ``5`` name one entity; any other string, padded or not, is refused. An entity named twice in one batch has no single requested
+    integer ``5`` name one entity; any other string, padded or not, is
+    refused. An entity named twice in one batch has no single requested
     state to verify against, so that is refused rather than guessed.
 
     Args:
@@ -318,6 +324,39 @@ class BaseResource[T: Entity]:
                 raise ValueError(
                     f"include={field!r} is not supported on {cls.entity_type}: {reason}"
                 )
+
+    @classmethod
+    def check_custom_field_names(
+        cls, fields: Mapping[str, Any], *, item: int | None = None
+    ) -> None:
+        """Refuse a ``CustomFields`` entry a verified write could not check.
+
+        The re-read finds each custom field by its name, so an entry that is
+        not a mapping carrying a string ``Name`` could never be looked up.
+        ``CustomFields`` matches case-insensitively and ``Name`` in any
+        casing, as the comparison does. Only a value compared entry by entry
+        (any sequence but a string, bytes or bytearray) is checked here; any
+        other value is compared whole after the write.
+
+        Args:
+            fields: The fields a verified write would send
+            item: The fields' zero-based position in a bulk batch, if any
+
+        Raises:
+            ValueError: A ``CustomFields`` entry is not a mapping carrying a
+                string ``Name``; the message names its zero-based position,
+                and the item's within a batch.
+        """
+        for key, value in fields.items():
+            if key.casefold() != "customfields" or not is_entry_sequence(value):
+                continue
+            for position, entry in enumerate(value):
+                if custom_field_name(entry) is None:
+                    where = "" if item is None else f"item {item} "
+                    raise ValueError(
+                        f"{where}{key} entry {position} ({entry!r}) is not a mapping carrying "
+                        "a string Name, so a verified write cannot check it"
+                    )
 
     @classmethod
     def check_where(cls, where: str | None) -> None:
@@ -559,9 +598,11 @@ class BaseResource[T: Entity]:
         ``None``, so fetch the entity again for a full read. The comparison rules are those of
         :mod:`targetprocess.resources._verify`: references by ``Id``, ``None``
         against null or an absent key, numbers numerically, strings stripped,
-        wire dates on the instant, custom fields by name. A key the re-read
-        does not carry cannot verify, so a field TP never returns
-        (``Password``) always raises.
+        wire dates on the instant, custom fields by name, and a string never
+        against a number. A key the re-read does not carry cannot verify, so
+        a field TP never returns (``Password``) always raises, and a
+        ``CustomFields`` entry without a string ``Name`` could never be found
+        by name, so it is refused before the write.
 
         A ``Description`` sent without the ``<!--markdown-->`` marker is
         stored through TP's HTML pipeline and read back entity-encoded, so a
@@ -581,7 +622,9 @@ class BaseResource[T: Entity]:
 
         Raises:
             ValueError: ``verify`` is True and a requested key is a field
-                this collection cannot hydrate (raised before the write)
+                this collection cannot hydrate, or a ``CustomFields`` entry is
+                not a mapping carrying a string ``Name`` (raised before the
+                write)
             VerificationError: ``verify`` is True and the re-read does not
                 show every requested field
             ReadOnlyViolation: Client is in readonly mode, or the collection
@@ -598,6 +641,7 @@ class BaseResource[T: Entity]:
         self._client._check_write_permission()
         if verify:
             self.check_include(list(fields))
+            self.check_custom_field_names(fields)
         data = await self._request_handler.update(self.entity_type, id, fields)
         if verify:
             return await self._verify_update(id, fields)
@@ -758,8 +802,10 @@ class BaseResource[T: Entity]:
         Raises:
             ValueError: An item has no ``Id`` key; or ``verify`` is True and an
                 item's ``Id`` is not an integer, two items name the same
-                entity, or an item names a field this collection cannot
-                hydrate (all raised before any request is sent).
+                entity, an item names a field this collection cannot
+                hydrate, or an item's ``CustomFields`` entry is not a mapping
+                carrying a string ``Name`` (all raised before any request is
+                sent).
             VerificationError: ``verify`` is True and at least one re-read
                 does not show its item's fields.
             ReadOnlyViolation: Client is in readonly mode, or the collection
@@ -781,8 +827,9 @@ class BaseResource[T: Entity]:
         ids: builtins.list[int] = []
         if verify:
             ids = _verification_ids(items)
-            for item in items:
+            for position, item in enumerate(items):
                 self.check_include([key for key in item if key != "Id"])
+                self.check_custom_field_names(item, item=position)
         data = await self._request_handler.bulk(self.entity_type, items)
         if verify:
             return await self._verify_many(items, ids)
@@ -868,7 +915,8 @@ class BaseResource[T: Entity]:
                 different value, a non-empty value after a clear, or no entry
                 of that name.
             ValueError: ``verify`` is True and this collection cannot hydrate
-                ``CustomFields`` (raised before the write).
+                ``CustomFields``, or ``name`` is not a string (raised before
+                the write).
             ReadOnlyViolation: Client is in readonly mode, or the collection
                 is read-only on the server (any mode)
             NotFoundError: Entity not found

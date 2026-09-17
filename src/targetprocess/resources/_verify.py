@@ -13,21 +13,26 @@ matched against the raw re-read, by these rules in order:
   observed mapping with an equal ``Id``; the rest of the observed reference
   (``Name``, ``NumericPriority``, ...) is ignored.
 - Numbers compare numerically, so ``3`` matches ``3.0``; a boolean is not a
-  number here, so ``True`` does not match ``1``.
+  number here, so ``True`` does not match ``1``, and a string is never parsed
+  as a number, so ``"3"`` does not match ``3``.
 - Two TargetProcess wire dates (``/Date(ms±HHMM)/``) compare on the instant
   they denote, since the offset echoed can differ from the one sent.
 - Other strings compare with surrounding whitespace stripped, as the models
   store them.
-- A requested ``CustomFields`` list matches entry by entry, each by name
-  (case-insensitively); a cleared entry (``Value`` ``None``) matches an
-  observed null or empty string, and an entry of that name missing from the
-  re-read is a mismatch keyed ``CustomFields[<name>]``.
-- Anything else, lists included, compares by equality.
+- A requested ``CustomFields`` sequence (any but a string, bytes or
+  bytearray) matches entry by entry, each by name (case-insensitively); a
+  cleared entry (``Value`` ``None``) matches an observed null or empty
+  string, and an entry of that name missing from the re-read is a mismatch
+  keyed ``CustomFields[<name>]``. An entry that is not a mapping carrying a
+  string ``Name`` cannot be looked up, so it is a mismatch too, keyed by its
+  zero-based position (``CustomFields[#<position>]``) and observed as
+  ``VerificationError.ABSENT``.
+- Anything else, other lists included, compares by equality.
 """
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import Any
+from typing import Any, TypeGuard
 
 from targetprocess._dates import parse_tp_date
 from targetprocess.exceptions import VerificationError
@@ -52,6 +57,35 @@ def _reference_id(value: object) -> object:
         return None
     found, reference_id = _get(value, "Id")
     return reference_id if found else None
+
+
+def is_entry_sequence(value: object) -> TypeGuard[Sequence[Any]]:
+    """Report whether a requested ``CustomFields`` value is compared entry by entry.
+
+    Args:
+        value: The ``CustomFields`` value the write sent.
+
+    Returns:
+        True for any sequence but a ``str``, ``bytes`` or ``bytearray``; a
+        mapping, and anything else, is compared by equality instead.
+    """
+    return isinstance(value, Sequence) and not isinstance(value, str | bytes | bytearray)
+
+
+def custom_field_name(entry: object) -> str | None:
+    """Return the ``Name`` a requested ``CustomFields`` entry is looked up by.
+
+    Args:
+        entry: One entry of the ``CustomFields`` value the write sent.
+
+    Returns:
+        The entry's ``Name``, in whatever casing it is keyed; ``None`` when the
+        entry is not a mapping or its name is missing or not a string.
+    """
+    if not isinstance(entry, Mapping):
+        return None
+    _, name = _get(entry, "Name")
+    return name if isinstance(name, str) else None
 
 
 def values_match(requested: object, observed: object) -> bool:
@@ -107,11 +141,17 @@ def custom_field_mismatch(name: str, value: object, observed: object) -> Mismatc
 
 
 def _custom_fields_mismatches(requested: Sequence[Any], observed: object) -> dict[str, Mismatch]:
-    """Apply :func:`custom_field_mismatch` to each entry of a requested ``CustomFields`` list."""
+    """Apply :func:`custom_field_mismatch` to each entry of a requested ``CustomFields`` sequence.
+
+    An entry without a string ``Name`` is reported rather than skipped, keyed
+    ``CustomFields[#<position>]`` and observed as ``ABSENT``: nothing could be
+    looked up for it, so it cannot have verified.
+    """
     mismatches: dict[str, Mismatch] = {}
-    for entry in requested:
-        _, name = _get(entry, "Name") if isinstance(entry, Mapping) else (False, None)
-        if not isinstance(name, str):
+    for position, entry in enumerate(requested):
+        name = custom_field_name(entry)
+        if name is None:
+            mismatches[f"CustomFields[#{position}]"] = (entry, ABSENT)
             continue
         _, value = _get(entry, "Value")
         mismatch = custom_field_mismatch(name, value, observed)
@@ -136,7 +176,7 @@ def compare_fields(
     mismatches: dict[str, Mismatch] = {}
     for key, value in requested.items():
         present, seen = _get(observed, key)
-        if key.casefold() == "customfields" and isinstance(value, list):
+        if key.casefold() == "customfields" and is_entry_sequence(value):
             mismatches.update(_custom_fields_mismatches(value, seen))
         elif not present:
             if value is not None:

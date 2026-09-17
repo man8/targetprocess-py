@@ -126,6 +126,16 @@ async def test_verify_false_makes_no_reread_and_returns_the_echo() -> None:
     assert story.custom_fields is None
 
 
+async def test_a_name_that_is_not_a_string_is_refused_before_the_write() -> None:
+    client, log = _client(None)
+    name: Any = 5  # a runtime value the annotation does not rule out
+
+    with pytest.raises(ValueError, match=r"CustomFields entry 0 .*a verified write cannot check"):
+        await client.user_stories.set_custom_field(123, name, "v")
+
+    assert log == []
+
+
 async def test_a_readonly_client_sends_nothing() -> None:
     client, log = _client(None, mode=ClientMode.READONLY)
 

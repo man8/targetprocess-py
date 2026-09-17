@@ -754,12 +754,15 @@ requested keys, after the whole batch for `update_many`, and return the
 re-read models, which carry `Id`, `ResourceType` and those keys (every other
 field `None`); a requested field not observed raises one `VerificationError`
 carrying integer entity Id -> field -> `(requested, observed)`. A verified
-`update_many` refuses, before sending, a repeated Id or one that is neither an
-integer nor a string of ASCII digits. References match by `Id`, `None` matches
-null or an absent key, numbers compare numerically, strings stripped, wire
-dates on the instant, custom fields by name, with no conversion between forms;
-any other absent key fails. A `Description` sent without the Markdown marker is
-stored HTML-encoded, so it can fail on its own encoding.
+write refuses, before sending, a `CustomFields` entry that is not a mapping
+with a string `Name`, and a verified `update_many` a repeated Id or one that is
+neither an integer nor a string of ASCII digits. References match by `Id`,
+`None` matches null or an absent key, numbers compare numerically, strings
+stripped, wire dates on the instant, and `CustomFields` (any sequence but a
+string, bytes or bytearray) entry by entry by name; any other absent key fails.
+Nothing converts between forms, so a string never matches a number. A
+`Description` sent without the Markdown marker is stored HTML-encoded, so it can
+fail on its own encoding.
 
 ### Entity-state transitions
 
