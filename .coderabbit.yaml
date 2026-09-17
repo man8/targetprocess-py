@@ -124,8 +124,10 @@ reviews:
         Items/Next/Prev envelope — are kept as recorded so a cassette still
         exercises real parsing, pagination and filter behaviour
         (docs/testing.md). On a write-path cassette the REQUEST body is
-        recorded as sent and is deliberately not field-scrubbed: its
-        Name/Description values are synthetic strings the test invented,
+        recorded as sent and is deliberately not field-scrubbed, save the Name
+        of each CustomFields entry, which is the tenant's configuration and is
+        scrubbed to the "Sanitised Name" placeholder like every other Name: its
+        other Name/Description values are synthetic strings the test invented,
         carrying the module's recording prefix, and must NOT be flagged. Do
         flag a request body carrying text that reads as having come off the
         live instance rather than being invented.

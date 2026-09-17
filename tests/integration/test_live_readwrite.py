@@ -21,10 +21,11 @@ convention:
   fixture teardown that a later refactor could quietly move out of the
   cassette.
 - **Everything sent is synthetic.** ``_scrub_response`` replaces free-text and
-  identity fields in a *response*, but ``_scrub_request`` scrubs only the host
-  and the token out of a *request* - a request body is recorded as sent. So a
-  write-path test may only ever send text it invented (see ``_NAME_PREFIX``),
-  never a value copied off the live instance.
+  identity fields in a *response*, but ``_scrub_request`` scrubs only the host,
+  the token and a custom field's name (the tenant's configuration) out of a
+  *request* - a request body is otherwise recorded as sent. So a write-path
+  test may only ever send text it invented (see ``_NAME_PREFIX``), never a
+  value copied off the live instance.
 
 Assertions are structural for the same reason the read-only ones are: by the
 time an interaction reaches a cassette every ``Name``/``Description`` is the
