@@ -436,6 +436,29 @@ Workflows and custom-field definitions are scoped by process *and* entity
 type, so their names repeat and neither has a resolver — filter instead:
 `client.workflows.list(where="(Process.Id eq 2) and (EntityType.Name eq 'Bug')")`.
 
+### Resolving an entity state within its workflow
+
+A state name identifies one state only inside one workflow: "Done" exists once
+per workflow, and every process carries its own workflows. So a state resolves
+against a workflow Id - from the `Workflow` reference of a state the item
+already carries, or from filtering `workflows` as above - with the same
+`NotFoundError`/`AmbiguousMatchError` contract as the lookups above.
+
+```python
+story = await client.user_stories.get(123, include=["EntityState"])
+current = await client.entity_states.get(story.entity_state.id, include=["Workflow"])
+workflow_id = current.workflow.id
+
+done = await client.entity_states.resolve("Done", workflow_id=workflow_id)
+
+# A workflow may have several final states - a completed and a rejected column
+for state in await client.entity_states.final_states(workflow_id):
+    print(state.id, state.name)
+
+# Or every state of the workflow, each with its flags and Workflow reference
+states = await client.entity_states.for_workflow(workflow_id)
+```
+
 ## Pagination
 
 `list()` returns an async iterator that fetches pages lazily as you consume it:

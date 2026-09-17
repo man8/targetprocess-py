@@ -86,6 +86,36 @@ async def test_priorities_scoped_to_an_entity_type(live_credentials) -> None:
 
 
 @pytest.mark.asyncio
+async def test_entity_states_scoped_to_a_workflow(live_credentials) -> None:
+    """The workflow-scoped state listing, and the final states drawn from it.
+
+    Names are placeholders on replay - the scrubber rewrites every ``Name`` -
+    so every state of the workflow would match a resolve by name and the
+    recorded call could not replay. This records the ``Workflow.Id`` route
+    and the ``IsFinal`` flag instead, both of which survive the scrubber;
+    ``resolve`` is proven by unit tests over the same listing.
+    """
+    domain, token = live_credentials
+    async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READONLY) as client:
+        first = [s async for s in client.user_stories.list(limit=1)][0]
+        assert first.entity_state is not None
+        current = await client.entity_states.get(first.entity_state.id, include=["Workflow"])
+        assert current.workflow is not None
+        workflow_id = current.workflow.id
+        states = await client.entity_states.for_workflow(workflow_id)
+        final = await client.entity_states.final_states(workflow_id)
+    # Structure only: TP accepted the Workflow.Id filter and every state came
+    # back in that workflow, carrying its IsFinal flag, and the helper kept
+    # exactly the final ones.
+    assert len(states) > 1
+    assert all(s.workflow is not None and s.workflow.id == workflow_id for s in states)
+    assert all(s.is_final is not None for s in states)
+    assert final  # guard against all() vacuously passing on an empty result
+    assert all(s.is_final is True for s in final)
+    assert {s.id for s in final} == {s.id for s in states if s.is_final}
+
+
+@pytest.mark.asyncio
 async def test_entity_types_catalogue_parses(live_credentials) -> None:
     domain, token = live_credentials
     async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READONLY) as client:

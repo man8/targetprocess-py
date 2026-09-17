@@ -206,6 +206,14 @@ the single match — raising `NotFoundError` when nothing matches (listing the
 names that do) and `AmbiguousMatchError` when several do, so a caller never
 receives a guessed Id.
 
+`entity_states` additionally exposes the workflow-scoped lookups, since a state
+name repeats once per workflow and a workflow once per process:
+`for_workflow(workflow_id) -> list[EntityState]` returns one workflow's states
+(`where=Workflow.Id eq …`), `resolve(name, *, workflow_id) -> EntityState`
+returns the single match with the same semantics as `priorities.resolve`, and
+`final_states(workflow_id) -> list[EntityState]` returns those whose `IsFinal`
+is true, in API order (a workflow may have several).
+
 `assignments` is the read/write surface for who is assigned to a work item
 in which role (an `Assignment` pairs a `GeneralUser` with a `Role` on an
 `Assignable`; `Owner` only records who created the item). `roles`

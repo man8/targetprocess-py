@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `{"CustomFields": [{"Name": ..., "Value": ...}]}`. It re-reads the entity by
   default and raises `VerificationError` when the value, or the clear, did not
   land, or no field of that name came back.
+- `entity_states.for_workflow(workflow_id)`, `entity_states.resolve(name, *,
+  workflow_id)` and `entity_states.final_states(workflow_id)`: the states of
+  one workflow, a state name resolved within that workflow (raising
+  `NotFoundError` or `AmbiguousMatchError` rather than guessing), and the
+  workflow's final states.
 
 ### Changed
 
