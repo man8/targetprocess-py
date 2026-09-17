@@ -507,6 +507,8 @@ Every typed manager writes one with
 a success status, so `verify` defaults on here (off on `update`): the re-read
 matches the entry by name, a clear reading back null or `""`, and raises
 `VerificationError` when the value differs or no entry of that name comes back.
+A date-typed value reads back in wire form, so it verifies only when sent in
+that form (`format_tp_date`) or with `verify=False`.
 
 Nested references use one of four lightweight shapes, chosen by what the
 API actually sends:
@@ -732,12 +734,14 @@ An update's return value is TP's own echo of the write, which can be stale.
 `update(..., verify=True)` and `update_many(..., verify=True)` on the typed
 managers (not `entities`) re-read each entity with one GET narrowed to the
 requested keys, after the whole batch for `update_many`, and return the
-re-read models; a requested field not observed raises one `VerificationError`
-carrying entity Id -> field -> `(requested, observed)`. References match by
-`Id`, `None` matches null or an absent key, numbers compare numerically,
-strings stripped, wire dates on the instant, custom fields by name; any other
-absent key fails. A `Description` sent without the Markdown marker is stored
-HTML-encoded, so it can fail on its own encoding.
+re-read models, which carry only those keys (every other field `None`); a
+requested field not observed raises one `VerificationError` carrying integer
+entity Id -> field -> `(requested, observed)`. A verified `update_many` refuses
+a non-integer or repeated Id before sending. References match by `Id`, `None`
+matches null or an absent key, numbers compare numerically, strings stripped,
+wire dates on the instant, custom fields by name, with no conversion between
+forms; any other absent key fails. A `Description` sent without the Markdown
+marker is stored HTML-encoded, so it can fail on its own encoding.
 
 ### Retry policy
 

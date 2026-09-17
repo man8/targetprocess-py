@@ -182,6 +182,9 @@ entity, which can be stale. A caller who reads that echo can believe a change
 landed when it did not. Pass `verify=True` and the library does not trust it:
 after the write it re-reads each entity with one independent GET, narrowed to
 the keys you sent, compares them, and returns the re-read model instead.
+Because the re-read is narrowed, that model carries only the keys you sent:
+every other field on it is `None`, so `get` the entity again when you need the
+rest.
 
 ```python
 from targetprocess import VerificationError
@@ -196,8 +199,10 @@ except VerificationError as exc:
 ```
 
 `update_many` re-reads every item after the whole batch and raises once, with
-the failing entities in `exc.mismatches` and the rest in `exc.verified_ids`.
-The comparison is on the wire values:
+the failing entities in `exc.mismatches` and the rest in `exc.verified_ids`,
+both keyed by integer Id. A verified batch names each entity once, by an
+integer Id or a string of digits; a repeated or non-integer Id raises
+`ValueError` before anything is sent. The comparison is on the wire values:
 
 - a reference such as `{"Id": 82}` matches on `Id` alone;
 - `None` matches a null or a field the re-read does not carry;
@@ -218,18 +223,18 @@ A custom-field value is written by the field's name, inside the entity's
 manager. Setting a value sends:
 
 ```json
-{"CustomFields": [{"Name": "Deadline", "Value": "2026-10-01"}]}
+{"CustomFields": [{"Name": "Release note", "Value": "Ships in October"}]}
 ```
 
 and clearing one sends a null `Value`:
 
 ```json
-{"CustomFields": [{"Name": "Deadline", "Value": null}]}
+{"CustomFields": [{"Name": "Release note", "Value": null}]}
 ```
 
 ```python
-story = await client.user_stories.set_custom_field(123, "Deadline", "2026-10-01")
-story = await client.user_stories.set_custom_field(123, "Deadline", None)
+story = await client.user_stories.set_custom_field(123, "Release note", "Ships in October")
+story = await client.user_stories.set_custom_field(123, "Release note", None)
 ```
 
 Leaving a field out of an update is not a clear: TargetProcess keeps the old
@@ -239,6 +244,13 @@ name (case-insensitively); a cleared field may read back as `None` or `""`.
 `VerificationError` here means the value did not land, a clear was discarded,
 or no field of that name exists on the entity's process - a misspelt name, or
 one configured on another process. Pass `verify=False` to skip the re-read.
+
+The value is compared as sent, with no conversion between forms. A date-typed
+field reads back in TargetProcess's `/Date(ms±HHMM)/` wire form, so it verifies
+only when you send that form - `format_tp_date` of a timezone-aware `datetime`
+(see [Time against a custom activity](#time-against-a-custom-activity)) rather
+than `"2026-10-01"` - or with `verify=False`. The verified return value is the
+narrowed re-read, carrying `custom_fields` and nothing else.
 Reading values back is `include=["CustomFields"]` on `get` or `list`.
 
 ### The generic `entities` accessor

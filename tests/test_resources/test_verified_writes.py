@@ -137,7 +137,7 @@ async def test_verified_update_reports_a_key_the_reread_does_not_carry() -> None
 async def test_verified_update_applies_the_comparison_rules(
     requested: Any, observed: Any, verifies: bool
 ) -> None:
-    client, _ = _client(
+    client, log = _client(
         {
             ("POST", _STORY): _story(),
             ("GET", _STORY): _story(Field=observed),
@@ -150,6 +150,8 @@ async def test_verified_update_applies_the_comparison_rules(
     else:
         with pytest.raises(VerificationError):
             await client.user_stories.update(123, Field=requested, verify=True)
+    # A verdict either way is the comparison's only when the entity was re-read.
+    assert [request.method for request in log] == ["POST", "GET"]
 
 
 async def test_verified_update_on_a_readonly_client_sends_nothing() -> None:
@@ -244,6 +246,50 @@ async def test_verified_update_many_checks_every_item_before_raising() -> None:
     assert "UserStory 7: Effort: requested 3.0, observed <absent>" in str(error)
 
 
+async def test_verified_update_many_keys_mismatches_and_verified_ids_by_integer_id() -> None:
+    client, log = _client(_many_routes({5: 2.0, 6: 3.0}))
+
+    with pytest.raises(VerificationError) as caught:
+        await client.user_stories.update_many(
+            [{"Id": "5", "Effort": 3.0}, {"Id": 6, "Effort": 3.0}], verify=True
+        )
+
+    assert [request.url.path for request in log[1:]] == [
+        "/api/v1/UserStory/5",
+        "/api/v1/UserStory/6",
+    ]
+    error = caught.value
+    assert error.mismatches == {5: {"Effort": (3.0, 2.0)}}
+    assert [type(key) for key in error.mismatches] == [int]
+    assert error.verified_ids == [6]
+
+
+@pytest.mark.parametrize("second_id", [5, "5"])
+async def test_verified_update_many_refuses_an_entity_named_twice_before_the_write(
+    second_id: int | str,
+) -> None:
+    client, log = _client({})
+
+    with pytest.raises(ValueError, match="items 0 and 1 both name Id 5"):
+        await client.user_stories.update_many(
+            [{"Id": 5, "Effort": 3.0}, {"Id": second_id, "Name": "Invented"}], verify=True
+        )
+
+    assert log == []
+
+
+@pytest.mark.parametrize("entity_id", ["five", True, 5.5, None])
+async def test_verified_update_many_refuses_a_non_integer_id_before_the_write(
+    entity_id: object,
+) -> None:
+    client, log = _client({})
+
+    with pytest.raises(ValueError, match="verify=True needs an integer Id"):
+        await client.user_stories.update_many([{"Id": entity_id, "Effort": 3.0}], verify=True)
+
+    assert log == []
+
+
 async def test_verified_update_many_on_a_readonly_client_sends_nothing() -> None:
     client, log = _client({}, mode=ClientMode.READONLY)
 
@@ -327,14 +373,12 @@ def test_compare_fields_compares_other_values_by_equality() -> None:
 def test_compare_fields_matches_custom_fields_entry_by_entry() -> None:
     observed = {
         "CustomFields": [
-            {"Name": "Deadline", "Type": "Date", "Value": "2026-10-01"},
+            {"Name": "Deadline", "Type": "Date", "Value": "/Date(1790805600000+0200)/"},
             {"Name": "Ticket", "Type": "Text", "Value": "Kept"},
         ]
     }
-    assert (
-        compare_fields({"CustomFields": [{"Name": "deadline", "Value": "2026-10-01"}]}, observed)
-        == {}
-    )
+    sent = {"CustomFields": [{"Name": "deadline", "Value": "/Date(1790805600000+0000)/"}]}
+    assert compare_fields(sent, observed) == {}
     assert compare_fields(
         {"CustomFields": [{"Name": "Ticket", "Value": None}, {"Name": "Missing", "Value": 1}]},
         observed,
@@ -358,6 +402,20 @@ def test_custom_field_mismatch_reports_an_absent_entry() -> None:
         None,
         _ABSENT,
     )
+
+
+def test_custom_field_mismatch_does_not_equate_an_iso_date_with_the_wire_form() -> None:
+    # A date-typed value reads back as a wire date; an ISO string sent for it is
+    # not normalised, so it cannot verify - the documented limit.
+    wire = "/Date(1790805600000+0200)/"
+    entries = [{"Name": "Deadline", "Type": "Date", "Value": wire}]
+
+    assert custom_field_mismatch("Deadline", "2026-10-01", entries) == ("2026-10-01", wire)
+    assert custom_field_mismatch("Deadline", "2026-09-30T22:00:00Z", entries) == (
+        "2026-09-30T22:00:00Z",
+        wire,
+    )
+    assert custom_field_mismatch("Deadline", wire, entries) is None
 
 
 def test_custom_field_mismatch_applies_the_scalar_rules() -> None:

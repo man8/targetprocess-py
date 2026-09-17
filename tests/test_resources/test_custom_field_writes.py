@@ -66,11 +66,13 @@ async def test_clear_sends_a_null_value() -> None:
 
 @pytest.mark.parametrize("cleared", [None, ""])
 async def test_clear_verifies_against_null_or_empty(cleared: str | None) -> None:
-    client, _ = _client(_with_fields({"Name": "Deadline", "Type": "Text", "Value": cleared}))
+    client, log = _client(_with_fields({"Name": "Deadline", "Type": "Text", "Value": cleared}))
 
     story = await client.user_stories.set_custom_field(123, "Deadline", None)
 
-    assert story.id == 123
+    assert [request.method for request in log] == ["POST", "GET"]
+    assert story.custom_fields is not None
+    assert [(f.name, f.value) for f in story.custom_fields] == [("Deadline", cleared)]
 
 
 async def test_a_discarded_clear_raises_naming_the_field() -> None:
@@ -106,11 +108,13 @@ async def test_an_entry_absent_from_the_reread_raises() -> None:
 
 
 async def test_the_name_matches_case_insensitively() -> None:
-    client, _ = _client(_with_fields({"Name": "Story Points", "Type": "Number", "Value": 3}))
+    client, log = _client(_with_fields({"Name": "Story Points", "Type": "Number", "Value": 3}))
 
     story = await client.user_stories.set_custom_field(123, "story points", 3.0)
 
-    assert story.id == 123
+    assert [request.method for request in log] == ["POST", "GET"]
+    assert story.custom_fields is not None
+    assert [(f.name, f.value) for f in story.custom_fields] == [("Story Points", 3)]
 
 
 async def test_verify_false_makes_no_reread_and_returns_the_echo() -> None:

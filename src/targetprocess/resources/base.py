@@ -104,6 +104,44 @@ def _require_ids(items: Sequence[dict[str, Any]]) -> None:
             )
 
 
+def _verification_ids(items: Sequence[dict[str, Any]]) -> list[int]:
+    """Return each item's ``Id`` as an integer, refusing a batch verification cannot key.
+
+    A verified ``update_many`` keys every mismatch, and every verified Id, by the
+    entity's integer Id, so a digit string such as ``"5"`` and the integer ``5``
+    name one entity. An entity named twice in one batch has no single requested
+    state to verify against, so that is refused rather than guessed.
+
+    Args:
+        items: The batch, each item already keyed ``Id``
+
+    Returns:
+        The items' Ids as integers, in item order.
+
+    Raises:
+        ValueError: An item's ``Id`` is neither an integer nor a string of
+            digits, or two items name the same entity.
+    """
+    ids: list[int] = []
+    for position, item in enumerate(items):
+        value = item["Id"]
+        if isinstance(value, str) and value.strip().isdecimal():
+            entity_id = int(value)
+        elif isinstance(value, int) and not isinstance(value, bool):
+            entity_id = value
+        else:
+            raise ValueError(
+                f"update_many item {position} has Id {value!r}; verify=True needs an integer Id"
+            )
+        if entity_id in ids:
+            raise ValueError(
+                f"update_many items {ids.index(entity_id)} and {position} both name Id "
+                f"{entity_id}; a verified batch must name each entity once"
+            )
+        ids.append(entity_id)
+    return ids
+
+
 def _resolve_by_name[N: NamedEntity](candidates: Sequence[N], name: str, *, what: str) -> N:
     """Return the single candidate whose ``Name`` equals ``name``, case-insensitively.
 
@@ -516,7 +554,9 @@ class BaseResource[T: Entity]:
         requested keys (``include=`` those keys, so a field outside the
         default projection such as ``CustomFields`` still arrives), compares
         each requested field with what was read back, and returns the re-read
-        model - never the echo. The comparison rules are those of
+        model - never the echo. That model carries only the requested keys:
+        every field outside them is ``None``, so fetch the entity again for a
+        full read. The comparison rules are those of
         :mod:`targetprocess.resources._verify`: references by ``Id``, ``None``
         against null or an absent key, numbers numerically, strings stripped,
         wire dates on the instant, custom fields by name. A key the re-read
@@ -535,8 +575,9 @@ class BaseResource[T: Entity]:
             **fields: Entity field values to update
 
         Returns:
-            Updated entity instance of type T - the re-read when ``verify``
-            is True, TP's echo of the write otherwise
+            Updated entity instance of type T - the re-read, narrowed to the
+            requested keys, when ``verify`` is True; TP's echo of the write
+            otherwise
 
         Raises:
             ValueError: ``verify`` is True and a requested key is a field
@@ -693,9 +734,13 @@ class BaseResource[T: Entity]:
 
         ``verify=True`` applies :meth:`update`'s verification to every item:
         after the whole batch has been sent, one independent GET per entity
-        re-reads it narrowed to that item's keys. Every item is checked
-        before anything is raised, so one ``VerificationError`` carries each
-        failing entity's mismatches, keyed by Id, and the Ids that did verify.
+        re-reads it narrowed to that item's keys, so each returned model
+        carries only those keys. Every item is checked before anything is
+        raised, so one ``VerificationError`` carries each failing entity's
+        mismatches, keyed by integer Id, and the Ids that did verify. A
+        verified batch must name each entity once by an integer Id (a string
+        of digits counts): an entity named twice has no single requested
+        state, and either is refused before any request is sent.
 
         Args:
             items: Field dicts, one per entity to update, each carrying the
@@ -706,12 +751,14 @@ class BaseResource[T: Entity]:
 
         Returns:
             The updated entities, parsed as type T - in item order as re-read
-            when ``verify`` is True, as the API returned them otherwise.
+            (narrowed to each item's keys) when ``verify`` is True, as the API
+            returned them otherwise.
 
         Raises:
-            ValueError: An item has no ``Id`` key, or ``verify`` is True and
-                an item names a field this collection cannot hydrate (both
-                raised before any request is sent).
+            ValueError: An item has no ``Id`` key; or ``verify`` is True and an
+                item's ``Id`` is not an integer, two items name the same
+                entity, or an item names a field this collection cannot
+                hydrate (all raised before any request is sent).
             VerificationError: ``verify`` is True and at least one re-read
                 does not show its item's fields.
             ReadOnlyViolation: Client is in readonly mode, or the collection
@@ -730,19 +777,25 @@ class BaseResource[T: Entity]:
         items = list(items)  # materialise once: validated and sent as the same batch
         _require_ids(items)
         items = [_with_canonical_id(item) for item in items]
+        ids: builtins.list[int] = []
         if verify:
+            ids = _verification_ids(items)
             for item in items:
                 self.check_include([key for key in item if key != "Id"])
         data = await self._request_handler.bulk(self.entity_type, items)
         if verify:
-            return await self._verify_many(items)
+            return await self._verify_many(items, ids)
         return [ResponseParser.parse_single(item, self.model_class) for item in data]
 
-    async def _verify_many(self, items: Sequence[dict[str, Any]]) -> builtins.list[T]:
+    async def _verify_many(
+        self, items: Sequence[dict[str, Any]], ids: Sequence[int]
+    ) -> builtins.list[T]:
         """Re-read every entity of a bulk update and raise unless all show their fields.
 
         Args:
             items: The batch as sent, each item keyed ``Id``
+            ids: The items' Ids as integers, in item order (see
+                :func:`_verification_ids`)
 
         Returns:
             The re-read entities, in item order.
@@ -753,19 +806,19 @@ class BaseResource[T: Entity]:
         """
         models: builtins.list[T] = []
         mismatches: dict[int, dict[str, tuple[Any, Any]]] = {}
-        for item in items:
+        for entity_id, item in zip(ids, items, strict=True):
             fields = {key: value for key, value in item.items() if key != "Id"}
-            model, failed = await self._reread_mismatches(item["Id"], fields)
+            model, failed = await self._reread_mismatches(entity_id, fields)
             models.append(model)
             if failed:
-                mismatches[item["Id"]] = failed
+                mismatches[entity_id] = failed
         if mismatches:
             raise VerificationError(
                 f"update_many did not verify {len(mismatches)} of {len(items)} entities - "
                 f"{describe(self.entity_type, mismatches)}",
                 entity_type=self.entity_type,
                 mismatches=mismatches,
-                verified_ids=[m.id for m in models if m.id not in mismatches],
+                verified_ids=[entity_id for entity_id in ids if entity_id not in mismatches],
             )
         return models
 
@@ -789,7 +842,11 @@ class BaseResource[T: Entity]:
         ``name`` case-insensitively, and compares its value; a cleared field
         reads back as null or an empty string, and either counts. A name that
         is misspelt, or belongs to another process's configuration, reads
-        back no entry at all and raises too.
+        back no entry at all and raises too. Values are compared as sent, with
+        no conversion between forms: a date-typed field reads back as a
+        ``/Date(ms±HHMM)/`` wire string, so it verifies only when the value
+        is sent in that form (:func:`targetprocess.models.format_tp_date`) -
+        otherwise pass ``verify=False``.
 
         Args:
             id: Entity ID
@@ -801,7 +858,7 @@ class BaseResource[T: Entity]:
                 observed (default True)
 
         Returns:
-            The entity - the re-read, carrying ``custom_fields``, when
+            The entity - the re-read, carrying only ``custom_fields``, when
             ``verify`` is True; TP's echo of the write otherwise.
 
         Raises:
