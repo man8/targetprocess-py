@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-17
+
+The first beta release.
+
 ### Added
 
 - `users.logged_user()`: resolves the user the client's credential
@@ -41,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Development status moves from Alpha to Beta (the
+  `Development Status :: 4 - Beta` classifier), and the README states what
+  1.0.0 requires.
 - `list()` refuses, before any request is sent, a `where=` filter naming a
   nested collection path TargetProcess accepts and silently ignores -
   currently `Assignments.*` on the assignable collections (`UserStory`,
@@ -155,5 +162,6 @@ The first public release.
 - Log scrubbing redacts the `access_token` query parameter and `Authorization`
   header values from the library's own log records.
 
-[Unreleased]: https://github.com/man8/targetprocess-py/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/man8/targetprocess-py/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/man8/targetprocess-py/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/man8/targetprocess-py/releases/tag/v0.1.0

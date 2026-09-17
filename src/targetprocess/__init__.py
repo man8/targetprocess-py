@@ -112,7 +112,7 @@ from targetprocess.resources import (
 from targetprocess.response_parser import ResponseParser
 from targetprocess.types import ClientMode, LevelState, StateLevels, UpsertAction, UpsertResult
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     # Exceptions

@@ -293,6 +293,27 @@ feat!: require an explicit mode on the client
   session that produced the change, are welcome: they say how the change was
   made.
 
+## Releasing
+
+A release is a pull request followed by a tag.
+
+1. In a pull request, set `__version__` in `src/targetprocess/__init__.py`
+   (the only version string; the build reads it). Move the `[Unreleased]`
+   entries in `CHANGELOG.md` under a `## [X.Y.Z] - YYYY-MM-DD` heading dated
+   the release day, and update the link references at its foot. When the minor
+   version changes, update the supported-versions table in `SECURITY.md`. When
+   the development status changes, update the classifier in `pyproject.toml`
+   and the README's Development Status section.
+2. Once it has merged, a maintainer creates a signed, annotated tag on that
+   commit on `main` and pushes it:
+   `git tag -s vX.Y.Z -m "targetprocess-py X.Y.Z" <commit>`, then
+   `git push origin vX.Y.Z`.
+3. `.github/workflows/release.yml` builds and checks the distributions, then
+   waits for a maintainer to approve the `pypi` environment deployment. Once
+   approved it publishes to PyPI and creates the GitHub Release from the
+   version's CHANGELOG section.
+4. Confirm the new version on PyPI and its GitHub Release.
+
 ## Reporting a vulnerability
 
 See [SECURITY.md](SECURITY.md). Do not open a public issue for a suspected

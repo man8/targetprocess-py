@@ -4,7 +4,8 @@
 
 | Version | Supported |
 | --- | --- |
-| 0.1.x | Yes |
+| 0.2.x | Yes |
+| 0.1.x | No |
 | Pre-release commits before 0.1.0 | No |
 
 Security fixes are released as a patch on the latest minor version. Once a new
