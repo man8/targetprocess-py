@@ -54,21 +54,29 @@ operational recipe for running and re-recording.
   headers (vcrpy applies it to requests only); `_scrub_response` drops the
   cookie family and `Content-Security-Policy` from recorded responses
   outright (a browser policy naming every third-party origin the vendor's
-  UI uses, exercised by nothing in a client fixture); `_scrub_request` and
+  UI uses, exercised by nothing in a client fixture), and `ETag` with them (a
+  per-response cache validator whose base64-shaped value the cassette guard
+  refuses); `_scrub_request` and
   `_scrub_response` neutralise every TP host that remains - the real tenant
   domain and the vendor's own infrastructure, CDN and corporate hosts -
   onto a placeholder host in the request URI and headers and in any
   response body/header that echoes it back (a `Location`, a pagination
   link); `_scrub_response` additionally strips free-text and PII-bearing
   fields (`Name`, `Description`, `FirstName`, `LastName`, `FullName`,
-  `Login`, `Tags`) and drops `CustomFields` entirely, replacing text values
-  with `Sanitised <Field>` placeholders. Those field names are matched
+  `Login`, `Tags`, `Email`, `Acid`, `GlobalId`, `FrontdoorUserId`,
+  `ActiveDirectoryName`, `LegacySkills`) and drops `CustomFields` entirely, as
+  it does the `Terms` and `GlobalTerms` collections (the organisation's own
+  renamed entity terms, which are free text), replacing text values with
+  `Sanitised <Field>` placeholders. Those field names are matched
   **case-insensitively**, which is load-bearing rather than lenient: the JSON
   entity API answers in PascalCase, but `/UploadFile.ashx` - the multipart
   file endpoint outside `/api/v1` - answers in camelCase, so an exact-case
   match would recognise none of the identity fields in an upload response.
   `UniqueFileName` is in the set for the same reason its `Name` is: TP
-  derives the stored filename from the one the upload sent.
+  derives the stored filename from the one the upload sent. `Email`, the
+  identity-service and directory identifiers (`GlobalId`, `FrontdoorUserId`,
+  `ActiveDirectoryName`) and the context id `Acid` are in it because they
+  identify the person or the tenant as a login does.
 
   Structural fields — entity `Id`, `ResourceType`, dates, numeric/boolean
   fields, the `Items`/`Next`/`Prev` envelope — are recorded as they came off

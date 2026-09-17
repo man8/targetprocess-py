@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `users.logged_user()`: resolves the user the client's credential
+  authenticates as with one `GET /api/v1/Users/LoggedUser`, returning the
+  `User` model, cached per client instance. `RequestHandler.logged_user()` is
+  the fixed-path read beneath it.
 - `update()` and `update_many()` take an opt-in, keyword-only `verify=True`:
   after the write each entity is re-read with one independent GET narrowed to
   the requested keys, the re-read model is returned instead of TargetProcess's

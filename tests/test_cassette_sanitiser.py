@@ -312,6 +312,48 @@ def test_response_redacts_identity_fields_whatever_their_casing() -> None:
     assert recorded["items"][0]["size"] == 63
 
 
+# One invented value per identifier the acting user's records carry beyond a login.
+_PERSON_AND_TENANT_IDENTIFIERS = {
+    "Email": "alex@example.com",
+    "Acid": "invented0context0identifier",
+    "GlobalId": "00000000-0000-4000-8000-000000000342",
+    "FrontdoorUserId": "invented-identity-service-id",
+    "ActiveDirectoryName": "alex.example",
+    "LegacySkills": "Invented free-text skills",
+}
+
+
+@pytest.mark.usefixtures("recording")
+@pytest.mark.parametrize("key", sorted(_PERSON_AND_TENANT_IDENTIFIERS))
+def test_response_redacts_person_and_tenant_identifiers_whatever_their_casing(key: str) -> None:
+    """The acting user's records identify the person and the tenant beyond a login.
+
+    ``GET /api/v1/Context`` answers with the acting user's ``Email`` and an
+    opaque tenant context id (``Acid``), and the ``User`` record hydrated from
+    it adds the identity-service and directory identifiers and a free-text
+    skills field. Each identifies the person or the tenant as a login does, so
+    each is redacted, in either casing, like the rest of the set.
+    """
+    camel = key[0].lower() + key[1:]
+    value = _PERSON_AND_TENANT_IDENTIFIERS[key]
+    body = json.dumps(
+        {
+            "LoggedUser": {"ResourceType": "User", "Id": 342, key: value},
+            "items": [{"resourceType": "User", "id": 342, camel: value}],
+        }
+    ).encode()
+
+    scrubbed = sanitiser._scrub_response({"headers": {}, "body": {"string": body}})
+
+    recorded = json.loads(scrubbed["body"]["string"])
+    assert recorded["LoggedUser"][key] == f"Sanitised {key}"
+    assert recorded["items"][0][camel] == f"Sanitised {camel}"
+    assert value not in scrubbed["body"]["string"].decode()
+    # Structural values still come off the wire untouched.
+    assert recorded["LoggedUser"]["Id"] == 342
+    assert recorded["items"][0]["resourceType"] == "User"
+
+
 @pytest.mark.usefixtures("recording")
 def test_entity_ids_are_recorded_as_received() -> None:
     """Ids are structural, and a rewritten one would defeat the filter assertions.
@@ -421,6 +463,85 @@ def test_response_drops_content_security_policy_outright() -> None:
     assert any(p.search(csp) for p in SECRET_PATTERNS)
     remaining = [v for values in scrubbed["headers"].values() for v in values]
     assert not any(p.search(v) for v in remaining for p in SECRET_PATTERNS)
+
+
+@pytest.mark.parametrize("name", ["ETag", "etag"])
+def test_response_drops_etag_outright(name: str) -> None:
+    """A per-response cache validator is removed at record time, not recorded.
+
+    TP answers with a weak ``ETag`` whose base64-shaped value trips the
+    cassette guard's secret patterns, and nothing a client fixture exercises
+    reads it. The match is on the folded name, so either casing goes; every
+    other header stays.
+    """
+    etag = 'W/"aW52ZW50ZWQgY2FjaGUgdmFsaWRhdG9yIGZvciB0aGUgdGVzdHM="'
+    response = {
+        "headers": {
+            name: [etag],
+            "Content-Type": ["application/json"],
+        },
+        "body": {"string": b"{}"},
+    }
+
+    scrubbed = sanitiser._scrub_response(response)
+
+    assert set(scrubbed["headers"]) == {"Content-Type"}
+    assert scrubbed["headers"]["Content-Type"] == ["application/json"]
+    # The guard's independent scan would have refused the value; after the
+    # hook there is no header left for it to look at.
+    assert any(p.search(etag) for p in SECRET_PATTERNS)
+    remaining = [v for values in scrubbed["headers"].values() for v in values]
+    assert not any(p.search(v) for v in remaining for p in SECRET_PATTERNS)
+
+
+@pytest.mark.usefixtures("recording")
+def test_response_empties_the_terms_collections_whatever_their_casing() -> None:
+    """Terms carry the organisation's own renamed entity terms, which are free text.
+
+    ``GET /api/v1/Context`` returns them in each process's ``Terms`` and in
+    the top-level ``GlobalTerms``. Like ``CustomFields``, both collections
+    are emptied wholesale rather than scrubbed per field, in either casing,
+    while the structure around them is recorded as received.
+    """
+    term = {
+        "ResourceType": "Term",
+        "Id": 3,
+        "WordKey": "Feature",
+        "Value": "Invented renamed term",
+    }
+    camel_term = {
+        "resourceType": "Term",
+        "id": 3,
+        "wordKey": "Feature",
+        "value": "Invented renamed term",
+    }
+    body = json.dumps(
+        {
+            "ResourceType": "Context",
+            "GlobalTerms": {"Items": [term]},
+            "Processes": {
+                "Items": [{"ResourceType": "ProcessInfo", "Id": 2, "Terms": {"Items": [term]}}]
+            },
+            "globalTerms": {"items": [camel_term]},
+            "processes": {
+                "items": [
+                    {"resourceType": "ProcessInfo", "id": 2, "terms": {"items": [camel_term]}}
+                ]
+            },
+        }
+    ).encode()
+
+    scrubbed = sanitiser._scrub_response({"headers": {}, "body": {"string": body}})
+
+    recorded = json.loads(scrubbed["body"]["string"])
+    assert recorded["GlobalTerms"] == []
+    assert recorded["Processes"]["Items"][0]["Terms"] == []
+    assert recorded["globalTerms"] == []
+    assert recorded["processes"]["items"][0]["terms"] == []
+    assert "Invented renamed term" not in scrubbed["body"]["string"].decode()
+    # Structural values still come off the wire untouched.
+    assert recorded["Processes"]["Items"][0]["Id"] == 2
+    assert recorded["processes"]["items"][0]["resourceType"] == "ProcessInfo"
 
 
 def test_vcr_config_wires_both_scrubbing_hooks() -> None:

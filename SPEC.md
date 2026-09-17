@@ -110,6 +110,26 @@ itself.
   set in which a name identifies exactly one Id. Supplying a priority by
   name, or an Id belonging to another entity type, fails the write with
   HTTP 403 rather than 400.
+- **Context**: `GET /api/v1/Context?format=json` returns the authenticated
+  context rather than a collection - no `Items` envelope, no per-record Id -
+  so it is not addressable through the entity surface. Verified against a live
+  TargetProcess instance with an administrator token (HTTP 200): the acting
+  user is the top-level `LoggedUser` object, carrying `Id` (int), `Email`,
+  `FirstName`, `LastName`, `Kind` and `ResourceType` (str), `IsActive` and
+  `IsAdministrator` (bool) - and no `Login`. Alongside it the payload carries
+  `Processes` (each with nested `CustomFields`, `Practices` and `Terms`
+  collections), `SelectedProjects` (each with `Process` and `Program`),
+  `SelectedTeams`, a workspace-wide `CustomFields` collection, `GlobalTerms`,
+  `Culture`, `AppContext`, `Acid`, `Edition`, `Version` and four booleans - a
+  heavy payload for an identity lookup. `Terms` and `GlobalTerms` hold the
+  instance's renamed entity terms, `Term` records carrying `WordKey` and
+  `Value`. Whether a non-administrator token can read Context, and whether the
+  endpoint honours `include=`, are unverified; the client does not request it.
+- **LoggedUser**: `GET /api/v1/Users/LoggedUser?format=json` returns the
+  `User` entity of the request's credential. Verified against a live
+  TargetProcess instance with an administrator token (HTTP 200): the same
+  top-level fields as `GET /api/v1/User/{id}` - every `User` model field but
+  `AvatarUri`, `Login` included. Non-administrator access is unverified.
 
 ## Public API Surface
 
@@ -130,6 +150,14 @@ TargetProcessClient(
 constructed with an explicit safety posture. Exactly one of `token` /
 `basic_auth` must be provided; supplying neither `token` nor `basic_auth`,
 or supplying both, raises `ValueError` at the transport layer.
+
+### Acting user
+
+`users.logged_user() -> User` returns the user the credential authenticates as
+from one `GET /api/v1/Users/LoggedUser`, parsed as `users.get` parses a record
+(the same `ParseError`). It is cached on the client's one `users` resource, so
+a second call makes no request; a failure caches nothing, there is no lock,
+and it works on a `READONLY` client.
 
 ### Resources
 
@@ -297,7 +325,7 @@ the TestPlan / TestStep family), the polymorphic bases (Assignables,
 Generals, InboundAssignables, OutboundAssignables), the people and allocation
 collections (Requesters, Companies, GeneralUsers, ProjectMembers, the
 allocation join types, GeneralFollowers) and the metadata and audit
-collections (Context, EntityStateHistory, Revisions, RevisionFiles, Messages,
+collections (EntityStateHistory, Revisions, RevisionFiles, Messages,
 MessageUids, Tags). `entities` reads and writes every one of them under the
 same mode gate, so nothing is unreachable. A typed manager for one of them
 follows demand rather than completeness, and arrives with its model, its

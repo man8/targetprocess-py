@@ -142,9 +142,14 @@ _TP_HOST_PATTERN_BYTES = re.compile(_TP_HOST_RE.encode("ascii"), re.IGNORECASE)
 #   support widgets. Nothing a client-library fixture exercises, and a host
 #   list that never converges under scrubbing, so it goes rather than being
 #   rewritten (the substring also catches ``-Report-Only``).
+# - ``etag``: a per-response cache validator whose base64-shaped value trips
+#   the cassette guard's secret patterns, and which carries nothing a fixture
+#   exercises. The guard needs no check of its own: its secret patterns
+#   already refuse a leaked value.
 #
-# ``tests/test_cassette_guard.py`` matches the same shapes independently.
-_DROPPED_HEADER_MARKERS: tuple[str, ...] = ("cookie", "content-security-policy")
+# ``tests/test_cassette_guard.py`` matches the cookie and policy shapes
+# independently.
+_DROPPED_HEADER_MARKERS: tuple[str, ...] = ("cookie", "content-security-policy", "etag")
 
 
 def _is_dropped_header(name: str) -> bool:
@@ -182,12 +187,21 @@ _REDACT_TEXT_KEYS = {
     "Login",
     "Tags",
     "UniqueFileName",
+    "Email",
+    "Acid",
+    "GlobalId",
+    "FrontdoorUserId",
+    "ActiveDirectoryName",
+    "LegacySkills",
 }
 _REDACT_TEXT_KEYS_FOLDED = {key.lower() for key in _REDACT_TEXT_KEYS}
 
-# The org-specific custom-field list, dropped wholesale rather than scrubbed
-# per field. Folded for the same reason as the set above.
-_DROPPED_BODY_KEY = "customfields"
+# Collections dropped wholesale rather than scrubbed per field, each replaced
+# by ``[]`` wherever it appears. ``CustomFields`` is the org-specific
+# custom-field list. ``Terms`` (on each process) and ``GlobalTerms`` carry the
+# organisation's own renamed entity terms, which are free text. Folded for the
+# same reason as the set above.
+_DROPPED_BODY_KEYS = {"customfields", "terms", "globalterms"}
 
 # Populated by ``_scrub_request`` with the real host it just rewrote, so
 # ``_scrub_response`` can scrub the same string out of the paired response
@@ -420,10 +434,10 @@ def _scrub(value: Any) -> Any:
         scrubbed: dict[str, Any] = {}
         for key, v in value.items():
             folded = key.lower()
-            if folded == _DROPPED_BODY_KEY:
-                # Org-specific custom-field schema; values have included
-                # internal ticket URLs. Not worth preserving per-field -
-                # drop the whole list.
+            if folded in _DROPPED_BODY_KEYS:
+                # Org-specific custom-field schema (values have included
+                # internal ticket URLs) or the organisation's renamed terms.
+                # Not worth preserving per-field - drop the whole collection.
                 scrubbed[key] = []
             elif folded in _REDACT_TEXT_KEYS_FOLDED and isinstance(v, str) and v:
                 scrubbed[key] = f"Sanitised {key}"
