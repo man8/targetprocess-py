@@ -24,6 +24,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `{"CustomFields": [{"Name": ..., "Value": ...}]}`. It re-reads the entity by
   default and raises `VerificationError` when the value, or the clear, did not
   land, or no field of that name came back.
+- `entity_states.for_workflow(workflow_id)`, `entity_states.resolve(name, *,
+  workflow_id)` and `entity_states.final_states(workflow_id)`: the states of
+  one workflow, a state name resolved within that workflow (raising
+  `NotFoundError` or `AmbiguousMatchError` rather than guessing), and the
+  workflow's final states.
+- `entity_state_levels(id)` and `advance_state(id, *, to, team_to=None,
+  verify=True)` on the six work-item managers, through their new shared base
+  `AssignableResource`: a work item's project-workflow and team-workflow
+  entity states read together as `StateLevels` (of two `LevelState`s), and
+  moved as one transition - each target resolved within its own level's
+  workflow, one write where both levels share a workflow, and the new
+  `SplitTransitionError` raised before any write when a distinct team level
+  would be left behind.
 
 ### Changed
 
@@ -39,6 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outside it is refused before the request is built rather than sent for
   TargetProcess to ignore. The `access_token` the transport merges in at
   send time is not part of the allowlist.
+- The relation examples in the `relations` and `relation_types` docstrings,
+  and the relations read in `scripts/live_smoke.py`, use the current
+  `Inbound`/`Outbound` names in place of the deprecated `Master`/`Slave`: the
+  create, the `Outbound.Id` filter and the include.
 
 ## [0.1.0] - 2026-09-08
 

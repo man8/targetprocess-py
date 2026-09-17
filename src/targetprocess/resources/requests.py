@@ -1,10 +1,10 @@
 """Request resource manager."""
 
 from targetprocess.models import Request
-from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
+from targetprocess.resources.assignables import AssignableResource
 
 
-class RequestsResource(BaseResource[Request]):
+class RequestsResource(AssignableResource[Request]):
     """Resource manager for Request entities.
 
     Provides type-safe CRUD operations for requests.
@@ -22,4 +22,3 @@ class RequestsResource(BaseResource[Request]):
 
     entity_type = "Request"
     model_class = Request
-    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS

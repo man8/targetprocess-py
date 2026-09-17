@@ -21,6 +21,7 @@ from targetprocess.exceptions import (
     RateLimitError,
     ReadOnlyViolation,
     RequestValidationError,
+    SplitTransitionError,
     TargetProcessError,
     VerificationError,
 )
@@ -72,6 +73,7 @@ from targetprocess.models import (
 )
 from targetprocess.request_handler import RequestHandler
 from targetprocess.resources import (
+    AssignableResource,
     AssignmentsResource,
     AttachmentsResource,
     BaseResource,
@@ -108,7 +110,7 @@ from targetprocess.resources import (
     WorkflowsResource,
 )
 from targetprocess.response_parser import ResponseParser
-from targetprocess.types import ClientMode, UpsertAction, UpsertResult
+from targetprocess.types import ClientMode, LevelState, StateLevels, UpsertAction, UpsertResult
 
 __version__ = "0.1.0"
 
@@ -124,6 +126,7 @@ __all__ = [
     "RateLimitError",
     "ReadOnlyViolation",
     "RequestValidationError",
+    "SplitTransitionError",
     "TargetProcessError",
     "VerificationError",
     # Models - Base
@@ -191,10 +194,13 @@ __all__ = [
     "RequestHandler",
     "ResponseParser",
     "TargetProcessClient",
+    "LevelState",
+    "StateLevels",
     "UpsertAction",
     "UpsertResult",
     # Resource Managers - Base
     "BaseResource",
+    "AssignableResource",
     # Resource Managers - Typed
     "AssignmentsResource",
     "AttachmentsResource",

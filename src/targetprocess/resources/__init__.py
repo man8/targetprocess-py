@@ -1,5 +1,6 @@
 """Resource managers for TargetProcess entities."""
 
+from targetprocess.resources.assignables import AssignableResource
 from targetprocess.resources.assignments import AssignmentsResource
 from targetprocess.resources.attachments import AttachmentsResource
 from targetprocess.resources.base import BaseResource
@@ -38,6 +39,7 @@ from targetprocess.resources.workflows import WorkflowsResource
 __all__ = [
     # Base
     "BaseResource",
+    "AssignableResource",
     # Typed resources
     "AssignmentsResource",
     "AttachmentsResource",

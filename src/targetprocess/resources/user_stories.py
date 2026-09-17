@@ -1,10 +1,10 @@
 """UserStory resource manager."""
 
 from targetprocess.models import UserStory
-from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
+from targetprocess.resources.assignables import AssignableResource
 
 
-class UserStoriesResource(BaseResource[UserStory]):
+class UserStoriesResource(AssignableResource[UserStory]):
     """Resource manager for UserStory entities.
 
     Provides type-safe CRUD operations for user stories.
@@ -22,4 +22,3 @@ class UserStoriesResource(BaseResource[UserStory]):
 
     entity_type = "UserStory"
     model_class = UserStory
-    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS

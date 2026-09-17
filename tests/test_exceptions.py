@@ -156,3 +156,21 @@ def test_verification_error_single_entity_form() -> None:
 
     assert error.entity_id == 123
     assert error.verified_ids == []
+
+
+def test_split_transition_error_carries_both_workflows() -> None:
+    import targetprocess
+    from targetprocess.exceptions import SplitTransitionError
+
+    error = SplitTransitionError(
+        "UserStory 123 has a team level in workflow 9",
+        entity_id=123,
+        project_workflow_id=5,
+        team_workflow_id=9,
+    )
+
+    assert issubclass(SplitTransitionError, TargetProcessError)
+    assert str(error) == "UserStory 123 has a team level in workflow 9"
+    assert (error.entity_id, error.project_workflow_id, error.team_workflow_id) == (123, 5, 9)
+    assert "SplitTransitionError" in targetprocess.__all__
+    assert targetprocess.SplitTransitionError is SplitTransitionError

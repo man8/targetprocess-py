@@ -207,14 +207,18 @@ async def test_entities_forward_the_filter_where_nothing_is_declared(entity_type
 
 def test_every_manager_with_ignored_filter_paths_is_mirrored_on_the_generic_path():
     """The generic map reaches each declaring manager by every spelling, plus Assignables."""
+    from targetprocess.resources.assignables import AssignableResource
     from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
     from targetprocess.resources.entities import _IGNORED_FILTER_PATHS
 
+    # AssignableResource declares the set once for the six managers; it is their
+    # base class rather than a manager, so it has no collection to mirror.
     declaring = {
         candidate
         for candidate in (getattr(resources, name) for name in resources.__all__)
         if isinstance(candidate, type)
         and issubclass(candidate, BaseResource)
+        and candidate is not AssignableResource
         and candidate.ignored_filter_paths
     }
     assert declaring == set(ASSIGNABLE_COLLECTIONS)
