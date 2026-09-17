@@ -108,8 +108,8 @@ def _verification_ids(items: Sequence[dict[str, Any]]) -> list[int]:
     """Return each item's ``Id`` as an integer, refusing a batch verification cannot key.
 
     A verified ``update_many`` keys every mismatch, and every verified Id, by the
-    entity's integer Id, so a digit string such as ``"5"`` and the integer ``5``
-    name one entity. An entity named twice in one batch has no single requested
+    entity's integer Id, so a string of ASCII digits such as ``"5"`` and the
+    integer ``5`` name one entity; any other string, padded or not, is refused. An entity named twice in one batch has no single requested
     state to verify against, so that is refused rather than guessed.
 
     Args:
@@ -119,13 +119,13 @@ def _verification_ids(items: Sequence[dict[str, Any]]) -> list[int]:
         The items' Ids as integers, in item order.
 
     Raises:
-        ValueError: An item's ``Id`` is neither an integer nor a string of
-            digits, or two items name the same entity.
+        ValueError: An item's ``Id`` is neither an integer (not a bool) nor a
+            string of ASCII digits, or two items name the same entity.
     """
     ids: list[int] = []
     for position, item in enumerate(items):
         value = item["Id"]
-        if isinstance(value, str) and value.strip().isdecimal():
+        if isinstance(value, str) and value.isascii() and value.isdigit():
             entity_id = int(value)
         elif isinstance(value, int) and not isinstance(value, bool):
             entity_id = value
@@ -554,9 +554,9 @@ class BaseResource[T: Entity]:
         requested keys (``include=`` those keys, so a field outside the
         default projection such as ``CustomFields`` still arrives), compares
         each requested field with what was read back, and returns the re-read
-        model - never the echo. That model carries only the requested keys:
-        every field outside them is ``None``, so fetch the entity again for a
-        full read. The comparison rules are those of
+        model - never the echo. That model carries the entity's ``Id`` and
+        ``ResourceType`` and the requested keys: every other field is
+        ``None``, so fetch the entity again for a full read. The comparison rules are those of
         :mod:`targetprocess.resources._verify`: references by ``Id``, ``None``
         against null or an absent key, numbers numerically, strings stripped,
         wire dates on the instant, custom fields by name. A key the re-read
@@ -735,7 +735,8 @@ class BaseResource[T: Entity]:
         ``verify=True`` applies :meth:`update`'s verification to every item:
         after the whole batch has been sent, one independent GET per entity
         re-reads it narrowed to that item's keys, so each returned model
-        carries only those keys. Every item is checked before anything is
+        carries its ``Id``, its ``ResourceType`` and those keys, and every
+        other field is ``None``. Every item is checked before anything is
         raised, so one ``VerificationError`` carries each failing entity's
         mismatches, keyed by integer Id, and the Ids that did verify. A
         verified batch must name each entity once by an integer Id (a string
@@ -858,8 +859,9 @@ class BaseResource[T: Entity]:
                 observed (default True)
 
         Returns:
-            The entity - the re-read, carrying only ``custom_fields``, when
-            ``verify`` is True; TP's echo of the write otherwise.
+            The entity - the re-read, carrying its ``id``, ``resource_type``
+            and ``custom_fields`` and no other field, when ``verify`` is True;
+            TP's echo of the write otherwise.
 
         Raises:
             VerificationError: ``verify`` is True and the re-read shows a

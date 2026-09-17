@@ -278,7 +278,7 @@ async def test_verified_update_many_refuses_an_entity_named_twice_before_the_wri
     assert log == []
 
 
-@pytest.mark.parametrize("entity_id", ["five", True, 5.5, None])
+@pytest.mark.parametrize("entity_id", ["five", " 5 ", "\uff15", True, 5.5, None])
 async def test_verified_update_many_refuses_a_non_integer_id_before_the_write(
     entity_id: object,
 ) -> None:

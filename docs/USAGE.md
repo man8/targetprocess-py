@@ -182,9 +182,9 @@ entity, which can be stale. A caller who reads that echo can believe a change
 landed when it did not. Pass `verify=True` and the library does not trust it:
 after the write it re-reads each entity with one independent GET, narrowed to
 the keys you sent, compares them, and returns the re-read model instead.
-Because the re-read is narrowed, that model carries only the keys you sent:
-every other field on it is `None`, so `get` the entity again when you need the
-rest.
+Because the re-read is narrowed, that model carries its `id` and
+`resource_type` and the keys you sent: every other field on it is `None`, so
+`get` the entity again when you need the rest.
 
 ```python
 from targetprocess import VerificationError
@@ -201,7 +201,7 @@ except VerificationError as exc:
 `update_many` re-reads every item after the whole batch and raises once, with
 the failing entities in `exc.mismatches` and the rest in `exc.verified_ids`,
 both keyed by integer Id. A verified batch names each entity once, by an
-integer Id or a string of digits; a repeated or non-integer Id raises
+integer Id or a string of ASCII digits; a repeated or non-integer Id raises
 `ValueError` before anything is sent. The comparison is on the wire values:
 
 - a reference such as `{"Id": 82}` matches on `Id` alone;
@@ -250,7 +250,8 @@ field reads back in TargetProcess's `/Date(ms±HHMM)/` wire form, so it verifies
 only when you send that form - `format_tp_date` of a timezone-aware `datetime`
 (see [Time against a custom activity](#time-against-a-custom-activity)) rather
 than `"2026-10-01"` - or with `verify=False`. The verified return value is the
-narrowed re-read, carrying `custom_fields` and nothing else.
+narrowed re-read: its `id`, `resource_type` and `custom_fields`, and no other
+field.
 Reading values back is `include=["CustomFields"]` on `get` or `list`.
 
 ### The generic `entities` accessor
