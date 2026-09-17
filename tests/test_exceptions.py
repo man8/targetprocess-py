@@ -14,6 +14,7 @@ from targetprocess.exceptions import (
     ReadOnlyViolation,
     RequestValidationError,
     TargetProcessError,
+    VerificationError,
 )
 
 
@@ -26,6 +27,7 @@ def test_base_exception_hierarchy() -> None:
     assert issubclass(RateLimitError, TargetProcessError)
     assert issubclass(ReadOnlyViolation, TargetProcessError)
     assert issubclass(APIError, TargetProcessError)
+    assert issubclass(VerificationError, TargetProcessError)
 
 
 def test_new_exception_hierarchy() -> None:
@@ -122,3 +124,35 @@ def test_ambiguous_match_error_generic_form() -> None:
     assert err.day is None
     assert err.count is None
     assert isinstance(err, TargetProcessError)
+
+
+def test_verification_error_carries_its_context() -> None:
+    import targetprocess
+
+    error = VerificationError(
+        "update_many did not verify 1 of 2 entities",
+        entity_type="Task",
+        mismatches={4: {"Effort": (1, VerificationError.ABSENT)}},
+        verified_ids=[3],
+    )
+
+    assert str(error) == "update_many did not verify 1 of 2 entities"
+    assert error.entity_type == "Task"
+    assert error.entity_id is None
+    assert error.mismatches == {4: {"Effort": (1, VerificationError.ABSENT)}}
+    assert error.verified_ids == [3]
+    assert repr(VerificationError.ABSENT) == "<absent>"
+    assert "VerificationError" in targetprocess.__all__
+    assert targetprocess.VerificationError is VerificationError
+
+
+def test_verification_error_single_entity_form() -> None:
+    error = VerificationError(
+        "update did not verify",
+        entity_type="UserStory",
+        entity_id=123,
+        mismatches={123: {"Effort": (3.0, 2.0)}},
+    )
+
+    assert error.entity_id == 123
+    assert error.verified_ids == []

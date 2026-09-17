@@ -1,7 +1,8 @@
 """Exception classes for targetprocess-py."""
 
+from collections.abc import Mapping, Sequence
 from datetime import date
-from typing import Any
+from typing import Any, ClassVar
 
 
 class TargetProcessError(Exception):
@@ -145,3 +146,58 @@ class AmbiguousMatchError(TargetProcessError):
         self.user_id = user_id
         self.day = day
         self.count = count
+
+
+class _Absent:
+    """The observed side of a requested field the re-read did not carry."""
+
+    def __repr__(self) -> str:
+        """Render as ``<absent>``, the form a mismatch message uses."""
+        return "<absent>"
+
+
+class VerificationError(TargetProcessError):
+    """An independent re-read after a write did not show the requested fields.
+
+    Raised by ``update(..., verify=True)`` and ``update_many(..., verify=True)``
+    when the entity read back after the write does not carry what the write
+    asked for. The write itself was sent and answered with a success status;
+    this error is the evidence that the status was not proof the change landed.
+
+    Attributes:
+        entity_type: The entity type written (e.g. ``"UserStory"``).
+        entity_id: The entity written, for a single-entity update; ``None``
+            for a bulk update.
+        mismatches: Entity Id -> field -> ``(requested, observed)`` for every
+            field that did not verify. A field the re-read did not carry at
+            all is observed as :attr:`ABSENT`; a custom field is keyed
+            ``CustomFields[<name>]``.
+        verified_ids: The entities of a bulk update whose re-read matched;
+            empty for a single-entity update.
+    """
+
+    ABSENT: ClassVar[object] = _Absent()
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        entity_type: str,
+        entity_id: int | None = None,
+        mismatches: Mapping[int, Mapping[str, tuple[Any, Any]]],
+        verified_ids: Sequence[int] = (),
+    ) -> None:
+        """Initialize verification error.
+
+        Args:
+            message: Human-readable description naming each mismatch.
+            entity_type: The entity type written.
+            entity_id: The entity written, for a single-entity update.
+            mismatches: Entity Id -> field -> ``(requested, observed)``.
+            verified_ids: The entities of a bulk update that did verify.
+        """
+        super().__init__(message)
+        self.entity_type = entity_type
+        self.entity_id = entity_id
+        self.mismatches = {entity: dict(fields) for entity, fields in mismatches.items()}
+        self.verified_ids = list(verified_ids)

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `update()` and `update_many()` take an opt-in, keyword-only `verify=True`:
+  after the write each entity is re-read with one independent GET narrowed to
+  the requested keys, the re-read model is returned instead of TargetProcess's
+  own echo, and a requested field that is not observed raises the new
+  `VerificationError`, which carries every mismatch. The default path is
+  unchanged.
+
 ### Changed
 
 - `list()` refuses, before any request is sent, a `where=` filter naming a

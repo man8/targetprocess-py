@@ -147,9 +147,9 @@ Typed resource managers, each exposed as a property on the client:
   append=None, innertake=None, order_by=None, order_by_desc=None, skip=None,
   limit=None, page_size=25) -> AsyncIterator[T]`
 - `create(**fields) -> T` (READWRITE only)
-- `update(id, **fields) -> T` (READWRITE only)
+- `update(id, *, verify=False, **fields) -> T` (READWRITE only)
 - `delete(id) -> None` (READWRITE only)
-- `create_many(items) -> list[T]` / `update_many(items) -> list[T]`
+- `create_many(items) -> list[T]` / `update_many(items, *, verify=False) -> list[T]`
   (READWRITE only) - one bulk request for the whole batch; see "Bulk write
   semantics" below. On a collection the server restricts (next paragraph)
   they raise `ReadOnlyViolation` in every mode, as the single-item writes do
@@ -547,6 +547,8 @@ All library exceptions extend `TargetProcessError`:
   `custom_activities.resolve`, and by `times.upsert`);
   optionally carries `assignable_id`, `user_id`, `day`, and `count` where the
   caller has that context.
+- `VerificationError` - an update with `verify=True` read back an entity not
+  showing a requested field; carries `mismatches` and `verified_ids`.
 
 ## Behavioural Contracts
 
@@ -688,6 +690,19 @@ dict-in/dict-out path underneath both.
 - **Empty input short-circuits.** An empty `items` returns `[]` with no
   network request - after the write gates have run, so a READONLY client
   is refused even for an empty batch.
+
+### Verified writes
+
+An update's return value is TP's own echo of the write, which can be stale.
+`update(..., verify=True)` and `update_many(..., verify=True)` on the typed
+managers (not `entities`) re-read each entity with one GET narrowed to the
+requested keys, after the whole batch for `update_many`, and return the
+re-read models; a requested field not observed raises one `VerificationError`
+carrying entity Id -> field -> `(requested, observed)`. References match by
+`Id`, `None` matches null or an absent key, numbers compare numerically,
+strings stripped, wire dates on the instant, custom fields by name; any other
+absent key fails. A `Description` sent without the Markdown marker is stored
+HTML-encoded, so it can fail on its own encoding.
 
 ### Retry policy
 
