@@ -15,6 +15,7 @@ hard-coded.
 - [Filtering and querying](#filtering-and-querying)
 - [Pagination](#pagination)
 - [Logging time](#logging-time)
+- [Moving an item through its workflow](#moving-an-item-through-its-workflow)
 - [Relations](#relations)
 - [Rich-text descriptions and comments](#rich-text-descriptions-and-comments)
 - [Attachments](#attachments)
@@ -607,6 +608,47 @@ entries = [
 ]
 ```
 
+## Moving an item through its workflow
+
+A work item carries two entity states: the project-workflow state on the item
+itself, and the team-workflow state on its team assignment - the lane a team
+board shows. Where the team has a workflow of its own the two move separately,
+and writing only the item's `EntityState` leaves them split behind a success
+status. `entity_state_levels` reads both levels, and `advance_state` moves them
+as one transition.
+
+```python
+levels = await client.user_stories.entity_state_levels(123)
+print(levels.project.state_id, levels.project.workflow_id)
+print(levels.team, levels.team_assignment_id, levels.collapsed)  # team is None without one
+
+if levels.team is None or levels.collapsed:
+    # One write moves the item, and a collapsed team level with it
+    moved = await client.user_stories.advance_state(123, to="Done")
+else:
+    # Choose each level's target from that level's own workflow
+    project_final = await client.entity_states.final_states(levels.project.workflow_id)
+    team_final = await client.entity_states.final_states(levels.team.workflow_id)
+    moved = await client.user_stories.advance_state(
+        123, to=project_final[0], team_to=team_final[0]
+    )
+```
+
+A target is a state Id, a state name, or an `EntityState` read with its
+`Workflow`, and each resolves within its own level's workflow (see
+[Resolving an entity state within its workflow](#resolving-an-entity-state-within-its-workflow)).
+With a distinct team level, leaving out `team_to` raises `SplitTransitionError`
+before anything is written: pass the team level's target too. Where both levels
+share one workflow `team_to` may be left out, and if given must name the same
+state as `to`. An item with more than one team assignment raises
+`AmbiguousMatchError`; move each through `client.team_assignments.update`.
+
+`verify` defaults to `True`: after the writes the item and its team assignment
+are each re-read, a level not showing its target raises `VerificationError`,
+and the levels returned are those re-reads. The item's write goes first and the
+two are not locked together, so a failure between them leaves the item moved
+and its team level not.
+
 ## Relations
 
 `client.relations` reads and writes `Relation` records directly: a
@@ -754,6 +796,7 @@ catch a specific failure or the base class. HTTP status codes map to types:
 | `ParseError` | a response body failed Pydantic model validation |
 | `ReadOnlyViolation` | a write was attempted on a `READONLY` client |
 | `VerificationError` | a verified write (`verify=True`, or `set_custom_field` by default) read back an entity not showing a requested field; carries `mismatches` |
+| `SplitTransitionError` | `advance_state` would move one entity-state level without the other; carries `entity_id`, `project_workflow_id` and `team_workflow_id` |
 
 ```python
 import logging

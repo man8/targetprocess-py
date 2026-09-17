@@ -51,6 +51,7 @@ import pytest
 
 from targetprocess import ClientMode, TargetProcessClient
 from targetprocess.exceptions import NotFoundError
+from targetprocess.models import EntityState
 
 pytestmark = [pytest.mark.vcr, pytest.mark.integration]
 
@@ -104,6 +105,15 @@ def _lowest_id[T: _HasId](items: list[T]) -> T:
     """
     assert items, "instance-wide lookup came back empty - nothing to select from"
     return min(items, key=lambda item: item.id)
+
+
+def _ungated_lowest_id(states: list[EntityState]) -> EntityState:
+    """Return the lowest-Id state a transition can enter without a comment or a role.
+
+    A state that requires a comment, or is restricted to a role, would refuse a
+    bare state write, so it is dropped before the structural selection.
+    """
+    return _lowest_id([s for s in states if s.is_comment_required is not True and s.role is None])
 
 
 async def _sandbox_story(client: TargetProcessClient, suffix: str):
@@ -464,6 +474,87 @@ async def test_relation_inbound_outbound_create_and_filter(live_credentials) -> 
             assert story is not None
             with pytest.raises(NotFoundError):
                 await client.user_stories.get(story.id)
+
+
+@pytest.mark.asyncio
+async def test_two_level_advance_moves_both_levels(live_credentials) -> None:
+    """Advancing a work item whose team level is in a workflow of its own.
+
+    A work item's project-workflow state and its team assignment's
+    team-workflow state move independently, and ``advance_state`` moves both
+    as one transition. Recording that needs the sandbox project linked to
+    exactly one team, and that team given a UserStory team workflow of its
+    own, distinct from the project workflow. The single ``TeamProject`` row is
+    the one selected; no link, more than one, or a collapsed pair of levels
+    fails the test rather than recording the wrong case. The test deletes only
+    what it creates - its team assignment and its story - never the team, its
+    link or a workflow.
+
+    Each level's target is chosen structurally - its workflow's final states,
+    less any gated by a required comment or a role, lowest Id - and passed as
+    a state Id. Names are placeholders on replay, so a target passed by name
+    could not replay; resolving a name within a level's workflow is proven by
+    unit tests. The plain reads after the advance are the independent
+    evidence that each level landed.
+    """
+    domain, token = live_credentials
+    async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READWRITE) as client:
+        # Read before anything is created, so a missing link writes nothing.
+        links = [
+            link
+            async for link in client.entities.list(
+                "TeamProject", where=f"Project.Id eq {_SANDBOX_PROJECT_ID}"
+            )
+        ]
+        assert links, "no team linked to the sandbox"
+        assert len(links) == 1, "unexpected extra team link"
+        team_id = links[0].Team["Id"]
+
+        story = await _sandbox_story(client, "two-level advance story")
+        try:
+            team_assignment = await client.team_assignments.create(
+                Assignable={"Id": story.id},
+                Team={"Id": team_id},
+            )
+            try:
+                levels = await client.user_stories.entity_state_levels(story.id)
+                assert levels.team is not None
+                assert levels.team_assignment_id == team_assignment.id
+                assert levels.collapsed is False, "the linked team shares the project workflow"
+
+                project_target = _ungated_lowest_id(
+                    await client.entity_states.final_states(levels.project.workflow_id)
+                )
+                team_target = _ungated_lowest_id(
+                    await client.entity_states.final_states(levels.team.workflow_id)
+                )
+                moved = await client.user_stories.advance_state(
+                    story.id, to=project_target.id, team_to=team_target.id
+                )
+
+                assert moved.project.state_id == project_target.id
+                assert moved.team is not None
+                assert moved.team.state_id == team_target.id
+                assert moved.collapsed is False
+
+                story_after = await client.user_stories.get(story.id, include=["EntityState"])
+                assert story_after.entity_state is not None
+                assert story_after.entity_state.id == project_target.id
+                team_after = await client.team_assignments.get(
+                    team_assignment.id, include=["EntityState"]
+                )
+                assert team_after.entity_state is not None
+                assert team_after.entity_state.id == team_target.id
+            finally:
+                await client.team_assignments.delete(team_assignment.id)
+
+            with pytest.raises(NotFoundError):
+                await client.team_assignments.get(team_assignment.id)
+        finally:
+            await client.user_stories.delete(story.id)
+
+        with pytest.raises(NotFoundError):
+            await client.user_stories.get(story.id)
 
 
 @pytest.mark.asyncio

@@ -201,3 +201,40 @@ class VerificationError(TargetProcessError):
         self.entity_id = entity_id
         self.mismatches = {entity: dict(fields) for entity, fields in mismatches.items()}
         self.verified_ids = list(verified_ids)
+
+
+class SplitTransitionError(TargetProcessError):
+    """An entity-state advance that would leave a work item's two levels apart.
+
+    A work item carries a project-workflow state on itself and a team-workflow
+    state on its team assignment. Raised by ``advance_state`` before any write
+    when the call would move one level without the other - a team level in a
+    workflow of its own with no ``team_to`` given - or would ask one shared
+    workflow to hold two different targets.
+
+    Attributes:
+        entity_id: The work item the advance targeted.
+        project_workflow_id: The workflow of the item's own state.
+        team_workflow_id: The workflow of its team assignment's state.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        entity_id: int,
+        project_workflow_id: int,
+        team_workflow_id: int,
+    ) -> None:
+        """Initialize split-transition error.
+
+        Args:
+            message: Human-readable description naming both workflows.
+            entity_id: The work item the advance targeted.
+            project_workflow_id: The workflow of the item's own state.
+            team_workflow_id: The workflow of its team assignment's state.
+        """
+        super().__init__(message)
+        self.entity_id = entity_id
+        self.project_workflow_id = project_workflow_id
+        self.team_workflow_id = team_workflow_id

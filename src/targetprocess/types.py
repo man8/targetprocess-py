@@ -54,3 +54,40 @@ class UpsertResult:
     action: UpsertAction
     time: Time | None
     changed_fields: frozenset[str]
+
+
+@dataclass(frozen=True)
+class LevelState:
+    """One entity-state level of a work item.
+
+    Attributes:
+        state_id: The EntityState's Id.
+        state_name: The EntityState's name, as the read carried it.
+        workflow_id: The Id of the workflow the state belongs to.
+    """
+
+    state_id: int
+    state_name: str | None
+    workflow_id: int
+
+
+@dataclass(frozen=True)
+class StateLevels:
+    """A work item's two entity-state levels, read together.
+
+    Attributes:
+        project: The project-workflow state, carried on the item itself.
+        team: The team-workflow state, carried on the item's team assignment -
+            the lane a team board shows. ``None`` when the item has no team
+            assignment.
+        team_assignment_id: The team assignment carrying ``team``; ``None``
+            when there is none.
+        collapsed: Whether both levels belong to one workflow, so that the team
+            level is not a state of its own and one write moves both. ``False``
+            when there is no team level.
+    """
+
+    project: LevelState
+    team: LevelState | None
+    team_assignment_id: int | None
+    collapsed: bool

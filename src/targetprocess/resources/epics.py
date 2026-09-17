@@ -1,10 +1,10 @@
 """Epic resource manager."""
 
 from targetprocess.models import Epic
-from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
+from targetprocess.resources.assignables import AssignableResource
 
 
-class EpicsResource(BaseResource[Epic]):
+class EpicsResource(AssignableResource[Epic]):
     """Resource manager for Epic entities.
 
     Provides type-safe CRUD operations for epics.
@@ -22,4 +22,3 @@ class EpicsResource(BaseResource[Epic]):
 
     entity_type = "Epic"
     model_class = Epic
-    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS

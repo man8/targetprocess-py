@@ -29,6 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one workflow, a state name resolved within that workflow (raising
   `NotFoundError` or `AmbiguousMatchError` rather than guessing), and the
   workflow's final states.
+- `entity_state_levels(id)` and `advance_state(id, *, to, team_to=None,
+  verify=True)` on the six work-item managers, through their new shared base
+  `AssignableResource`: a work item's project-workflow and team-workflow
+  entity states read together as `StateLevels` (of two `LevelState`s), and
+  moved as one transition - each target resolved within its own level's
+  workflow, one write where both levels share a workflow, and the new
+  `SplitTransitionError` raised before any write when a distinct team level
+  would be left behind.
 
 ### Changed
 

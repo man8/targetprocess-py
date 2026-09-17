@@ -1,10 +1,10 @@
 """Bug resource manager."""
 
 from targetprocess.models import Bug
-from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
+from targetprocess.resources.assignables import AssignableResource
 
 
-class BugsResource(BaseResource[Bug]):
+class BugsResource(AssignableResource[Bug]):
     """Resource manager for Bug entities.
 
     Provides type-safe CRUD operations for bugs.
@@ -22,4 +22,3 @@ class BugsResource(BaseResource[Bug]):
 
     entity_type = "Bug"
     model_class = Bug
-    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS

@@ -130,6 +130,13 @@ itself.
   TargetProcess instance with an administrator token (HTTP 200): the same
   top-level fields as `GET /api/v1/User/{id}` - every `User` model field but
   `AvatarUri`, `Login` included. Non-administrator access is unverified.
+- **Entity states**: a work item carries two entity states that move
+  independently - the project-workflow state on the item (`EntityState`) and
+  the team-workflow state on each of its `TeamAssignment` records (the lane a
+  team board shows). Each state's `Workflow` reference names its workflow;
+  where the team has no workflow of its own the team assignment carries the
+  item's own state object (observed with `Workflow.Id` 1, the project
+  workflow), so a second write would be a no-op.
 
 ## Public API Surface
 
@@ -594,6 +601,8 @@ All library exceptions extend `TargetProcessError`:
   caller has that context.
 - `VerificationError` - an update with `verify=True` read back an entity not
   showing a requested field; carries `mismatches` and `verified_ids`.
+- `SplitTransitionError` - `advance_state` would move one entity-state level
+  without the other; carries `entity_id` and both workflow Ids.
 
 ## Behavioural Contracts
 
@@ -751,6 +760,18 @@ null or an absent key, numbers compare numerically, strings stripped, wire
 dates on the instant, custom fields by name, with no conversion between forms;
 any other absent key fails. A `Description` sent without the Markdown marker is
 stored HTML-encoded, so it can fail on its own encoding.
+
+### Entity-state transitions
+
+The six work-item managers (`AssignableResource`) expose
+`entity_state_levels(id) -> StateLevels` and
+`advance_state(id, *, to, team_to=None, verify=True) -> StateLevels`. Each
+target (Id, name or `EntityState`) resolves within its own level's workflow.
+Levels whose workflow Ids are equal are collapsed: one write, and `team_to`
+absent or naming the same state. A distinct team level without `team_to`
+raises `SplitTransitionError` naming both workflows, before any write; more
+than one team assignment raises `AmbiguousMatchError`. Writes go item then
+team, unlocked; `verify` re-reads each level, a collapsed team level included.
 
 ### Retry policy
 

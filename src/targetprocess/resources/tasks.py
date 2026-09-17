@@ -1,10 +1,10 @@
 """Task resource manager."""
 
 from targetprocess.models import Task
-from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
+from targetprocess.resources.assignables import AssignableResource
 
 
-class TasksResource(BaseResource[Task]):
+class TasksResource(AssignableResource[Task]):
     """Resource manager for Task entities.
 
     Provides type-safe CRUD operations for tasks.
@@ -22,4 +22,3 @@ class TasksResource(BaseResource[Task]):
 
     entity_type = "Task"
     model_class = Task
-    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS

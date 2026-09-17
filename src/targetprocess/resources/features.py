@@ -1,10 +1,10 @@
 """Feature resource manager."""
 
 from targetprocess.models import Feature
-from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
+from targetprocess.resources.assignables import AssignableResource
 
 
-class FeaturesResource(BaseResource[Feature]):
+class FeaturesResource(AssignableResource[Feature]):
     """Resource manager for Feature entities.
 
     Provides type-safe CRUD operations for features.
@@ -22,4 +22,3 @@ class FeaturesResource(BaseResource[Feature]):
 
     entity_type = "Feature"
     model_class = Feature
-    ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS
