@@ -203,12 +203,16 @@ except VerificationError as exc:
 the failing entities in `exc.mismatches` and the rest in `exc.verified_ids`,
 both keyed by integer Id. A verified batch names each entity once, by an
 integer Id or a string of ASCII digits; a repeated or non-integer Id raises
-`ValueError` before anything is sent. The comparison is on the wire values:
+`ValueError` before anything is sent. A verified write also raises `ValueError`
+before anything is sent for a `CustomFields` entry that is not a mapping with a
+string `Name`, since the re-read finds each entry by name. The comparison is on
+the wire values:
 
 - a reference such as `{"Id": 82}` matches on `Id` alone;
 - `None` matches a null or a field the re-read does not carry;
 - numbers compare numerically (`5` matches `5.0`), strings with surrounding
   whitespace stripped, and wire dates on the instant rather than the offset;
+  a string never matches a number (`"3"` does not verify against `3`);
 - any other field the re-read does not carry fails, observed as
   `VerificationError.ABSENT`.
 
@@ -246,8 +250,9 @@ name (case-insensitively); a cleared field may read back as `None` or `""`.
 or no field of that name exists on the entity's process - a misspelt name, or
 one configured on another process. Pass `verify=False` to skip the re-read.
 
-The value is compared as sent, with no conversion between forms. A date-typed
-field reads back in TargetProcess's `/Date(ms±HHMM)/` wire form, so it verifies
+The value is compared as sent, with no conversion between forms, so a string
+value does not verify against a numeric field's number. A date-typed field
+reads back in TargetProcess's `/Date(ms±HHMM)/` wire form, so it verifies
 only when you send that form - `format_tp_date` of a timezone-aware `datetime`
 (see [Time against a custom activity](#time-against-a-custom-activity)) rather
 than `"2026-10-01"` - or with `verify=False`. The verified return value is the

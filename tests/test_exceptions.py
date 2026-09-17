@@ -1,6 +1,12 @@
 """Tests for targetprocess exception classes."""
 
+import inspect
+import pickle
+from collections.abc import Callable
 from datetime import date
+from typing import Any
+
+import pytest
 
 from targetprocess.exceptions import (
     AmbiguousMatchError,
@@ -174,3 +180,118 @@ def test_split_transition_error_carries_both_workflows() -> None:
     assert (error.entity_id, error.project_workflow_id, error.team_workflow_id) == (123, 5, 9)
     assert "SplitTransitionError" in targetprocess.__all__
     assert targetprocess.SplitTransitionError is SplitTransitionError
+
+
+# Every protocol this interpreter can write, so an error shipped across processes
+# round-trips whichever one the sending side picks.
+_PROTOCOLS = pytest.mark.parametrize("protocol", range(pickle.HIGHEST_PROTOCOL + 1))
+
+
+def _round_trip(value: object, protocol: int) -> Any:
+    return pickle.loads(pickle.dumps(value, protocol))
+
+
+@_PROTOCOLS
+def test_absent_stays_the_one_absent_across_pickling(protocol: int) -> None:
+    assert _round_trip(VerificationError.ABSENT, protocol) is VerificationError.ABSENT
+
+
+@_PROTOCOLS
+@pytest.mark.parametrize(
+    ("entity_id", "verified_ids"), [(123, []), (None, [3])], ids=["single", "bulk"]
+)
+def test_verification_error_survives_a_pickle_round_trip(
+    protocol: int, entity_id: int | None, verified_ids: list[int]
+) -> None:
+    error = VerificationError(
+        "did not verify",
+        entity_type="Task",
+        entity_id=entity_id,
+        mismatches={4: {"Effort": (1, VerificationError.ABSENT), "Name": ("a", "b")}},
+        verified_ids=verified_ids,
+    )
+
+    loaded = _round_trip(error, protocol)
+
+    assert type(loaded) is VerificationError
+    assert str(loaded) == str(error)
+    assert loaded.args == error.args
+    assert loaded.entity_type == "Task"
+    assert loaded.entity_id == entity_id
+    assert loaded.mismatches == {4: {"Effort": (1, VerificationError.ABSENT), "Name": ("a", "b")}}
+    assert loaded.mismatches[4]["Effort"][1] is VerificationError.ABSENT
+    assert loaded.verified_ids == verified_ids
+    assert loaded.__dict__ == error.__dict__
+
+
+def _library_errors() -> dict[type[TargetProcessError], Callable[[], TargetProcessError]]:
+    """One factory per exception class the module defines, each passing non-default arguments."""
+    from targetprocess.exceptions import SplitTransitionError
+
+    return {
+        TargetProcessError: lambda: TargetProcessError("Something failed"),
+        APIError: lambda: APIError(
+            "Request failed", status_code=400, details={"endpoint": "/api/v1/Bugs", "method": "GET"}
+        ),
+        AuthenticationError: lambda: AuthenticationError("Invalid token"),
+        ForbiddenError: lambda: ForbiddenError("Permission denied"),
+        NotFoundError: lambda: NotFoundError("UserStory 123 not found"),
+        RequestValidationError: lambda: RequestValidationError("Name is required"),
+        RateLimitError: lambda: RateLimitError("Rate limit exceeded"),
+        NetworkError: lambda: NetworkError("Connection reset"),
+        ParseError: lambda: ParseError("Response failed model validation"),
+        ReadOnlyViolation: lambda: ReadOnlyViolation(
+            "update", "UserStory", reason="the collection is read-only on the server"
+        ),
+        AmbiguousMatchError: lambda: AmbiguousMatchError(
+            "3 Time entries already match assignable 51383 / user 1 on 2026-08-09",
+            assignable_id=51383,
+            user_id=1,
+            day=date(2026, 8, 9),
+            count=3,
+        ),
+        VerificationError: lambda: VerificationError(
+            "did not verify",
+            entity_type="Task",
+            entity_id=4,
+            mismatches={4: {"Effort": (1, VerificationError.ABSENT)}},
+            verified_ids=[3],
+        ),
+        SplitTransitionError: lambda: SplitTransitionError(
+            "UserStory 123 has a team level in workflow 9",
+            entity_id=123,
+            project_workflow_id=5,
+            team_workflow_id=9,
+        ),
+    }
+
+
+@_PROTOCOLS
+@pytest.mark.parametrize(
+    "factory",
+    list(_library_errors().values()),
+    ids=[error_class.__name__ for error_class in _library_errors()],
+)
+def test_every_library_error_survives_a_pickle_round_trip(
+    protocol: int, factory: Callable[[], TargetProcessError]
+) -> None:
+    error = factory()
+
+    loaded = _round_trip(error, protocol)
+
+    assert type(loaded) is type(error)
+    assert str(loaded) == str(error)
+    assert loaded.args == error.args
+    assert loaded.__dict__ == error.__dict__
+
+
+def test_the_pickle_table_covers_every_library_error() -> None:
+    import targetprocess.exceptions as module
+
+    defined = {
+        member
+        for _, member in inspect.getmembers(module, inspect.isclass)
+        if issubclass(member, TargetProcessError) and member.__module__ == module.__name__
+    }
+
+    assert defined == set(_library_errors())

@@ -14,7 +14,12 @@ import pytest
 
 from targetprocess import TargetProcessClient
 from targetprocess.exceptions import ReadOnlyViolation, VerificationError
-from targetprocess.resources._verify import compare_fields, custom_field_mismatch, describe
+from targetprocess.resources._verify import (
+    compare_fields,
+    custom_field_mismatch,
+    describe,
+    values_match,
+)
 from targetprocess.types import ClientMode
 
 _STORY = "/api/v1/UserStory/123"
@@ -174,6 +179,105 @@ async def test_verified_update_refuses_an_unhydratable_include_before_the_write(
     assert log == []
 
 
+_UNCHECKABLE_ENTRIES = pytest.mark.parametrize(
+    "entry",
+    [{"Value": "v"}, {"Name": 5, "Value": "v"}, "junk"],
+    ids=["nameless", "non-string-name", "not-a-mapping"],
+)
+
+
+@_UNCHECKABLE_ENTRIES
+async def test_verified_update_refuses_a_custom_field_entry_without_a_string_name(
+    entry: object,
+) -> None:
+    client, log = _client({})
+
+    with pytest.raises(ValueError, match=r"CustomFields entry 1 .*a verified write cannot check"):
+        await client.user_stories.update(
+            123, CustomFields=[{"Name": "Ticket", "Value": "v"}, entry], verify=True
+        )
+
+    assert log == []
+
+
+async def test_unverified_update_sends_a_custom_field_entry_without_a_string_name() -> None:
+    client, log = _client({("POST", _STORY): _story(Effort=1.0)})
+
+    story = await client.user_stories.update(123, CustomFields=[{"Value": "v"}])
+
+    assert [request.method for request in log] == ["POST"]
+    assert json.loads(log[0].content) == {"CustomFields": [{"Value": "v"}]}
+    assert story.effort == 1.0  # the echo
+
+
+@pytest.mark.parametrize(
+    ("key", "entries", "refused"),
+    [
+        ("customfields", [{"Value": "v"}], "customfields entry 0 "),
+        (
+            "CustomFields",
+            ({"Name": "Ticket", "Value": "v"}, {"Value": "v"}),
+            "CustomFields entry 1 ",
+        ),
+    ],
+    ids=["lower-case-key", "tuple"],
+)
+async def test_verified_update_refuses_an_uncheckable_entry_under_any_key_casing_or_sequence(
+    key: str, entries: object, refused: str
+) -> None:
+    client, log = _client({})
+
+    with pytest.raises(ValueError, match=refused):
+        await client.user_stories.update(123, verify=True, **{key: entries})
+
+    assert log == []
+
+
+def _ticket_routes() -> dict[tuple[str, str], Responder]:
+    """A write echo with no custom fields, and a re-read carrying ``Ticket`` = ``"v"``."""
+    ticket = {"Name": "Ticket", "Type": "Text", "Value": "v"}
+    return {("POST", _STORY): _story(), ("GET", _STORY): _story(CustomFields=[ticket])}
+
+
+async def test_verified_update_verifies_a_custom_fields_tuple() -> None:
+    client, log = _client(_ticket_routes())
+
+    story = await client.user_stories.update(
+        123, CustomFields=({"Name": "Ticket", "Value": "v"},), verify=True
+    )
+
+    assert [request.method for request in log] == ["POST", "GET"]
+    assert json.loads(log[0].content) == {"CustomFields": [{"Name": "Ticket", "Value": "v"}]}
+    # The re-read model, never the echo.
+    assert story.custom_fields is not None
+    assert [(field.name, field.value) for field in story.custom_fields] == [("Ticket", "v")]
+
+
+async def test_verified_update_finds_an_entry_whose_keys_are_in_any_casing() -> None:
+    client, log = _client(_ticket_routes())
+
+    await client.user_stories.update(
+        123, CustomFields=[{"name": "Ticket", "value": "v"}], verify=True
+    )
+
+    assert [request.method for request in log] == ["POST", "GET"]
+
+
+async def test_verified_update_sends_a_custom_fields_mapping_and_compares_it_whole() -> None:
+    client, log = _client(_ticket_routes())
+
+    mapping = {"Name": "Ticket", "Value": "v"}
+
+    with pytest.raises(VerificationError) as caught:
+        await client.user_stories.update(123, CustomFields=mapping, verify=True)
+
+    assert [request.method for request in log] == ["POST", "GET"]
+    assert json.loads(log[0].content) == {"CustomFields": mapping}
+    assert caught.value.mismatches == {
+        123: {"CustomFields": (mapping, [{"Name": "Ticket", "Type": "Text", "Value": "v"}])}
+    }
+
+
 # --- update_many(verify=True) ----------------------------------------------------------------
 
 
@@ -310,7 +414,42 @@ async def test_verified_update_many_refuses_an_unhydratable_include_before_the_w
     assert log == []
 
 
+async def test_verified_update_many_refuses_a_custom_field_entry_naming_item_and_entry() -> None:
+    client, log = _client({})
+
+    with pytest.raises(
+        ValueError, match=r"^update_many item 1: CustomFields entry 0 .*cannot check"
+    ):
+        await client.user_stories.update_many(
+            [
+                {"Id": 5, "CustomFields": [{"Name": "Ticket", "Value": "v"}]},
+                {"Id": 6, "CustomFields": [{"Value": "v"}]},
+            ],
+            verify=True,
+        )
+
+    assert log == []
+
+
 # --- the comparison, directly -----------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("requested", "observed", "matches"),
+    [
+        ("3", 3, False),
+        (3, "3", False),
+        ("3", 3.0, False),
+        (5, 5.0, True),
+        (" x ", "x", True),
+        (True, 1, False),
+    ],
+    ids=["str-int", "int-str", "str-float", "int-float", "padded-str", "bool-int"],
+)
+def test_values_match_applies_the_scalar_rules(
+    requested: object, observed: object, matches: bool
+) -> None:
+    assert values_match(requested, observed) is matches
 
 
 def test_compare_fields_matches_keys_case_insensitively() -> None:
@@ -385,6 +524,41 @@ def test_compare_fields_matches_custom_fields_entry_by_entry() -> None:
     ) == {
         "CustomFields[Ticket]": (None, "Kept"),
         "CustomFields[Missing]": (1, _ABSENT),
+    }
+
+
+def test_compare_fields_matches_a_custom_fields_tuple_entry_by_entry() -> None:
+    observed = {"CustomFields": [{"Name": "Ticket", "Type": "Text", "Value": "Kept"}]}
+
+    assert compare_fields({"CustomFields": ({"Name": "ticket", "Value": "Kept"},)}, observed) == {}
+    assert compare_fields({"CustomFields": ({"Name": "Ticket", "Value": "Other"},)}, observed) == {
+        "CustomFields[Ticket]": ("Other", "Kept")
+    }
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["Ticket", b"Ticket", bytearray(b"Ticket"), {"Name": "Ticket", "Value": "v"}],
+    ids=["str", "bytes", "bytearray", "mapping"],
+)
+def test_compare_fields_compares_a_custom_fields_string_bytes_or_mapping_whole(
+    value: object,
+) -> None:
+    assert compare_fields({"CustomFields": value}, {"CustomFields": value}) == {}
+    assert compare_fields({"CustomFields": value}, {"CustomFields": []}) == {
+        "CustomFields": (value, [])
+    }
+
+
+@_UNCHECKABLE_ENTRIES
+def test_compare_fields_reports_a_custom_field_entry_without_a_string_name(entry: object) -> None:
+    observed = {"CustomFields": [{"Name": "Ticket", "Type": "Text", "Value": "v"}]}
+
+    assert compare_fields(
+        {"CustomFields": [{"Name": "Ticket", "Value": "v"}, entry]}, observed
+    ) == {"CustomFields[#1]": (entry, _ABSENT)}
+    assert compare_fields({"CustomFields": [entry]}, {"CustomFields": []}) == {
+        "CustomFields[#0]": (entry, _ABSENT)
     }
 
 
