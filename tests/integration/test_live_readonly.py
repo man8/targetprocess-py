@@ -118,3 +118,20 @@ async def test_severities_rank_the_bug_set(live_credentials) -> None:
     ranks = [s.importance for s in severities]
     assert all(rank is not None and rank >= 1 for rank in ranks)
     assert len(set(ranks)) == len(ranks)
+
+
+@pytest.mark.asyncio
+async def test_logged_user_resolves_the_acting_user(live_credentials) -> None:
+    """The LoggedUser route returns the acting user's User record, cached per client.
+
+    Recorded against a live instance through the record-time hooks, so every
+    identity field is a placeholder; the Id is structural and asserted only
+    as present.
+    """
+    domain, token = live_credentials
+    async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READONLY) as client:
+        user = await client.users.logged_user()
+        again = await client.users.logged_user()
+    assert user.id > 0 and user.resource_type == "User"
+    assert user.login is not None
+    assert again is user

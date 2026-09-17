@@ -60,6 +60,12 @@ _REDACTED_FIELD_NAMES = {
     "login",
     "tags",
     "uniquefilename",
+    "email",
+    "acid",
+    "globalid",
+    "frontdooruserid",
+    "activedirectoryname",
+    "legacyskills",
 }
 _PLACEHOLDER_PREFIX = "Sanitised "
 
@@ -245,6 +251,56 @@ def test_identity_field_offenders_flags_a_leak_whatever_its_casing() -> None:
         "Items[0].Name='A real story title'",
         "items[0].owner.fullName='A Real Person'",
         "items[0].owner.login='areallogin'",
+    ]
+
+
+def test_identity_field_offenders_flags_person_and_tenant_identifiers() -> None:
+    """The acting user's records carry identifiers beyond a login, in either casing.
+
+    A Context body names the acting user's email and an opaque tenant context
+    id, and the User record hydrated from it adds identity-service and
+    directory identifiers and free-text skills. Every one must be a
+    placeholder, whichever casing the endpoint answers in.
+    """
+    leaky = _body_cassette(
+        {
+            "LoggedUser": {
+                "Id": 342,
+                "Email": "a.real.person@example.com",
+                "Acid": "areal0context0identifier",
+                "GlobalId": "a-real-global-id",
+                "FrontdoorUserId": "a-real-identity-service-id",
+                "ActiveDirectoryName": "a.real.directory.name",
+                "LegacySkills": "Real free-text skills",
+            },
+            "items": [
+                {
+                    "email": "a.real.person@example.com",
+                    "acid": "areal0context0identifier",
+                    "globalId": "a-real-global-id",
+                    "frontdoorUserId": "a-real-identity-service-id",
+                    "activeDirectoryName": "a.real.directory.name",
+                    "legacySkills": "Real free-text skills",
+                }
+            ],
+        }
+    )
+
+    offenders = identity_field_offenders(leaky)
+
+    assert sorted(offenders) == [
+        "LoggedUser.Acid='areal0context0identifier'",
+        "LoggedUser.ActiveDirectoryName='a.real.directory.name'",
+        "LoggedUser.Email='a.real.person@example.com'",
+        "LoggedUser.FrontdoorUserId='a-real-identity-service-id'",
+        "LoggedUser.GlobalId='a-real-global-id'",
+        "LoggedUser.LegacySkills='Real free-text skills'",
+        "items[0].acid='areal0context0identifier'",
+        "items[0].activeDirectoryName='a.real.directory.name'",
+        "items[0].email='a.real.person@example.com'",
+        "items[0].frontdoorUserId='a-real-identity-service-id'",
+        "items[0].globalId='a-real-global-id'",
+        "items[0].legacySkills='Real free-text skills'",
     ]
 
 
