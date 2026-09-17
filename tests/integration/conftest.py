@@ -312,6 +312,65 @@ def _resync_response_content_length(response: dict[str, Any]) -> None:
             headers[key] = [length]
 
 
+# A custom field is addressed on the wire by its name, and that name is the
+# tenant's configuration rather than text a test invented - the same reason
+# ``_REDACT_TEXT_KEYS`` treats every ``Name`` in a response as tenant text. So a
+# write that sets a custom field would record it as sent, and it is the one
+# field-level value scrubbed on the request side: each ``CustomFields`` entry's
+# name becomes ``Sanitised <Key>``, as a response's would. The value is left as
+# sent, since a write-path test only ever sends a value it invented. Rewriting a
+# name to its own placeholder changes nothing, so the pass is a fixed point, and
+# a body it does not change is returned as the same bytes.
+_REQUEST_CUSTOM_FIELDS_KEY = "customfields"
+
+
+def _scrub_custom_field_names(entries: list[Any]) -> bool:
+    """Replace each entry's non-empty string ``Name`` (any casing) in place; report a change."""
+    changed = False
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        for key, value in list(entry.items()):
+            placeholder = f"Sanitised {key}"
+            if key.lower() == "name" and isinstance(value, str) and value and value != placeholder:
+                entry[key] = placeholder
+                changed = True
+    return changed
+
+
+def _scrub_entity_custom_field_names(entity: object) -> bool:
+    """Scrub the names in an entity object's top-level ``CustomFields`` list; report a change."""
+    if not isinstance(entity, dict):
+        return False
+    changed = False
+    for key, value in entity.items():
+        if key.lower() == _REQUEST_CUSTOM_FIELDS_KEY and isinstance(value, list):
+            changed = _scrub_custom_field_names(value) or changed
+    return changed
+
+
+def _scrub_request_body_json(body: bytes) -> bytes:
+    """Scrub custom-field names out of a JSON request body, leaving everything else as sent.
+
+    A write body is one entity object, or - on a bulk write - a JSON array of
+    them. Only an entity object carrying a ``CustomFields`` list (any casing)
+    at its top level is touched, and the body only when a name actually
+    changes; it is then re-serialised the way httpx sends JSON. Any other body
+    - not JSON, no such list - is returned unchanged.
+    """
+    try:
+        parsed = json.loads(body)
+    except ValueError:
+        return body
+    entities = parsed if isinstance(parsed, list) else [parsed]
+    changed = False
+    for entity in entities:
+        changed = _scrub_entity_custom_field_names(entity) or changed
+    if not changed:
+        return body
+    return json.dumps(parsed, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+
 def _scrub_request(request: Any) -> Any:
     """VCR ``before_record_request`` hook: strip real host and credentials from the request.
 
@@ -357,9 +416,12 @@ def _scrub_request(request: Any) -> Any:
 
     original_body = request.body
     if isinstance(original_body, bytes):
-        request.body = _scrub_bytes(original_body, replacements)
+        request.body = _scrub_request_body_json(_scrub_bytes(original_body, replacements))
     elif isinstance(original_body, str):
-        request.body = _scrub_text(original_body, replacements)
+        text = _scrub_text(original_body, replacements)
+        encoded = text.encode("utf-8")
+        scrubbed = _scrub_request_body_json(encoded)
+        request.body = text if scrubbed is encoded else scrubbed.decode("utf-8")
     elif original_body is not None:
         # A file-like or iterator body would serialise as an opaque pickled
         # blob that no scrubber here has read and no committed-cassette guard

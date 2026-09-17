@@ -124,7 +124,7 @@ Every typed resource manager (`client.user_stories`, `client.bugs`,
 | `get` | `get(id, *, include=None, exclude=None, result_include=None, append=None, innertake=None) -> T` | any |
 | `list` | `list(*, where=None, include=None, exclude=None, result_include=None, append=None, innertake=None, order_by=None, order_by_desc=None, skip=None, limit=None, page_size=25) -> AsyncIterator[T]` | any |
 | `create` | `create(**fields) -> T` | READWRITE |
-| `update` | `update(id, **fields) -> T` | READWRITE |
+| `update` | `update(id, *, verify=False, **fields) -> T` | READWRITE |
 | `delete` | `delete(id) -> None` | READWRITE |
 
 ```python
@@ -174,6 +174,85 @@ await client.user_stories.update_many(
     [{"Id": story.id, "Description": "Groomed"} for story in stories]
 )
 ```
+
+### Verified writes
+
+An update returns TargetProcess's own response to the write: its echo of the
+entity, which can be stale. A caller who reads that echo can believe a change
+landed when it did not. Pass `verify=True` and the library does not trust it:
+after the write it re-reads each entity with one independent GET, narrowed to
+the keys you sent, compares them, and returns the re-read model instead.
+Because the re-read is narrowed, that model carries its `id` and
+`resource_type` and the keys you sent: every other field on it is `None`, so
+`get` the entity again when you need the rest.
+
+```python
+from targetprocess import VerificationError
+
+try:
+    story = await client.user_stories.update(123, Effort=5, EntityState={"Id": 82}, verify=True)
+    await client.tasks.update_many([{"Id": 456, "Effort": 2}], verify=True)
+except VerificationError as exc:
+    for entity_id, fields in exc.mismatches.items():
+        for field, (requested, observed) in fields.items():
+            print(entity_id, field, requested, observed)
+```
+
+`update_many` re-reads every item after the whole batch and raises once, with
+the failing entities in `exc.mismatches` and the rest in `exc.verified_ids`,
+both keyed by integer Id. A verified batch names each entity once, by an
+integer Id or a string of ASCII digits; a repeated or non-integer Id raises
+`ValueError` before anything is sent. The comparison is on the wire values:
+
+- a reference such as `{"Id": 82}` matches on `Id` alone;
+- `None` matches a null or a field the re-read does not carry;
+- numbers compare numerically (`5` matches `5.0`), strings with surrounding
+  whitespace stripped, and wire dates on the instant rather than the offset;
+- any other field the re-read does not carry fails, observed as
+  `VerificationError.ABSENT`.
+
+A `Description` sent without the `<!--markdown-->` marker is stored
+HTML-encoded (see [Rich-text descriptions and comments](#rich-text-descriptions-and-comments)),
+so verifying it can fail on its own encoding. The generic `entities` accessor
+does not take `verify`.
+
+### Custom-field values
+
+A custom-field value is written by the field's name, inside the entity's
+`CustomFields` array. `set_custom_field` forms that payload on every typed
+manager. Setting a value sends:
+
+```json
+{"CustomFields": [{"Name": "Release note", "Value": "Ships in October"}]}
+```
+
+and clearing one sends a null `Value`:
+
+```json
+{"CustomFields": [{"Name": "Release note", "Value": null}]}
+```
+
+```python
+story = await client.user_stories.set_custom_field(123, "Release note", "Ships in October")
+story = await client.user_stories.set_custom_field(123, "Release note", None)
+```
+
+Leaving a field out of an update is not a clear: TargetProcess keeps the old
+value and still answers with a success status. So `set_custom_field` verifies
+by default, re-reading `include=["CustomFields"]` and matching the entry by
+name (case-insensitively); a cleared field may read back as `None` or `""`.
+`VerificationError` here means the value did not land, a clear was discarded,
+or no field of that name exists on the entity's process - a misspelt name, or
+one configured on another process. Pass `verify=False` to skip the re-read.
+
+The value is compared as sent, with no conversion between forms. A date-typed
+field reads back in TargetProcess's `/Date(ms±HHMM)/` wire form, so it verifies
+only when you send that form - `format_tp_date` of a timezone-aware `datetime`
+(see [Time against a custom activity](#time-against-a-custom-activity)) rather
+than `"2026-10-01"` - or with `verify=False`. The verified return value is the
+narrowed re-read: its `id`, `resource_type` and `custom_fields`, and no other
+field.
+Reading values back is `include=["CustomFields"]` on `get` or `list`.
 
 ### The generic `entities` accessor
 
@@ -651,6 +730,7 @@ catch a specific failure or the base class. HTTP status codes map to types:
 | `NetworkError` | transport failure — no HTTP response arrived at all |
 | `ParseError` | a response body failed Pydantic model validation |
 | `ReadOnlyViolation` | a write was attempted on a `READONLY` client |
+| `VerificationError` | a verified write (`verify=True`, or `set_custom_field` by default) read back an entity not showing a requested field; carries `mismatches` |
 
 ```python
 import logging

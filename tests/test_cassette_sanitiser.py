@@ -56,6 +56,9 @@ SIBLING_DOMAIN = "acme-customer.eu.tpondemand.com"
 # Long enough, and padded, to trip the guard's loose-base64 pattern if it ever
 # reaches a cassette - so the cross-check below is a real check.
 REAL_TOKEN = "cmVhbHRva2VudmFsdWVsb25nZW5vdWdodG90cmlwZ3VhcmQ="
+# A custom field is addressed on the wire by its name, which is the tenant's own
+# configuration: a write sends it, so the request side must scrub it.
+REAL_FIELD_NAME = "Escalation ticket link"
 PLACEHOLDER = sanitiser._PLACEHOLDER_DOMAIN
 REDACTED = sanitiser._REDACTED
 
@@ -161,6 +164,90 @@ def test_request_with_unscrubbable_body_type_fails_loudly() -> None:
 
     with pytest.raises(TypeError, match="Cannot scrub request body"):
         sanitiser._scrub_request(request)
+
+
+@pytest.mark.usefixtures("recording")
+def test_request_scrubs_custom_field_names_whatever_their_casing() -> None:
+    """The one field-level value scrubbed on the request side: a custom field's name."""
+    body = json.dumps(
+        {
+            "Name": "Invented story name",
+            "CustomFields": [{"Name": REAL_FIELD_NAME, "Value": "Invented value"}],
+            "customFields": [{"name": "Another tenant field", "value": 3.5}],
+        },
+        separators=(",", ":"),
+    ).encode()
+    request = Request(
+        "POST",
+        f"https://{REAL_DOMAIN}/api/v1/UserStory/7",
+        body,
+        {"host": REAL_DOMAIN, "content-length": str(len(body))},
+    )
+
+    scrubbed = sanitiser._scrub_request(request)
+
+    recorded = json.loads(scrubbed.body)
+    assert recorded == {
+        "Name": "Invented story name",
+        "CustomFields": [{"Name": "Sanitised Name", "Value": "Invented value"}],
+        "customFields": [{"name": "Sanitised name", "value": 3.5}],
+    }
+    assert REAL_FIELD_NAME.encode() not in scrubbed.body
+    assert scrubbed.headers["content-length"] == str(len(scrubbed.body))
+
+
+@pytest.mark.usefixtures("recording")
+def test_request_scrubs_custom_field_names_in_every_item_of_a_bulk_body() -> None:
+    """A bulk write is a JSON array of entity objects; each item's names are scrubbed."""
+    body = json.dumps(
+        [
+            {"Id": 5, "CustomFields": [{"Name": REAL_FIELD_NAME, "Value": "Invented value"}]},
+            {"Id": 6, "Effort": 3.0},
+            {"Id": 7, "customfields": [{"name": "Another tenant field", "value": None}]},
+        ],
+        separators=(",", ":"),
+    ).encode()
+    request = Request(
+        "POST",
+        f"https://{REAL_DOMAIN}/api/v1/UserStory/bulk",
+        body,
+        {"host": REAL_DOMAIN, "content-length": str(len(body))},
+    )
+
+    scrubbed = sanitiser._scrub_request(request)
+
+    assert json.loads(scrubbed.body) == [
+        {"Id": 5, "CustomFields": [{"Name": "Sanitised Name", "Value": "Invented value"}]},
+        {"Id": 6, "Effort": 3.0},
+        {"Id": 7, "customfields": [{"name": "Sanitised name", "value": None}]},
+    ]
+    assert REAL_FIELD_NAME.encode() not in scrubbed.body
+    assert scrubbed.headers["content-length"] == str(len(scrubbed.body))
+
+
+@pytest.mark.usefixtures("recording")
+def test_request_body_without_custom_fields_is_left_alone() -> None:
+    """Any other body - and an already-scrubbed one - comes back byte-for-byte."""
+    bodies = [
+        b'{"Name":"Invented story name","Effort":3.0}',
+        b'[{"Id":5,"Effort":3.0},"not an object"]',
+        b'{"CustomFields":[{"Name":"Sanitised Name","Value":null}]}',
+        b'[{"Id":5,"CustomFields":[{"Name":"Sanitised Name","Value":1}]}]',
+        b'{"CustomFields":"not a list"}',
+        b'--boundary\r\nContent-Disposition: form-data; name="file"\r\n\r\nabc',
+        '{"Name": "caf\u00e9"}'.encode("latin-1"),
+    ]
+    for body in bodies:
+        request = Request(
+            "POST",
+            f"https://{REAL_DOMAIN}/api/v1/UserStory",
+            body,
+            {"host": REAL_DOMAIN, "content-length": str(len(body))},
+        )
+
+        scrubbed = sanitiser._scrub_request(request)
+
+        assert scrubbed.body == body
 
 
 @pytest.mark.usefixtures("offline")
@@ -532,7 +619,10 @@ def _leaky_interactions() -> list[tuple[Request, dict[str, object]]]:
     }
 
     # Write-path POST: the carrier the recorded write cassettes depend on.
-    write_body = f'{{"Name":"x","Url":"https://{REAL_DOMAIN}/entity/1"}}'.encode()
+    write_body = (
+        f'{{"Name":"x","Url":"https://{REAL_DOMAIN}/entity/1",'
+        f'"CustomFields":[{{"Name":"{REAL_FIELD_NAME}","Value":"Invented value"}}]}}'
+    ).encode()
     write_request = Request(
         "POST",
         f"https://{REAL_DOMAIN}/api/v1/UserStories?access_token={REAL_TOKEN}",
@@ -583,6 +673,16 @@ def test_recording_pipeline_writes_a_clean_cassette(tmp_path: Path) -> None:
     assert [p.pattern for p in SECRET_PATTERNS if p.search(recorded)] == []
     assert cookie_header_offenders(recorded) == []
     assert csp_header_offenders(recorded) == []
+
+    # A recorded body is a YAML scalar the serialiser may fold across lines,
+    # so the custom-field name is checked in the parsed request body, where a
+    # fold cannot hide it.
+    request_bodies = [
+        interaction["request"]["body"] for interaction in yaml.safe_load(recorded)["interactions"]
+    ]
+    write_body = json.loads(request_bodies[1])
+    assert write_body["CustomFields"] == [{"Name": "Sanitised Name", "Value": "Invented value"}]
+    assert not any(REAL_FIELD_NAME in str(body) for body in request_bodies)
 
     for interaction in yaml.safe_load(recorded)["interactions"]:
         response = interaction["response"]

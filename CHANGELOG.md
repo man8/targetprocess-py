@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   authenticates as with one `GET /api/v1/Users/LoggedUser`, returning the
   `User` model, cached per client instance. `RequestHandler.logged_user()` is
   the fixed-path read beneath it.
+- `update()` and `update_many()` take an opt-in, keyword-only `verify=True`:
+  after the write each entity is re-read with one independent GET narrowed to
+  the requested keys, the re-read model is returned instead of TargetProcess's
+  own echo, and a requested field that is not observed raises the new
+  `VerificationError`, which carries every mismatch. The default path is
+  unchanged.
+- `set_custom_field(id, name, value)` on every typed manager sets a
+  custom-field value by name, or clears it when `value` is `None`, sending
+  `{"CustomFields": [{"Name": ..., "Value": ...}]}`. It re-reads the entity by
+  default and raises `VerificationError` when the value, or the clear, did not
+  land, or no field of that name came back.
 
 ### Changed
 

@@ -5,8 +5,14 @@ import re
 from collections.abc import AsyncIterator, Mapping, Sequence
 from typing import TYPE_CHECKING, Any, Literal
 
-from targetprocess.exceptions import AmbiguousMatchError, NotFoundError, ReadOnlyViolation
+from targetprocess.exceptions import (
+    AmbiguousMatchError,
+    NotFoundError,
+    ReadOnlyViolation,
+    VerificationError,
+)
 from targetprocess.models import Entity, NamedEntity
+from targetprocess.resources._verify import compare_fields, describe
 from targetprocess.response_parser import ResponseParser
 
 if TYPE_CHECKING:
@@ -96,6 +102,44 @@ def _require_ids(items: Sequence[dict[str, Any]]) -> None:
                 f"({', '.join(repr(k) for k in keys)}); the update target is "
                 "ambiguous - keep exactly one, spelled 'Id'"
             )
+
+
+def _verification_ids(items: Sequence[dict[str, Any]]) -> list[int]:
+    """Return each item's ``Id`` as an integer, refusing a batch verification cannot key.
+
+    A verified ``update_many`` keys every mismatch, and every verified Id, by the
+    entity's integer Id, so a string of ASCII digits such as ``"5"`` and the
+    integer ``5`` name one entity; any other string, padded or not, is refused. An entity named twice in one batch has no single requested
+    state to verify against, so that is refused rather than guessed.
+
+    Args:
+        items: The batch, each item already keyed ``Id``
+
+    Returns:
+        The items' Ids as integers, in item order.
+
+    Raises:
+        ValueError: An item's ``Id`` is neither an integer (not a bool) nor a
+            string of ASCII digits, or two items name the same entity.
+    """
+    ids: list[int] = []
+    for position, item in enumerate(items):
+        value = item["Id"]
+        if isinstance(value, str) and value.isascii() and value.isdigit():
+            entity_id = int(value)
+        elif isinstance(value, int) and not isinstance(value, bool):
+            entity_id = value
+        else:
+            raise ValueError(
+                f"update_many item {position} has Id {value!r}; verify=True needs an integer Id"
+            )
+        if entity_id in ids:
+            raise ValueError(
+                f"update_many items {ids.index(entity_id)} and {position} both name Id "
+                f"{entity_id}; a verified batch must name each entity once"
+            )
+        ids.append(entity_id)
+    return ids
 
 
 def _resolve_by_name[N: NamedEntity](candidates: Sequence[N], name: str, *, what: str) -> N:
@@ -498,19 +542,48 @@ class BaseResource[T: Entity]:
         data = await self._request_handler.create(self.entity_type, fields)
         return ResponseParser.parse_single(data, self.model_class)
 
-    async def update(self, id: int, **fields: Any) -> T:
+    async def update(self, id: int, *, verify: bool = False, **fields: Any) -> T:
         """Update existing entity.
 
         Requires client mode to be READWRITE.
 
+        By default the return value is TP's own response to the write - its
+        echo of the entity, which can be stale, so reading it can show a
+        change that did not land. ``verify=True`` does not trust it: after the
+        write, one independent GET re-reads the entity narrowed to the
+        requested keys (``include=`` those keys, so a field outside the
+        default projection such as ``CustomFields`` still arrives), compares
+        each requested field with what was read back, and returns the re-read
+        model - never the echo. That model carries the entity's ``Id`` and
+        ``ResourceType`` and the requested keys: every other field is
+        ``None``, so fetch the entity again for a full read. The comparison rules are those of
+        :mod:`targetprocess.resources._verify`: references by ``Id``, ``None``
+        against null or an absent key, numbers numerically, strings stripped,
+        wire dates on the instant, custom fields by name. A key the re-read
+        does not carry cannot verify, so a field TP never returns
+        (``Password``) always raises.
+
+        A ``Description`` sent without the ``<!--markdown-->`` marker is
+        stored through TP's HTML pipeline and read back entity-encoded, so a
+        verify on such a value can mismatch on its own encoding: prefix the
+        marker, or verify on other fields.
+
         Args:
             id: Entity ID
+            verify: Re-read the entity after the write and raise when it does
+                not show the requested fields (default False)
             **fields: Entity field values to update
 
         Returns:
-            Updated entity instance of type T
+            Updated entity instance of type T - the re-read, narrowed to the
+            requested keys, when ``verify`` is True; TP's echo of the write
+            otherwise
 
         Raises:
+            ValueError: ``verify`` is True and a requested key is a field
+                this collection cannot hydrate (raised before the write)
+            VerificationError: ``verify`` is True and the re-read does not
+                show every requested field
             ReadOnlyViolation: Client is in readonly mode, or the collection
                 is read-only on the server (any mode)
             NotFoundError: Entity not found
@@ -523,8 +596,52 @@ class BaseResource[T: Entity]:
         """
         self._check_server_writable("update")
         self._client._check_write_permission()
+        if verify:
+            self.check_include(list(fields))
         data = await self._request_handler.update(self.entity_type, id, fields)
+        if verify:
+            return await self._verify_update(id, fields)
         return ResponseParser.parse_single(data, self.model_class)
+
+    async def _reread_mismatches(
+        self, id: int, fields: Mapping[str, Any]
+    ) -> tuple[T, dict[str, tuple[Any, Any]]]:
+        """Re-read one entity narrowed to ``fields`` and compare it with them.
+
+        Args:
+            id: Entity ID
+            fields: The fields the write sent
+
+        Returns:
+            The re-read model, and field -> ``(requested, observed)`` for
+            each field that did not verify.
+        """
+        data = await self._request_handler.get(self.entity_type, id, include=list(fields))
+        return ResponseParser.parse_single(data, self.model_class), compare_fields(fields, data)
+
+    async def _verify_update(self, id: int, fields: Mapping[str, Any]) -> T:
+        """Re-read one updated entity and raise unless it shows ``fields``.
+
+        Args:
+            id: Entity ID
+            fields: The fields the update sent
+
+        Returns:
+            The re-read entity.
+
+        Raises:
+            VerificationError: A requested field was not observed.
+        """
+        model, mismatches = await self._reread_mismatches(id, fields)
+        if mismatches:
+            by_entity = {id: mismatches}
+            raise VerificationError(
+                f"update did not verify - {describe(self.entity_type, by_entity)}",
+                entity_type=self.entity_type,
+                entity_id=id,
+                mismatches=by_entity,
+            )
+        return model
 
     async def delete(self, id: int) -> None:
         """Delete entity.
@@ -595,7 +712,9 @@ class BaseResource[T: Entity]:
         data = await self._request_handler.bulk(self.entity_type, items)
         return [ResponseParser.parse_single(item, self.model_class) for item in data]
 
-    async def update_many(self, items: Sequence[dict[str, Any]]) -> builtins.list[T]:
+    async def update_many(
+        self, items: Sequence[dict[str, Any]], *, verify: bool = False
+    ) -> builtins.list[T]:
         """Update several entities in one bulk request.
 
         Requires client mode to be READWRITE. The whole batch is sent as a
@@ -613,16 +732,36 @@ class BaseResource[T: Entity]:
         ``items`` returns ``[]`` without a network request (after the write
         gates have run).
 
+        ``verify=True`` applies :meth:`update`'s verification to every item:
+        after the whole batch has been sent, one independent GET per entity
+        re-reads it narrowed to that item's keys, so each returned model
+        carries its ``Id``, its ``ResourceType`` and those keys, and every
+        other field is ``None``. Every item is checked before anything is
+        raised, so one ``VerificationError`` carries each failing entity's
+        mismatches, keyed by integer Id, and the Ids that did verify. A
+        verified batch must name each entity once by an integer Id (a string
+        of digits counts): an entity named twice has no single requested
+        state, and either is refused before any request is sent.
+
         Args:
             items: Field dicts, one per entity to update, each carrying the
                 target's ``Id`` alongside the fields to change (e.g.
                 ``{"Id": 123, "Name": "Renamed"}``)
+            verify: Re-read each entity after the batch and raise when any
+                does not show its requested fields (default False)
 
         Returns:
-            The updated entities, parsed as type T, as the API returned them.
+            The updated entities, parsed as type T - in item order as re-read
+            (narrowed to each item's keys) when ``verify`` is True, as the API
+            returned them otherwise.
 
         Raises:
-            ValueError: An item has no ``Id`` key.
+            ValueError: An item has no ``Id`` key; or ``verify`` is True and an
+                item's ``Id`` is not an integer, two items name the same
+                entity, or an item names a field this collection cannot
+                hydrate (all raised before any request is sent).
+            VerificationError: ``verify`` is True and at least one re-read
+                does not show its item's fields.
             ReadOnlyViolation: Client is in readonly mode, or the collection
                 is read-only on the server (any mode)
             NotFoundError: A referenced entity was not found
@@ -639,5 +778,105 @@ class BaseResource[T: Entity]:
         items = list(items)  # materialise once: validated and sent as the same batch
         _require_ids(items)
         items = [_with_canonical_id(item) for item in items]
+        ids: builtins.list[int] = []
+        if verify:
+            ids = _verification_ids(items)
+            for item in items:
+                self.check_include([key for key in item if key != "Id"])
         data = await self._request_handler.bulk(self.entity_type, items)
+        if verify:
+            return await self._verify_many(items, ids)
         return [ResponseParser.parse_single(item, self.model_class) for item in data]
+
+    async def _verify_many(
+        self, items: Sequence[dict[str, Any]], ids: Sequence[int]
+    ) -> builtins.list[T]:
+        """Re-read every entity of a bulk update and raise unless all show their fields.
+
+        Args:
+            items: The batch as sent, each item keyed ``Id``
+            ids: The items' Ids as integers, in item order (see
+                :func:`_verification_ids`)
+
+        Returns:
+            The re-read entities, in item order.
+
+        Raises:
+            VerificationError: At least one entity did not show its fields;
+                raised after every item has been re-read.
+        """
+        models: builtins.list[T] = []
+        mismatches: dict[int, dict[str, tuple[Any, Any]]] = {}
+        for entity_id, item in zip(ids, items, strict=True):
+            fields = {key: value for key, value in item.items() if key != "Id"}
+            model, failed = await self._reread_mismatches(entity_id, fields)
+            models.append(model)
+            if failed:
+                mismatches[entity_id] = failed
+        if mismatches:
+            raise VerificationError(
+                f"update_many did not verify {len(mismatches)} of {len(items)} entities - "
+                f"{describe(self.entity_type, mismatches)}",
+                entity_type=self.entity_type,
+                mismatches=mismatches,
+                verified_ids=[entity_id for entity_id in ids if entity_id not in mismatches],
+            )
+        return models
+
+    async def set_custom_field(
+        self, id: int, name: str, value: object, *, verify: bool = True
+    ) -> T:
+        """Set or clear one custom-field value on an entity.
+
+        Requires client mode to be READWRITE. TP addresses a custom-field
+        value by the field's name inside the entity's ``CustomFields`` array,
+        so this sends ``{"CustomFields": [{"Name": name, "Value": value}]}``
+        through :meth:`update` - the same gates and the same verification.
+        ``None`` clears the value: the payload carries ``"Value": null``. A
+        clear has to be sent, not left out, because a partial update that
+        omits a custom field leaves its value in place and still answers with
+        a success status.
+
+        Verification is on by default here, unlike :meth:`update`, because a
+        discarded custom-field write is otherwise silent. The re-read requests
+        ``include=[CustomFields]``, finds the entry whose name matches
+        ``name`` case-insensitively, and compares its value; a cleared field
+        reads back as null or an empty string, and either counts. A name that
+        is misspelt, or belongs to another process's configuration, reads
+        back no entry at all and raises too. Values are compared as sent, with
+        no conversion between forms: a date-typed field reads back as a
+        ``/Date(ms±HHMM)/`` wire string, so it verifies only when the value
+        is sent in that form (:func:`targetprocess.models.format_tp_date`) -
+        otherwise pass ``verify=False``.
+
+        Args:
+            id: Entity ID
+            name: The custom field's name, as configured on the entity's
+                process
+            value: The value to set, in the wire form the field's type takes;
+                ``None`` clears it
+            verify: Re-read the entity and raise when the value is not
+                observed (default True)
+
+        Returns:
+            The entity - the re-read, carrying its ``id``, ``resource_type``
+            and ``custom_fields`` and no other field, when ``verify`` is True;
+            TP's echo of the write otherwise.
+
+        Raises:
+            VerificationError: ``verify`` is True and the re-read shows a
+                different value, a non-empty value after a clear, or no entry
+                of that name.
+            ValueError: ``verify`` is True and this collection cannot hydrate
+                ``CustomFields`` (raised before the write).
+            ReadOnlyViolation: Client is in readonly mode, or the collection
+                is read-only on the server (any mode)
+            NotFoundError: Entity not found
+            RequestValidationError: TP refused the value
+            AuthenticationError: Invalid credentials
+            ForbiddenError: Insufficient permissions
+            NetworkError: Transport-level failure
+            ParseError: Response failed model validation
+            APIError: Other API errors
+        """
+        return await self.update(id, CustomFields=[{"Name": name, "Value": value}], verify=verify)

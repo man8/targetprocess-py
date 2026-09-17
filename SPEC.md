@@ -175,9 +175,9 @@ Typed resource managers, each exposed as a property on the client:
   append=None, innertake=None, order_by=None, order_by_desc=None, skip=None,
   limit=None, page_size=25) -> AsyncIterator[T]`
 - `create(**fields) -> T` (READWRITE only)
-- `update(id, **fields) -> T` (READWRITE only)
+- `update(id, *, verify=False, **fields) -> T` (READWRITE only)
 - `delete(id) -> None` (READWRITE only)
-- `create_many(items) -> list[T]` / `update_many(items) -> list[T]`
+- `create_many(items) -> list[T]` / `update_many(items, *, verify=False) -> list[T]`
   (READWRITE only) - one bulk request for the whole batch; see "Bulk write
   semantics" below. On a collection the server restricts (next paragraph)
   they raise `ReadOnlyViolation` in every mode, as the single-item writes do
@@ -500,6 +500,15 @@ range error is actionable.
 values are reachable on every entity type: fetched with
 `include=[CustomFields]`, the payload's `CustomFields` array parses into a
 `list[CustomFieldValue] | None` rather than landing raw in `model_extra`.
+Every typed manager writes one with
+`set_custom_field(id, name, value, *, verify=True) -> T`, which sends
+`{"CustomFields": [{"Name": name, "Value": value}]}` through `update`; a null
+`Value` clears. A partial update omitting a custom field keeps its value behind
+a success status, so `verify` defaults on here (off on `update`): the re-read
+matches the entry by name, a clear reading back null or `""`, and raises
+`VerificationError` when the value differs or no entry of that name comes back.
+A date-typed value reads back in wire form, so it verifies only when sent in
+that form (`format_tp_date`) or with `verify=False`.
 
 Nested references use one of four lightweight shapes, chosen by what the
 API actually sends:
@@ -575,6 +584,8 @@ All library exceptions extend `TargetProcessError`:
   `custom_activities.resolve`, and by `times.upsert`);
   optionally carries `assignable_id`, `user_id`, `day`, and `count` where the
   caller has that context.
+- `VerificationError` - an update with `verify=True` read back an entity not
+  showing a requested field; carries `mismatches` and `verified_ids`.
 
 ## Behavioural Contracts
 
@@ -716,6 +727,22 @@ dict-in/dict-out path underneath both.
 - **Empty input short-circuits.** An empty `items` returns `[]` with no
   network request - after the write gates have run, so a READONLY client
   is refused even for an empty batch.
+
+### Verified writes
+
+An update's return value is TP's own echo of the write, which can be stale.
+`update(..., verify=True)` and `update_many(..., verify=True)` on the typed
+managers (not `entities`) re-read each entity with one GET narrowed to the
+requested keys, after the whole batch for `update_many`, and return the
+re-read models, which carry `Id`, `ResourceType` and those keys (every other
+field `None`); a requested field not observed raises one `VerificationError`
+carrying integer entity Id -> field -> `(requested, observed)`. A verified
+`update_many` refuses, before sending, a repeated Id or one that is neither an
+integer nor a string of ASCII digits. References match by `Id`, `None` matches
+null or an absent key, numbers compare numerically, strings stripped, wire
+dates on the instant, custom fields by name, with no conversion between forms;
+any other absent key fails. A `Description` sent without the Markdown marker is
+stored HTML-encoded, so it can fail on its own encoding.
 
 ### Retry policy
 

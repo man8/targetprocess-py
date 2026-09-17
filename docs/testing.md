@@ -27,7 +27,10 @@ operational recipe for running and re-recording.
   project fixed by a module constant, and each test deletes what it created
   in a `finally` — the delete being the recorded `delete` interaction, not
   teardown bookkeeping. `_scrub_request` neutralises only the host and
-  token, so a request body is recorded as sent and may carry nothing but
+  token, save the name of each custom field in a JSON request body (one
+  entity, or every item of a bulk array), which is the tenant's configuration
+  and is scrubbed to the placeholder as every `Name` in a response body is; so
+  a request body is otherwise recorded as sent and may carry nothing but
   synthetic text; created entities are named with the module's
   `_NAME_PREFIX` constant, and the sandbox is swept for that string against a
   planted positive control before the cassettes are committed (CONTRIBUTING.md

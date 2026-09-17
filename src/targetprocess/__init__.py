@@ -22,6 +22,7 @@ from targetprocess.exceptions import (
     ReadOnlyViolation,
     RequestValidationError,
     TargetProcessError,
+    VerificationError,
 )
 from targetprocess.models import (
     AssignableEntity,
@@ -124,6 +125,7 @@ __all__ = [
     "ReadOnlyViolation",
     "RequestValidationError",
     "TargetProcessError",
+    "VerificationError",
     # Models - Base
     "Entity",
     "NamedEntity",

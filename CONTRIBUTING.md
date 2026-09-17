@@ -171,9 +171,12 @@ reported as not checked and fails the run.
     body rather than a fixture teardown a later refactor could move outside the
     cassette.
   - **Everything sent is synthetic.** `_scrub_request` neutralises the host and
-    the token but nothing field-level, so a request body is recorded as sent:
-    a write-path test may only send text it invented, never a value copied off
-    the live instance.
+    the token but nothing field-level, save the name of each custom field in a
+    JSON request body (one entity, or every item of a bulk array), which is the
+    tenant's configuration and is scrubbed to the placeholder as every `Name` in
+    a response body is. So a request body is otherwise recorded as sent: a
+    write-path test may only send text it invented, never a value copied off the
+    live instance.
   - **Org-level state is read, never written.** Where a surface needs an
     existing Role, Team, RelationType or project membership, the test reads it
     live and uses it. Creating one would be a write outside the sandbox.
