@@ -277,3 +277,120 @@ async def test_bulk_create_and_update_tasks_under_a_story(live_credentials) -> N
                 await client.tasks.get(task.id)
         with pytest.raises(NotFoundError):
             await client.user_stories.get(story.id)
+
+
+@pytest.mark.asyncio
+async def test_verified_update_returns_the_re_read(live_credentials) -> None:
+    """``update(..., verify=True)``: the write, then an independent re-read narrowed to its keys.
+
+    Only ``Effort`` is sent. A ``Name`` or ``Description`` would be replaced
+    by a placeholder on the response side of the cassette, so the re-read
+    would fail the comparison on every replay. The narrowed re-read carries
+    no ``EntityVersion``, so a plain ``get`` afterwards is what shows the
+    write was accepted as well as observed.
+    """
+    domain, token = live_credentials
+    async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READWRITE) as client:
+        story = await client.user_stories.create(
+            Name=f"{_NAME_PREFIX} verified update story",
+            Description=_CREATED_DESCRIPTION,
+            Project={"Id": _SANDBOX_PROJECT_ID},
+        )
+        try:
+            assert story.entity_version is not None
+
+            updated = await client.user_stories.update(
+                story.id, Effort=_UPDATED_EFFORT, verify=True
+            )
+
+            assert updated.id == story.id
+            assert updated.effort == _UPDATED_EFFORT
+            # The re-read, not the echo: TP's update echo carries
+            # EntityVersion, and a re-read narrowed to Effort does not.
+            assert updated.entity_version is None
+
+            reread = await client.user_stories.get(story.id)
+            assert reread.entity_version is not None
+            assert reread.entity_version > story.entity_version
+        finally:
+            await client.user_stories.delete(story.id)
+
+        with pytest.raises(NotFoundError):
+            await client.user_stories.get(story.id)
+
+
+# Settable custom-field types in order of preference, each with the invented
+# value a set sends. Text first: a string value is the plainest payload.
+_CUSTOM_FIELD_VALUES: dict[str, object] = {
+    "Text": f"{_NAME_PREFIX} value",
+    "Number": 3.5,
+    "CheckBox": True,
+}
+
+
+@pytest.mark.asyncio
+async def test_custom_field_set_and_clear_round_trip(live_credentials) -> None:
+    """``set_custom_field`` sets a value and clears it again, on a story it created.
+
+    Verification is off on this path, deliberately. The response scrubber
+    empties every ``CustomFields`` list in a cassette, so a verifying re-read
+    could never observe the value on replay: it would pass while recording
+    and fail on every run after. The re-read comparison is proven by the unit
+    tests instead, and here each write's acceptance is evidenced by
+    ``EntityVersion`` advancing. The field is chosen structurally, from the
+    definitions the sandbox's process configures for UserStory, because its
+    name is a placeholder on replay; the request body carries that
+    placeholder too, since the request hook scrubs a custom field's name.
+    """
+    domain, token = live_credentials
+    async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READWRITE) as client:
+        story = await client.user_stories.create(
+            Name=f"{_NAME_PREFIX} custom field story",
+            Description=_CREATED_DESCRIPTION,
+            Project={"Id": _SANDBOX_PROJECT_ID},
+        )
+        try:
+            assert story.entity_version is not None
+            project = await client.projects.get(_SANDBOX_PROJECT_ID, include=["Process"])
+            assert project.process is not None
+            definitions = [
+                definition
+                async for definition in client.custom_fields.list(
+                    where=(
+                        f"(Process.Id eq {project.process.id}) and (EntityType.Name eq 'UserStory')"
+                    ),
+                    include=["Id", "Name", "FieldType", "EntityType", "Process"],
+                )
+            ]
+            settable = [
+                min(
+                    (d for d in definitions if d.field_type == field_type),
+                    key=lambda d: d.id,
+                    default=None,
+                )
+                for field_type in _CUSTOM_FIELD_VALUES
+            ]
+            field = next((d for d in settable if d is not None), None)
+            assert field is not None, (
+                "no settable custom field for UserStory on the sandbox process"
+            )
+            assert field.name is not None and field.field_type is not None
+
+            after_set = await client.user_stories.set_custom_field(
+                story.id, field.name, _CUSTOM_FIELD_VALUES[field.field_type], verify=False
+            )
+            assert after_set.id == story.id
+            assert after_set.entity_version is not None
+            assert after_set.entity_version > story.entity_version
+
+            after_clear = await client.user_stories.set_custom_field(
+                story.id, field.name, None, verify=False
+            )
+            assert after_clear.id == story.id
+            assert after_clear.entity_version is not None
+            assert after_clear.entity_version > after_set.entity_version
+        finally:
+            await client.user_stories.delete(story.id)
+
+        with pytest.raises(NotFoundError):
+            await client.user_stories.get(story.id)

@@ -500,6 +500,13 @@ range error is actionable.
 values are reachable on every entity type: fetched with
 `include=[CustomFields]`, the payload's `CustomFields` array parses into a
 `list[CustomFieldValue] | None` rather than landing raw in `model_extra`.
+Every typed manager writes one with
+`set_custom_field(id, name, value, *, verify=True) -> T`, which sends
+`{"CustomFields": [{"Name": name, "Value": value}]}` through `update`; a null
+`Value` clears. A partial update omitting a custom field keeps its value behind
+a success status, so `verify` defaults on here (off on `update`): the re-read
+matches the entry by name, a clear reading back null or `""`, and raises
+`VerificationError` when the value differs or no entry of that name comes back.
 
 Nested references use one of four lightweight shapes, chosen by what the
 API actually sends:

@@ -768,3 +768,56 @@ class BaseResource[T: Entity]:
                 verified_ids=[m.id for m in models if m.id not in mismatches],
             )
         return models
+
+    async def set_custom_field(
+        self, id: int, name: str, value: object, *, verify: bool = True
+    ) -> T:
+        """Set or clear one custom-field value on an entity.
+
+        Requires client mode to be READWRITE. TP addresses a custom-field
+        value by the field's name inside the entity's ``CustomFields`` array,
+        so this sends ``{"CustomFields": [{"Name": name, "Value": value}]}``
+        through :meth:`update` - the same gates and the same verification.
+        ``None`` clears the value: the payload carries ``"Value": null``. A
+        clear has to be sent, not left out, because a partial update that
+        omits a custom field leaves its value in place and still answers with
+        a success status.
+
+        Verification is on by default here, unlike :meth:`update`, because a
+        discarded custom-field write is otherwise silent. The re-read requests
+        ``include=[CustomFields]``, finds the entry whose name matches
+        ``name`` case-insensitively, and compares its value; a cleared field
+        reads back as null or an empty string, and either counts. A name that
+        is misspelt, or belongs to another process's configuration, reads
+        back no entry at all and raises too.
+
+        Args:
+            id: Entity ID
+            name: The custom field's name, as configured on the entity's
+                process
+            value: The value to set, in the wire form the field's type takes;
+                ``None`` clears it
+            verify: Re-read the entity and raise when the value is not
+                observed (default True)
+
+        Returns:
+            The entity - the re-read, carrying ``custom_fields``, when
+            ``verify`` is True; TP's echo of the write otherwise.
+
+        Raises:
+            VerificationError: ``verify`` is True and the re-read shows a
+                different value, a non-empty value after a clear, or no entry
+                of that name.
+            ValueError: ``verify`` is True and this collection cannot hydrate
+                ``CustomFields`` (raised before the write).
+            ReadOnlyViolation: Client is in readonly mode, or the collection
+                is read-only on the server (any mode)
+            NotFoundError: Entity not found
+            RequestValidationError: TP refused the value
+            AuthenticationError: Invalid credentials
+            ForbiddenError: Insufficient permissions
+            NetworkError: Transport-level failure
+            ParseError: Response failed model validation
+            APIError: Other API errors
+        """
+        return await self.update(id, CustomFields=[{"Name": name, "Value": value}], verify=verify)

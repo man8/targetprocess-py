@@ -211,6 +211,36 @@ HTML-encoded (see [Rich-text descriptions and comments](#rich-text-descriptions-
 so verifying it can fail on its own encoding. The generic `entities` accessor
 does not take `verify`.
 
+### Custom-field values
+
+A custom-field value is written by the field's name, inside the entity's
+`CustomFields` array. `set_custom_field` forms that payload on every typed
+manager. Setting a value sends:
+
+```json
+{"CustomFields": [{"Name": "Deadline", "Value": "2026-10-01"}]}
+```
+
+and clearing one sends a null `Value`:
+
+```json
+{"CustomFields": [{"Name": "Deadline", "Value": null}]}
+```
+
+```python
+story = await client.user_stories.set_custom_field(123, "Deadline", "2026-10-01")
+story = await client.user_stories.set_custom_field(123, "Deadline", None)
+```
+
+Leaving a field out of an update is not a clear: TargetProcess keeps the old
+value and still answers with a success status. So `set_custom_field` verifies
+by default, re-reading `include=["CustomFields"]` and matching the entry by
+name (case-insensitively); a cleared field may read back as `None` or `""`.
+`VerificationError` here means the value did not land, a clear was discarded,
+or no field of that name exists on the entity's process - a misspelt name, or
+one configured on another process. Pass `verify=False` to skip the re-read.
+Reading values back is `include=["CustomFields"]` on `get` or `list`.
+
 ### The generic `entities` accessor
 
 For entity types without a typed manager (which ones, and why, is set out in
@@ -687,7 +717,7 @@ catch a specific failure or the base class. HTTP status codes map to types:
 | `NetworkError` | transport failure — no HTTP response arrived at all |
 | `ParseError` | a response body failed Pydantic model validation |
 | `ReadOnlyViolation` | a write was attempted on a `READONLY` client |
-| `VerificationError` | a write with `verify=True` read back an entity not showing a requested field; carries `mismatches` |
+| `VerificationError` | a verified write (`verify=True`, or `set_custom_field` by default) read back an entity not showing a requested field; carries `mismatches` |
 
 ```python
 import logging

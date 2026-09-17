@@ -159,9 +159,9 @@ class _Absent:
 class VerificationError(TargetProcessError):
     """An independent re-read after a write did not show the requested fields.
 
-    Raised by ``update(..., verify=True)`` and ``update_many(..., verify=True)``
-    when the entity read back after the write does not carry what the write
-    asked for. The write itself was sent and answered with a success status;
+    Raised by ``update(..., verify=True)``, ``update_many(..., verify=True)``
+    and ``set_custom_field`` when the entity read back after the write does
+    not carry what the write asked for. The write itself was sent and answered with a success status;
     this error is the evidence that the status was not proof the change landed.
 
     Attributes:
