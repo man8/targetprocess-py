@@ -287,16 +287,33 @@ See [SPEC.md](SPEC.md) for the full specification, including detailed architectu
 
 ## Development Status
 
-**Current Status**: Alpha - core library complete
+**Current status**: Beta. The core library is complete and tested against a
+real TargetProcess instance. The public surface may still change between 0.x
+minor releases; every change is recorded in [CHANGELOG.md](CHANGELOG.md).
 
-- ✅ Project structure and configuration
-- ✅ Exception hierarchy
-- ✅ Client safety modes (handler-layer + resource-layer enforcement)
-- ✅ HTTP transport layer (access_token / Basic auth)
-- ✅ API request/response handling (RequestHandler + ResponseParser), retry/backoff, rate limiting
-- ✅ Entity models (42 model classes: the `Entity`/`NamedEntity`/`GeneralEntity`/`AssignableEntity` base chain, 6 nested shapes (`EntityRef`, `EntityTypeRef`, `UserRef`, `RefWithImportance`, `CustomFieldValue`, `CustomFieldConfig`), and 32 concrete entity types across the assignable, planning, organisational, workflow and configuration, join, supporting, and custom-field groups), each declaring its type's full `/meta` field surface
-- ✅ Resource managers (typed + generic)
-- ✅ Recorded integration test suite against a real TargetProcess instance
+### What 1.0.0 requires
+
+1.0.0 will be released once all of the following hold:
+
+1. At least one comprehensive production integration is built on the library
+   and has been stable through the beta period.
+2. No open issue labelled `bug` remains unless explicitly deferred past 1.0.0,
+   and every known case where TargetProcess silently ignores all or part of a
+   request has been resolved: the library refuses it before sending, verifies it
+   after the write, or SPEC.md documents it as a limitation.
+3. The public surface is frozen: SPEC.md's Public API Surface matches
+   `targetprocess.__all__`, a Semantic Versioning promise for that surface is
+   stated, and a deprecation policy is written.
+4. Documentation and the recorded test cassettes are current: every public
+   resource manager is documented in [docs/USAGE.md](docs/USAGE.md), the
+   `KNOWN_DEVIATIONS` table in `scripts/check_model_coverage.py` has been
+   re-checked against a live instance, and the recorded test cassettes have no
+   open hygiene issues.
+5. CI tests every Python version `pyproject.toml` claims.
+6. The last beta release needed no breaking change to the public surface.
+7. The release carries the `Development Status :: 5 - Production/Stable`
+   classifier, a CHANGELOG section for 1.0.0, a `v1.0.0` tag on `main`, and is
+   published to PyPI through the release workflow.
 
 ## Requirements
 
