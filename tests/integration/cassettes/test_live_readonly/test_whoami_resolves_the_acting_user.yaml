@@ -1,0 +1,598 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - e85facb34282445ca8a90e9e582e885a
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/Context?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "Context", "Acid": "Sanitised Acid", "Edition": "Pro",
+        "Version": "2609.1.0.3434", "IsFull": true, "AnyProject": false, "AnyTeam":
+        false, "IsNoTeamIncluded": true, "LoggedUser": {"ResourceType": "User", "Id":
+        1, "FirstName": "Sanitised FirstName", "LastName": "Sanitised LastName", "Email":
+        "Sanitised Email", "IsActive": true, "IsAdministrator": true, "Kind": "User"},
+        "Culture": {"ResourceType": "Culture", "Name": "", "DecimalSeparator": ".",
+        "CurrencyDecimalSeparator": ".", "CurrencyDecimalDigits": 2, "CurrencyGroupSeparator":
+        ",", "ShortDateFormat": "MM/dd/yyyy", "LongDateFormat": "dddd, dd MMMM yyyy",
+        "TimePattern": "g:i A"}, "SelectedProjects": {"Items": [{"ResourceType": "ProjectInfo",
+        "Id": 50149, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        48843, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33771, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        34443, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        74054, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33088, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        54034, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 29, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        71385, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 58102, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        216, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32415, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        50532, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 33585, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        42142, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33771, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        75596, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        33569, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        71391, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 34, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 58102, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        36930, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 23, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33088, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        71389, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 34, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 58102, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        71388, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 34, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 58102, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        69820, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 33, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 53231, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 21, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33772, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        35071, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        34442, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        37082, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33088, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        35159, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 23, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33088, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        29789, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        55992, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        33758, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 21, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33772, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        2005, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32415, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        42008, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32416, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        984, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33777, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        51089, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 27, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 51087, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        60260, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 31, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 51087, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        54496, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 31, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 51087, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        66364, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 31, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 51087, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        61733, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 31, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 51087, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        53331, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 34531, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32415, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        1193, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32415, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        34887, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        36125, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32415, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        71392, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 34, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 58102, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        35514, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        34439, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        45961, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        33536, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33771, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        564, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 23790, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32903, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        32886, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32903, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        50904, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        566, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32903, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        52346, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        40915, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 26, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 40913, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        565, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32903, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        42009, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32416, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        34280, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32416, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        32909, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32416, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        48844, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33771, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        33545, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        66715, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 66716, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32903, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        60940, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 33011, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 71390, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 34, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 58102, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        34440, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        34915, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        51568, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        32322, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33777, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        36390, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 35579, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33088, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        32853, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 21, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33772, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        37464, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        583, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 10, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 37930, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 33088, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        49938, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": null}, {"ResourceType": "ProjectInfo",
+        "Id": 50645, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        61743, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 29, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        61741, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 29, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 31254, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        215, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32903, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        45832, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32415, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        58103, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 58102, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        2006, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32415, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        34441, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}, {"ResourceType": "ProjectInfo", "Id":
+        34438, "Name": "Sanitised Name", "Process": {"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name"}, "Program": {"ResourceType": "ProgramInfo",
+        "Id": 32904, "Name": "Sanitised Name"}}]}, "SelectedTeams": {"Items": [{"ResourceType":
+        "TeamInfo", "Id": 214, "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo",
+        "Id": 300, "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo", "Id": 8424,
+        "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo", "Id": 21041, "Name":
+        "Sanitised Name"}, {"ResourceType": "TeamInfo", "Id": 21042, "Name": "Sanitised
+        Name"}, {"ResourceType": "TeamInfo", "Id": 32417, "Name": "Sanitised Name"},
+        {"ResourceType": "TeamInfo", "Id": 32666, "Name": "Sanitised Name"}, {"ResourceType":
+        "TeamInfo", "Id": 32849, "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo",
+        "Id": 33091, "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo", "Id":
+        33890, "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo", "Id": 34475,
+        "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo", "Id": 35629, "Name":
+        "Sanitised Name"}, {"ResourceType": "TeamInfo", "Id": 36147, "Name": "Sanitised
+        Name"}, {"ResourceType": "TeamInfo", "Id": 36931, "Name": "Sanitised Name"},
+        {"ResourceType": "TeamInfo", "Id": 40949, "Name": "Sanitised Name"}, {"ResourceType":
+        "TeamInfo", "Id": 50897, "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo",
+        "Id": 51640, "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo", "Id":
+        51642, "Name": "Sanitised Name"}, {"ResourceType": "TeamInfo", "Id": 74876,
+        "Name": "Sanitised Name"}]}, "Processes": {"Items": [{"ResourceType": "ProcessInfo",
+        "Id": 2, "Name": "Sanitised Name", "IsDefault": true, "Terms": [], "CustomFields":
+        [], "Practices": {"Items": [{"ResourceType": "Practice", "Id": 1, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": null,
+        "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort": false, "AreAllTasksClosedWhenUserStoryIsClosed":
+        true}, {"ResourceType": "Practice", "Id": 3, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null}, {"ResourceType": "Practice",
+        "Id": 6, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null}, {"ResourceType": "Practice", "Id": 8, "Name": "Sanitised
+        Name", "Description": "Sanitised Description", "DisplayName": "Requests"},
+        {"ResourceType": "Practice", "Id": 2, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining":
+        false, "IsTimeDescriptionFieldVisible": true, "IsTimeDescriptionRequired":
+        false, "IsRequiredShowRoleDropDown": true, "EntitiesWithTimeTracking": []},
+        {"ResourceType": "Practice", "Id": 11, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Features"}, {"ResourceType": "Practice",
+        "Id": 12, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": "Epics"}, {"ResourceType": "Practice", "Id": 9, "Name": "Sanitised
+        Name", "Description": "Sanitised Description", "DisplayName": null}, {"ResourceType":
+        "Practice", "Id": 4, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": "Epics and Features"}]}}, {"ResourceType": "ProcessInfo", "Id":
+        29, "Name": "Sanitised Name", "IsDefault": false, "Terms": [], "CustomFields":
+        [], "Practices": {"Items": [{"ResourceType": "Practice", "Id": 1, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": null,
+        "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort": false, "AreAllTasksClosedWhenUserStoryIsClosed":
+        true}, {"ResourceType": "Practice", "Id": 2, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining":
+        false, "IsTimeDescriptionFieldVisible": true, "IsTimeDescriptionRequired":
+        true, "IsRequiredShowRoleDropDown": false, "EntitiesWithTimeTracking": []},
+        {"ResourceType": "Practice", "Id": 8, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Requests"}, {"ResourceType": "Practice",
+        "Id": 11, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": "Features"}, {"ResourceType": "Practice", "Id": 4, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": "Epics
+        and Features"}]}}, {"ResourceType": "ProcessInfo", "Id": 34, "Name": "Sanitised
+        Name", "IsDefault": false, "Terms": [], "CustomFields": [], "Practices": {"Items":
+        [{"ResourceType": "Practice", "Id": 1, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null, "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort":
+        false, "AreAllTasksClosedWhenUserStoryIsClosed": true}, {"ResourceType": "Practice",
+        "Id": 2, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining": false, "IsTimeDescriptionFieldVisible":
+        true, "IsTimeDescriptionRequired": true, "IsRequiredShowRoleDropDown": false,
+        "EntitiesWithTimeTracking": []}, {"ResourceType": "Practice", "Id": 3, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": null},
+        {"ResourceType": "Practice", "Id": 4, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Epics and Features"}, {"ResourceType":
+        "Practice", "Id": 6, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null}, {"ResourceType": "Practice", "Id": 8, "Name": "Sanitised
+        Name", "Description": "Sanitised Description", "DisplayName": "Requests"},
+        {"ResourceType": "Practice", "Id": 9, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null}, {"ResourceType": "Practice",
+        "Id": 10, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null}, {"ResourceType": "Practice", "Id": 11, "Name": "Sanitised
+        Name", "Description": "Sanitised Description", "DisplayName": "Features"},
+        {"ResourceType": "Practice", "Id": 12, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Epics"}]}}, {"ResourceType": "ProcessInfo",
+        "Id": 23, "Name": "Sanitised Name", "IsDefault": false, "Terms": [], "CustomFields":
+        [], "Practices": {"Items": [{"ResourceType": "Practice", "Id": 1, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": null,
+        "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort": true, "AreAllTasksClosedWhenUserStoryIsClosed":
+        true}, {"ResourceType": "Practice", "Id": 10, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null}, {"ResourceType": "Practice",
+        "Id": 11, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": "Features"}, {"ResourceType": "Practice", "Id": 12, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": "Epics"},
+        {"ResourceType": "Practice", "Id": 8, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Requests"}, {"ResourceType": "Practice",
+        "Id": 2, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining": false, "IsTimeDescriptionFieldVisible":
+        true, "IsTimeDescriptionRequired": true, "IsRequiredShowRoleDropDown": false,
+        "EntitiesWithTimeTracking": []}, {"ResourceType": "Practice", "Id": 4, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": "Epics
+        and Features"}]}}, {"ResourceType": "ProcessInfo", "Id": 33, "Name": "Sanitised
+        Name", "IsDefault": false, "Terms": [], "CustomFields": [], "Practices": {"Items":
+        [{"ResourceType": "Practice", "Id": 1, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null, "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort":
+        false, "AreAllTasksClosedWhenUserStoryIsClosed": true}, {"ResourceType": "Practice",
+        "Id": 2, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining": false, "IsTimeDescriptionFieldVisible":
+        true, "IsTimeDescriptionRequired": true, "IsRequiredShowRoleDropDown": false,
+        "EntitiesWithTimeTracking": []}, {"ResourceType": "Practice", "Id": 8, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": "Requests"}]}},
+        {"ResourceType": "ProcessInfo", "Id": 21, "Name": "Sanitised Name", "IsDefault":
+        false, "Terms": [], "CustomFields": [], "Practices": {"Items": [{"ResourceType":
+        "Practice", "Id": 1, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null, "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort":
+        true, "AreAllTasksClosedWhenUserStoryIsClosed": true}, {"ResourceType": "Practice",
+        "Id": 2, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining": false, "IsTimeDescriptionFieldVisible":
+        true, "IsTimeDescriptionRequired": true, "IsRequiredShowRoleDropDown": true,
+        "EntitiesWithTimeTracking": []}, {"ResourceType": "Practice", "Id": 8, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": "Requests"},
+        {"ResourceType": "Practice", "Id": 11, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Features"}, {"ResourceType": "Practice",
+        "Id": 4, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": "Epics and Features"}]}}, {"ResourceType": "ProcessInfo", "Id":
+        27, "Name": "Sanitised Name", "IsDefault": false, "Terms": [], "CustomFields":
+        [], "Practices": {"Items": [{"ResourceType": "Practice", "Id": 1, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": null,
+        "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort": false, "AreAllTasksClosedWhenUserStoryIsClosed":
+        true}, {"ResourceType": "Practice", "Id": 2, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining":
+        false, "IsTimeDescriptionFieldVisible": true, "IsTimeDescriptionRequired":
+        true, "IsRequiredShowRoleDropDown": true, "EntitiesWithTimeTracking": []},
+        {"ResourceType": "Practice", "Id": 3, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null}, {"ResourceType": "Practice",
+        "Id": 6, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null}, {"ResourceType": "Practice", "Id": 8, "Name": "Sanitised
+        Name", "Description": "Sanitised Description", "DisplayName": "Requests"},
+        {"ResourceType": "Practice", "Id": 9, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null}, {"ResourceType": "Practice",
+        "Id": 10, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null}, {"ResourceType": "Practice", "Id": 11, "Name": "Sanitised
+        Name", "Description": "Sanitised Description", "DisplayName": "Features"},
+        {"ResourceType": "Practice", "Id": 12, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Epics"}, {"ResourceType": "Practice",
+        "Id": 4, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": "Epics and Features"}]}}, {"ResourceType": "ProcessInfo", "Id":
+        31, "Name": "Sanitised Name", "IsDefault": false, "Terms": [], "CustomFields":
+        [], "Practices": {"Items": [{"ResourceType": "Practice", "Id": 1, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": null,
+        "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort": true, "AreAllTasksClosedWhenUserStoryIsClosed":
+        true}, {"ResourceType": "Practice", "Id": 2, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining":
+        false, "IsTimeDescriptionFieldVisible": true, "IsTimeDescriptionRequired":
+        true, "IsRequiredShowRoleDropDown": true, "EntitiesWithTimeTracking": []},
+        {"ResourceType": "Practice", "Id": 3, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null}, {"ResourceType": "Practice",
+        "Id": 6, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null}, {"ResourceType": "Practice", "Id": 8, "Name": "Sanitised
+        Name", "Description": "Sanitised Description", "DisplayName": "Requests"},
+        {"ResourceType": "Practice", "Id": 9, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null}, {"ResourceType": "Practice",
+        "Id": 11, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": "Features"}, {"ResourceType": "Practice", "Id": 12, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": "Epics"},
+        {"ResourceType": "Practice", "Id": 4, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Epics and Features"}]}}, {"ResourceType":
+        "ProcessInfo", "Id": 26, "Name": "Sanitised Name", "IsDefault": false, "Terms":
+        [], "CustomFields": [], "Practices": {"Items": [{"ResourceType": "Practice",
+        "Id": 1, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null, "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort":
+        true, "AreAllTasksClosedWhenUserStoryIsClosed": true}, {"ResourceType": "Practice",
+        "Id": 2, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining": false, "IsTimeDescriptionFieldVisible":
+        true, "IsTimeDescriptionRequired": true, "IsRequiredShowRoleDropDown": true,
+        "EntitiesWithTimeTracking": []}, {"ResourceType": "Practice", "Id": 3, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": null},
+        {"ResourceType": "Practice", "Id": 6, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null}, {"ResourceType": "Practice",
+        "Id": 9, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null}, {"ResourceType": "Practice", "Id": 11, "Name": "Sanitised
+        Name", "Description": "Sanitised Description", "DisplayName": "Features"},
+        {"ResourceType": "Practice", "Id": 12, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Epics"}, {"ResourceType": "Practice",
+        "Id": 8, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": "Requests"}, {"ResourceType": "Practice", "Id": 4, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": "Epics
+        and Features"}]}}, {"ResourceType": "ProcessInfo", "Id": 10, "Name": "Sanitised
+        Name", "IsDefault": false, "Terms": [], "CustomFields": [], "Practices": {"Items":
+        [{"ResourceType": "Practice", "Id": 1, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": null, "EffortPoints": "Hour", "IsStoryEffortEqualsSumTasksEffort":
+        false, "AreAllTasksClosedWhenUserStoryIsClosed": true}, {"ResourceType": "Practice",
+        "Id": 8, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": "Requests"}, {"ResourceType": "Practice", "Id": 11, "Name":
+        "Sanitised Name", "Description": "Sanitised Description", "DisplayName": "Features"},
+        {"ResourceType": "Practice", "Id": 12, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Epics"}, {"ResourceType": "Practice",
+        "Id": 9, "Name": "Sanitised Name", "Description": "Sanitised Description",
+        "DisplayName": null}, {"ResourceType": "Practice", "Id": 2, "Name": "Sanitised
+        Name", "Description": "Sanitised Description", "DisplayName": null, "IsCloseAssignableIfZeroTimeRemaining":
+        false, "IsTimeDescriptionFieldVisible": true, "IsTimeDescriptionRequired":
+        false, "IsRequiredShowRoleDropDown": true, "EntitiesWithTimeTracking": []},
+        {"ResourceType": "Practice", "Id": 4, "Name": "Sanitised Name", "Description":
+        "Sanitised Description", "DisplayName": "Epics and Features"}]}}]}, "GlobalTerms":
+        [], "AppContext": {"ResourceType": "AppContext", "ProjectContext": {"ResourceType":
+        "SimpleContext", "No": false}, "TeamContext": {"ResourceType": "SimpleContext",
+        "No": true}}, "CustomFields": []}'
+    headers:
+      cache-control:
+      - no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '34710'
+      content-type:
+      - application/json
+      date:
+      - Thu, 17 Sep 2026 06:12:34 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-0b1c8ddc229a311b45e895d02bd447d8-e53f6927311d3e03-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-cache-stopwatch:
+      - '5'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - d72083fd-0eee-4a4a-8894-ab3dda4dcfe6
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 3b1b146d971fb3565d3cdc6c9042153e
+      x-kong-upstream-latency:
+      - '15'
+      x-permitted-cross-domain-policies:
+      - none
+      x-servercachedresponse:
+      - 'true'
+      x-sql-stopwatch:
+      - '5'
+      x-stopwatch:
+      - '6'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - example.tpondemand.com
+      user-agent:
+      - python-httpx/0.28.1
+      x-request-id:
+      - 9f0910aa465b4f4c8b346d0d1eaab936
+    method: GET
+    uri: https://example.tpondemand.com/api/v1/User/1?access_token=REDACTED&format=json
+  response:
+    body:
+      string: '{"ResourceType": "User", "Id": 1, "FirstName": "Sanitised FirstName",
+        "LastName": "Sanitised LastName", "Email": "Sanitised Email", "Login": "Sanitised
+        Login", "FullName": "Sanitised FullName", "CreateDate": "/Date(1421018306837+0100)/",
+        "ModifyDate": "/Date(1789596039000+0200)/", "DeleteDate": null, "IsActive":
+        true, "IsAdministrator": true, "Locale": null, "Kind": "User", "GlobalId":
+        "Sanitised GlobalId", "IsIntegration": false, "AccessStartDate": null, "AccessEndDate":
+        null, "FrontdoorUserId": "Sanitised FrontdoorUserId", "FrontdoorUserRoles":
+        "Admin", "PasswordHashAlgorithm": "IdentityV3", "EntityVersion": 49537789,
+        "LastLoginDate": "/Date(1789596000000+0200)/", "WeeklyAvailableHours": 30.0,
+        "CurrentAllocation": 100, "CurrentAvailableHours": 0.0, "AvailableFrom": null,
+        "AvailableFutureAllocation": 0, "AvailableFutureHours": 0.0, "IsObserver":
+        false, "IsContributor": false, "LegacySkills": null, "ActiveDirectoryName":
+        null, "RichEditor": "Markdown", "Role": {"ResourceType": "Role", "Id": 10,
+        "Name": "Sanitised Name"}, "CustomFields": []}'
+    headers:
+      cache-control:
+      - no-store, must-revalidate, proxy-revalidate, no-cache
+      connection:
+      - keep-alive
+      content-length:
+      - '1056'
+      content-type:
+      - application/json
+      date:
+      - Thu, 17 Sep 2026 06:12:34 GMT
+      expires:
+      - Wed, 16 Sep 2026 06:12:34 GMT
+      server:
+      - nginx
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      traceparent:
+      - 00-9d665d7d878a62c6568f269a96ad3438-04752e34e36ade25-01
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      via:
+      - 1.1 kong/3.9.1
+      x-api-v1-without-rest:
+      - 'true'
+      x-content-type-options:
+      - nosniff
+      x-correlationid:
+      - 62375ded-490d-4a05-baf6-a3bdf331fa7c
+      x-diagnostic-tags:
+      - get-resource
+      x-frame-options:
+      - SAMEORIGIN
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 197fa96809b0fe69e9199b3cc6563064
+      x-kong-upstream-latency:
+      - '18'
+      x-loaddbreader:
+      - '5'
+      x-loadresourcedbreaderdata:
+      - '0'
+      x-permitted-cross-domain-policies:
+      - none
+      x-sql-stopwatch:
+      - '9'
+      x-stopwatch:
+      - '12'
+      x-tp-handled-by:
+      - tp-next
+    status:
+      code: 200
+      message: OK
+version: 1

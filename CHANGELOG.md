@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `TargetProcessClient.whoami()` (alias `current_user()`): resolves the user
+  the client's credential authenticates as - `GET /api/v1/Context` for
+  `LoggedUser.Id`, then `users.get` - returning the `User` model, cached per
+  client instance. `RequestHandler.context()` is the fixed-path read beneath
+  it.
+
 ### Changed
 
 - `list()` refuses, before any request is sent, a `where=` filter naming a

@@ -74,6 +74,22 @@ logs, and a copied request URL carries it too. Do not enable httpx request-URL
 logging in production, and never copy or share a request URL that includes
 `access_token`.
 
+### Resolving the acting user
+
+`whoami()` returns the full `User` model for the user the client's credential
+authenticates as, so a caller that needs its own user Id for per-user queries
+need not carry it as configuration beside the token. The result is cached for
+the client's lifetime, so a later call makes no request. It works on a
+`READONLY` client, and `current_user()` is an alias.
+
+```python
+async with TargetProcessClient(
+    domain="example.tpondemand.com", token="…", mode=ClientMode.READONLY
+) as client:
+    user = await client.whoami()
+    print(user.id, user.login)
+```
+
 ### Client lifecycle
 
 Prefer `async with`, which closes the underlying HTTP client on exit. When you

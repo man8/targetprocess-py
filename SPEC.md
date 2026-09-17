@@ -110,6 +110,21 @@ itself.
   set in which a name identifies exactly one Id. Supplying a priority by
   name, or an Id belonging to another entity type, fails the write with
   HTTP 403 rather than 400.
+- **Context**: `GET /api/v1/Context?format=json` returns the authenticated
+  context rather than a collection - no `Items` envelope, no per-record Id -
+  so it is not addressable through the entity surface. Verified against a
+  live TargetProcess instance with an ordinary user token (HTTP 200, no
+  special grant): the acting user is the top-level `LoggedUser` object,
+  carrying `Id` (int), `Email`, `FirstName`, `LastName`, `Kind` and
+  `ResourceType` (str), `IsActive` and `IsAdministrator` (bool) - and no
+  `Login`. Alongside it the payload carries `Processes` (each with nested
+  `CustomFields`, `Practices` and `Terms` collections), `SelectedProjects`
+  (each with `Process` and `Program`), `SelectedTeams`, a workspace-wide
+  `CustomFields` collection, `GlobalTerms`, `Culture`, `AppContext`, `Acid`,
+  `Edition`, `Version` and four booleans - a heavy payload for an identity
+  lookup. `Terms` and `GlobalTerms` hold the instance's renamed entity terms,
+  `Term` records carrying `WordKey` and `Value`. Whether the endpoint honours
+  `include=` is unverified; the client requests it whole.
 
 ## Public API Surface
 
@@ -130,6 +145,19 @@ TargetProcessClient(
 constructed with an explicit safety posture. Exactly one of `token` /
 `basic_auth` must be provided; supplying neither `token` nor `basic_auth`,
 or supplying both, raises `ValueError` at the transport layer.
+
+### Acting user
+
+`whoami() -> User` resolves the user the client's credential authenticates
+as: one `GET /api/v1/Context` supplies `LoggedUser.Id`, then `users.get(id)`
+hydrates it, so the result is the full `User` model - `login` included,
+which Context itself does not carry. `current_user()` is an alias. The
+result is cached on the client for its lifetime and a second call makes no
+request: the credential is constructor-only, so the answer cannot change.
+A Context body with no usable `LoggedUser.Id` raises `ParseError`; an error
+from either request propagates as it would from any read, and nothing is
+cached on failure. There is no lock - concurrent first calls may each fetch,
+and each caches the same user. Both work on a `READONLY` client.
 
 ### Resources
 
@@ -297,7 +325,7 @@ the TestPlan / TestStep family), the polymorphic bases (Assignables,
 Generals, InboundAssignables, OutboundAssignables), the people and allocation
 collections (Requesters, Companies, GeneralUsers, ProjectMembers, the
 allocation join types, GeneralFollowers) and the metadata and audit
-collections (Context, EntityStateHistory, Revisions, RevisionFiles, Messages,
+collections (EntityStateHistory, Revisions, RevisionFiles, Messages,
 MessageUids, Tags). `entities` reads and writes every one of them under the
 same mode gate, so nothing is unreachable. A typed manager for one of them
 follows demand rather than completeness, and arrives with its model, its

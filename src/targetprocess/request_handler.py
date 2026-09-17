@@ -333,6 +333,44 @@ class RequestHandler:
         response = await self._request("GET", url)
         return cast(dict[str, Any], response.json())
 
+    async def context(self) -> dict[str, Any]:
+        """Get the authenticated context (``GET /api/v1/Context``).
+
+        Context describes the credential the request is made with - the
+        acting user as ``LoggedUser``, alongside the processes, projects and
+        teams in scope - rather than a collection: it has no ``Items``
+        envelope and no per-record Id, so the entity methods, which address a
+        collection by name, cannot reach it. The path is a fixed literal and
+        never caller-supplied, so neither the entity-type check nor the
+        instance-path guard ``download_file`` applies. It sends ``format=json``
+        and nothing else - no response shaping.
+
+        Returns:
+            The decoded JSON object.
+
+        Raises:
+            AuthenticationError: Invalid credentials (401).
+            ForbiddenError: Insufficient permissions (403).
+            NotFoundError: The endpoint answered 404.
+            RequestValidationError: The request was refused as invalid (400).
+            RateLimitError: A 429 persisted after the retries a GET receives.
+            APIError: Any other error status, including a persistent 5xx.
+            NetworkError: Transport-level failure; no response was received.
+            ValueError: A built query parameter is outside
+                ``QUERY_PARAMETERS`` - ``format`` is declared, so this does
+                not occur.
+
+        Example:
+            >>> data = await handler.context()
+            >>> data["LoggedUser"]["Id"]
+        """
+        url = f"{self._transport.base_url}/Context"
+        params = {"format": "json"}
+        self._check_query_parameters(params)
+        url = f"{url}?{urlencode(params)}"
+        response = await self._request("GET", url)
+        return cast(dict[str, Any], response.json())
+
     @staticmethod
     def _list_params(
         *,
