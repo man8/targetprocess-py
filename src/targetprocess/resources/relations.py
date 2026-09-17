@@ -7,26 +7,28 @@ from targetprocess.resources.base import BaseResource
 class RelationsResource(BaseResource[Relation]):
     """Resource manager for Relation entities.
 
-    A Relation links a ``Master`` entity to a ``Slave`` entity, typed by a
-    ``RelationType`` (Dependency, Blocker, Relation, Duplicate, ...). The
-    direction carries meaning: the Master is the source of the dependency -
-    in a Blocker relation the Master is the blocking item and the Slave the
-    blocked one. Creating one takes the three references; removing one
-    deletes the Relation record itself.
+    A Relation links an ``Inbound`` (source) entity to an ``Outbound``
+    (target) entity, typed by a ``RelationType`` (Dependency, Blocker,
+    Relation, Duplicate, ...). The direction carries meaning: the source is
+    the origin of the dependency - in a Blocker relation the Inbound is the
+    blocking item and the Outbound the blocked one. ``Master``/``Slave`` are
+    the deprecated names for the same pair. Creating one takes the three
+    references; removing one deletes the Relation record itself.
 
     RelationType Ids are instance-specific, so resolve them by name via
     ``client.relation_types`` rather than hardcoding.
 
     Example:
         client = TargetProcessClient(...)
+        # What blocks item 123?
         async for r in client.relations.list(
-            where="Slave.Id eq 123",
-            include=["Master", "Slave", "RelationType"],
+            where="Outbound.Id eq 123",
+            include=["Inbound", "Outbound", "RelationType"],
         ):
-            print(r.master, r.relation_type)
+            print(r.inbound, r.relation_type)
         blocker = await client.relation_types.resolve("Blocker")
         await client.relations.create(
-            Master={"Id": 456}, Slave={"Id": 123}, RelationType={"Id": blocker.id}
+            Inbound={"Id": 456}, Outbound={"Id": 123}, RelationType={"Id": blocker.id}
         )
     """
 

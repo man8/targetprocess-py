@@ -20,7 +20,7 @@ class RelationTypesResource(BaseResource[RelationType]):
         client = TargetProcessClient(...)
         blocker = await client.relation_types.resolve("Blocker")
         await client.relations.create(
-            Master={"Id": 456}, Slave={"Id": 123}, RelationType={"Id": blocker.id}
+            Inbound={"Id": 456}, Outbound={"Id": 123}, RelationType={"Id": blocker.id}
         )
     """
 

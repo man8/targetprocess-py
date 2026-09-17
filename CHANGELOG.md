@@ -44,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outside it is refused before the request is built rather than sent for
   TargetProcess to ignore. The `access_token` the transport merges in at
   send time is not part of the allowlist.
+- The relation examples in the `relations` and `relation_types` docstrings,
+  and the relations read in `scripts/live_smoke.py`, use the current
+  `Inbound`/`Outbound` names in place of the deprecated `Master`/`Slave`: the
+  create, the `Outbound.Id` filter and the include.
 
 ## [0.1.0] - 2026-09-08
 

@@ -396,6 +396,77 @@ async def test_relation_create_and_delete(live_credentials) -> None:
 
 
 @pytest.mark.asyncio
+async def test_relation_inbound_outbound_create_and_filter(live_credentials) -> None:
+    """A Relation written and found through the current ``Inbound``/``Outbound`` names.
+
+    The test above creates on the deprecated ``Master``/``Slave`` pair, and its
+    create echo already shows the current pair mirroring it - evidence for the
+    read side only. This one is the evidence for the rest: that TP accepts
+    ``Inbound``/``Outbound`` on a create, and applies a ``where=`` on
+    ``Outbound.Id`` rather than answering with unfiltered rows. The create
+    echo's deprecated pair is asserted too, as the proof that both names
+    describe one record.
+
+    Both stories are created against the same URI, so on replay the two
+    creates are told apart only by the order they were recorded in - the same
+    caveat the test above carries: a change to the creates here wants the
+    cassette re-recorded.
+    """
+    domain, token = live_credentials
+    async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READWRITE) as client:
+        source = await _sandbox_story(client, "relation inbound story")
+        target = None
+        try:
+            target = await _sandbox_story(client, "relation outbound story")
+            relation_type = _lowest_id([rt async for rt in client.relation_types.list()])
+
+            relation = await client.relations.create(
+                Inbound={"Id": source.id},
+                Outbound={"Id": target.id},
+                RelationType={"Id": relation_type.id},
+            )
+            try:
+                assert relation.id > 0
+                assert relation.inbound is not None and relation.inbound.id == source.id
+                assert relation.outbound is not None and relation.outbound.id == target.id
+                assert relation.master is not None and relation.master.id == source.id
+                assert relation.slave is not None and relation.slave.id == target.id
+
+                # A filter TP ignored would answer with other relations too;
+                # ``limit`` bounds that read, and the Id list refuses it.
+                found = [
+                    r
+                    async for r in client.relations.list(
+                        where=f"Outbound.Id eq {target.id}",
+                        include=["Inbound", "Outbound", "RelationType"],
+                        limit=5,
+                    )
+                ]
+                assert [r.id for r in found] == [relation.id]
+                assert found[0].inbound is not None and found[0].inbound.id == source.id
+            finally:
+                await client.relations.delete(relation.id)
+
+            with pytest.raises(NotFoundError):
+                await client.relations.get(relation.id)
+        finally:
+            leftover = []
+            for story_id in [story.id for story in (source, target) if story is not None]:
+                try:
+                    await client.user_stories.delete(story_id)
+                except Exception as exc:
+                    leftover.append(f"UserStory {story_id}: {exc!r}")
+            assert not leftover, f"recording left entities in the sandbox: {leftover}"
+
+        # Outside the ``finally`` that deleted them: both stories read back
+        # gone, so every record this recording created is proven deleted.
+        for story in (source, target):
+            assert story is not None
+            with pytest.raises(NotFoundError):
+                await client.user_stories.get(story.id)
+
+
+@pytest.mark.asyncio
 async def test_attachment_upload_list_download_and_delete(live_credentials) -> None:
     """The file-transfer surface, which is the one the vendor does not document.
 

@@ -8,6 +8,7 @@ from targetprocess import ClientMode, ReadOnlyViolation, TargetProcessClient
 from targetprocess.models import Relation
 from targetprocess.request_handler import RequestHandler
 from targetprocess.resources.relations import RelationsResource
+from tests._support.request_handler import scripted_list
 
 
 @pytest.mark.asyncio
@@ -86,3 +87,34 @@ async def test_relations_writes_blocked_in_readonly_mode():
         await client.relations.update(123, RelationType={"Id": 5})
     with pytest.raises(ReadOnlyViolation):
         await client.relations.delete(123)
+
+
+@pytest.mark.asyncio
+async def test_relations_list_sends_an_outbound_filter_unrefused():
+    """A filter on the current ``Outbound`` path reaches the handler exactly as written."""
+    handler = Mock(spec=RequestHandler)
+    handler.list, seen = scripted_list(
+        [
+            {
+                "Id": 53,
+                "ResourceType": "Relation",
+                "Inbound": {"Id": 456, "Name": "Blocking story"},
+                "Outbound": {"Id": 123, "Name": "Blocked story"},
+                "RelationType": {"Id": 2, "Name": "Blocker"},
+            }
+        ]
+    )
+    resource = RelationsResource(Mock(spec=TargetProcessClient), handler)
+
+    found = [
+        r
+        async for r in resource.list(
+            where="Outbound.Id eq 123", include=["Inbound", "Outbound", "RelationType"]
+        )
+    ]
+
+    assert seen["entity_type"] == "Relation"
+    assert seen["where"] == "Outbound.Id eq 123"
+    assert seen["include"] == ["Inbound", "Outbound", "RelationType"]
+    assert [r.id for r in found] == [53]
+    assert found[0].inbound is not None and found[0].inbound.id == 456

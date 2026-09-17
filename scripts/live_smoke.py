@@ -221,7 +221,7 @@ async def run_checks(client: TargetProcessClient, smoke: Smoke) -> None:
     await smoke.check(
         "relations.list",
         lambda: _summarise(
-            client.relations.list(limit=SAMPLE, include=["Master", "Slave", "RelationType"])
+            client.relations.list(limit=SAMPLE, include=["Inbound", "Outbound", "RelationType"])
         ),
     )
     await smoke.check(
