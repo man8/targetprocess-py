@@ -112,19 +112,19 @@ itself.
   HTTP 403 rather than 400.
 - **Context**: `GET /api/v1/Context?format=json` returns the authenticated
   context rather than a collection - no `Items` envelope, no per-record Id -
-  so it is not addressable through the entity surface. Verified against a
-  live TargetProcess instance with an ordinary user token (HTTP 200, no
-  special grant): the acting user is the top-level `LoggedUser` object,
-  carrying `Id` (int), `Email`, `FirstName`, `LastName`, `Kind` and
-  `ResourceType` (str), `IsActive` and `IsAdministrator` (bool) - and no
-  `Login`. Alongside it the payload carries `Processes` (each with nested
-  `CustomFields`, `Practices` and `Terms` collections), `SelectedProjects`
-  (each with `Process` and `Program`), `SelectedTeams`, a workspace-wide
-  `CustomFields` collection, `GlobalTerms`, `Culture`, `AppContext`, `Acid`,
-  `Edition`, `Version` and four booleans - a heavy payload for an identity
-  lookup. `Terms` and `GlobalTerms` hold the instance's renamed entity terms,
-  `Term` records carrying `WordKey` and `Value`. Whether the endpoint honours
-  `include=` is unverified; the client requests it whole.
+  so it is not addressable through the entity surface. Verified against a live
+  TargetProcess instance with an administrator token (HTTP 200): the acting
+  user is the top-level `LoggedUser` object, carrying `Id` (int), `Email`,
+  `FirstName`, `LastName`, `Kind` and `ResourceType` (str), `IsActive` and
+  `IsAdministrator` (bool) - and no `Login`. Alongside it the payload carries
+  `Processes` (each with nested `CustomFields`, `Practices` and `Terms`
+  collections), `SelectedProjects` (each with `Process` and `Program`),
+  `SelectedTeams`, a workspace-wide `CustomFields` collection, `GlobalTerms`,
+  `Culture`, `AppContext`, `Acid`, `Edition`, `Version` and four booleans - a
+  heavy payload for an identity lookup. `Terms` and `GlobalTerms` hold the
+  instance's renamed entity terms, `Term` records carrying `WordKey` and
+  `Value`. Whether a non-administrator token can read Context, and whether the
+  endpoint honours `include=`, are unverified; the client requests it whole.
 
 ## Public API Surface
 
