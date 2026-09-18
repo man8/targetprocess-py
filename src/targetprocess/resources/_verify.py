@@ -7,12 +7,13 @@ matched against the raw re-read, by these rules in order:
 - A requested ``CustomFields`` sequence (any but a string, bytes or
   bytearray) is routed entry by entry before any other rule applies, each
   entry matched by name (case-insensitively). A cleared entry (``Value``
-  ``None``) matches an observed null or empty string, any other value is
-  compared by the rules below, and an entry of that name missing from the
-  re-read is a mismatch keyed ``CustomFields[<name>]``. An entry that is not
-  a mapping carrying a string ``Name`` cannot be looked up, so it is a
-  mismatch too, keyed by its zero-based position
-  (``CustomFields[#<position>]``) and observed as
+  ``None``) matches an observed null, ``""``, ``False`` or ``0`` - each is
+  TP's empty state for some field type, so accepting the set never masks a
+  failed clear. Any other value is compared by the rules below, and an entry
+  of that name missing from the re-read is a mismatch keyed
+  ``CustomFields[<name>]``. An entry that is not a mapping carrying a string
+  ``Name`` cannot be looked up, so it is a mismatch too, keyed by its
+  zero-based position (``CustomFields[#<position>]``) and observed as
   ``VerificationError.ABSENT``.
 - A requested key the re-read does not carry at all is a mismatch, observed
   as ``VerificationError.ABSENT`` - unless the request was ``None``, which an
@@ -122,7 +123,9 @@ def custom_field_mismatch(name: str, value: object, observed: object) -> Mismatc
 
     Args:
         name: The custom field's name, matched case-insensitively.
-        value: The value the write sent; ``None`` is a clear.
+        value: The value the write sent; ``None`` is a clear, verified by an
+            observed null, ``""``, ``False`` or ``0`` - any of TP's empty
+            states, regardless of the field's own ``Type``.
         observed: The re-read's ``CustomFields`` list (or whatever it carried).
 
     Returns:
@@ -137,7 +140,11 @@ def custom_field_mismatch(name: str, value: object, observed: object) -> Mismatc
         _, entry_name = _get(entry, "Name")
         if isinstance(entry_name, str) and entry_name.strip().casefold() == wanted:
             _, seen = _get(entry, "Value")
-            cleared = value is None and (seen is None or seen == "")
+            # Each of null, "", False and 0 is TP's empty state for some field
+            # type, so accepting the set on a requested clear cannot mask a
+            # failed one: for it to pass wrongly the field would already have
+            # to be holding an empty value.
+            cleared = value is None and seen in (None, "", False, 0)
             return None if cleared or values_match(value, seen) else (value, seen)
     return (value, ABSENT)
 

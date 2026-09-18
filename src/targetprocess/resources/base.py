@@ -889,8 +889,10 @@ class BaseResource[T: Entity]:
         discarded custom-field write is otherwise silent. The re-read requests
         ``include=[CustomFields]``, finds the entry whose name matches
         ``name`` case-insensitively, and compares its value; a cleared field
-        reads back as null or an empty string, and either counts. A name that
-        is misspelt, or belongs to another process's configuration, reads
+        reads back as null, an empty string, ``False`` or ``0`` - TP's empty
+        state for some field type (a CheckBox reads back ``False``) - and any
+        of them counts, regardless of the field's own configured type. A name
+        that is misspelt, or belongs to another process's configuration, reads
         back no entry at all and raises too. Values are compared as sent, with
         no conversion between forms: a date-typed field reads back as a
         ``/Date(ms±HHMM)/`` wire string, so it verifies only when the value

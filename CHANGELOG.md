@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-18
+
+### Fixed
+
+- A verified clear of a custom field (`update(..., verify=True)` or
+  `set_custom_field(id, name, None)`) no longer raises `VerificationError`
+  when the field reads back `False` or `0`. The re-read comparison now
+  accepts any of TargetProcess's empty-equivalent values - null, `""`,
+  `False` or `0` - as showing a requested clear, rather than only null or
+  `""`. This fixes clearing a `CheckBox` custom field, which reads back
+  `False`, and a numeric one, which reads back `0`; a *set* value of `False`
+  or `0` is unaffected and still compares exactly as before.
+
 ## [0.2.0] - 2026-09-17
 
 The first beta release.
@@ -162,6 +175,7 @@ The first public release.
 - Log scrubbing redacts the `access_token` query parameter and `Authorization`
   header values from the library's own log records.
 
-[Unreleased]: https://github.com/man8/targetprocess-py/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/man8/targetprocess-py/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/man8/targetprocess-py/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/man8/targetprocess-py/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/man8/targetprocess-py/releases/tag/v0.1.0
