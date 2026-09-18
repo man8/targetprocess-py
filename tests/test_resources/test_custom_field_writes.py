@@ -64,9 +64,15 @@ async def test_clear_sends_a_null_value() -> None:
     assert json.loads(log[0].content) == {"CustomFields": [{"Name": "Deadline", "Value": None}]}
 
 
-@pytest.mark.parametrize("cleared", [None, ""])
-async def test_clear_verifies_against_null_or_empty(cleared: str | None) -> None:
-    client, log = _client(_with_fields({"Name": "Deadline", "Type": "Text", "Value": cleared}))
+@pytest.mark.parametrize(
+    ("cleared", "field_type"),
+    [(None, "Text"), ("", "Text"), (False, "CheckBox"), (0, "Number")],
+    ids=["null", "empty-string", "checkbox-false", "numeric-zero"],
+)
+async def test_clear_verifies_against_any_empty_equivalent(
+    cleared: str | bool | int | None, field_type: str
+) -> None:
+    client, log = _client(_with_fields({"Name": "Deadline", "Type": field_type, "Value": cleared}))
 
     story = await client.user_stories.set_custom_field(123, "Deadline", None)
 

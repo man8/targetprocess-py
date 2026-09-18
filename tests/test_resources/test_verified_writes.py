@@ -569,6 +569,36 @@ def test_custom_field_mismatch_accepts_null_or_empty_as_cleared() -> None:
     assert custom_field_mismatch("Ticket", None, [{"Name": "Ticket", "Value": "x"}]) == (None, "x")
 
 
+@pytest.mark.parametrize(
+    "observed",
+    [None, "", False, 0],
+    ids=["null", "empty-string", "checkbox-false", "numeric-zero"],
+)
+def test_custom_field_mismatch_accepts_any_empty_equivalent_as_cleared(observed: object) -> None:
+    assert custom_field_mismatch("Done", None, [{"Name": "Done", "Value": observed}]) is None
+
+
+@pytest.mark.parametrize(
+    "observed",
+    [True, 3, "x"],
+    ids=["checkbox-true", "non-zero-number", "populated-string"],
+)
+def test_custom_field_mismatch_still_raises_a_clear_against_a_non_empty_value(
+    observed: object,
+) -> None:
+    assert custom_field_mismatch("Done", None, [{"Name": "Done", "Value": observed}]) == (
+        None,
+        observed,
+    )
+
+
+def test_custom_field_mismatch_does_not_treat_a_requested_false_as_clearing_against_zero() -> None:
+    # R2: the empty-equivalent widening applies only when the *requested* value
+    # is None - a requested False is a set value and still compares through
+    # values_match, which treats bool and int as different types.
+    assert custom_field_mismatch("Done", False, [{"Name": "Done", "Value": 0}]) == (False, 0)
+
+
 def test_custom_field_mismatch_reports_an_absent_entry() -> None:
     assert custom_field_mismatch("Ticket", "x", []) == ("x", _ABSENT)
     assert custom_field_mismatch("Ticket", "x", None) == ("x", _ABSENT)

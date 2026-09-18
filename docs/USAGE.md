@@ -245,7 +245,9 @@ story = await client.user_stories.set_custom_field(123, "Release note", None)
 Leaving a field out of an update is not a clear: TargetProcess keeps the old
 value and still answers with a success status. So `set_custom_field` verifies
 by default, re-reading `include=["CustomFields"]` and matching the entry by
-name (case-insensitively); a cleared field may read back as `None` or `""`.
+name (case-insensitively); a cleared field may read back as `None`, `""`,
+`False` or `0` - a CheckBox reads back `False`, and any of these empty
+equivalents counts, regardless of the field's own configured type.
 `VerificationError` here means the value did not land, a clear was discarded,
 or no field of that name exists on the entity's process - a misspelt name, or
 one configured on another process. Pass `verify=False` to skip the re-read.
