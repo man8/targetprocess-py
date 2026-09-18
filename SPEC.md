@@ -520,10 +520,11 @@ Every typed manager writes one with
 `{"CustomFields": [{"Name": name, "Value": value}]}` through `update`; a null
 `Value` clears. A partial update omitting a custom field keeps its value behind
 a success status, so `verify` defaults on here (off on `update`): the re-read
-matches the entry by name, a clear reading back null or `""`, and raises
-`VerificationError` when the value differs or no entry of that name comes back.
-A date-typed value reads back in wire form, so it verifies only when sent in
-that form (`format_tp_date`) or with `verify=False`.
+matches the entry by name, a clear reading back any of TP's empty-equivalent
+values - null, `""`, `False` or `0`, since a CheckBox reads back `False` and a
+numeric field `0` - and raises `VerificationError` when the value differs or no
+entry of that name comes back. A date-typed value reads back in wire form, so it
+verifies only when sent in that form (`format_tp_date`) or with `verify=False`.
 
 Nested references use one of four lightweight shapes, chosen by what the
 API actually sends:
