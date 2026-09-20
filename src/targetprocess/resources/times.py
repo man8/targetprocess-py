@@ -119,10 +119,10 @@ def _supplied_mutable_fields(
             number ``>= 0``. Checked here, ahead of ``find_for_day`` and any
             create/update, so a bad value is rejected before a request is
             sent. This is the only range check on a duration, and deliberately
-            so: the read models constrain nothing, because a constraint on a
-            server-supplied value fails the whole entity and would abort a
-            whole ``list()`` page with a ``ParseError``. The write path is
-            where the value originates, so it is where the check belongs.
+            so: ``Time.spent`` and ``Time.remain`` constrain nothing, because a
+            constraint on a server-supplied value fails the whole entity and
+            would abort a whole ``list()`` page with a ``ParseError``. The write
+            path is where the value originates, so it is where the check belongs.
     """
     _validate_duration("spent", spent)
     if remain is not None:

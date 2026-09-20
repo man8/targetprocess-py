@@ -73,12 +73,13 @@ class RoleEffort(Entity):
 
     Breaks an Assignable's effort down by Role.
 
-    Every numeric field here is a server-supplied roll-up, so none carries a
-    range constraint - the rule ``AssignableEntity`` states for the same class
-    of field: a constraint on a value TP computes fails the **whole entity**
-    rather than the field, so one out-of-range roll-up would abort a whole
-    ``list()`` page with a ``ParseError``. Write-side range checks belong where
-    the value originates - see ``times.upsert``.
+    None of the numeric fields carries a range constraint. Each arrives from
+    the server on a read, whoever set it there, and ``AssignableEntity`` gives
+    the rule for that class of field: a constraint on a server-supplied value
+    fails the **whole entity** rather than the field, so one bad figure would
+    abort a whole ``list()`` page. Nothing validates one on the way in either -
+    the resource layer writes ``**fields`` and dumps no model - so unlike a
+    duration (see ``times.upsert``) this model has no write-side counterpart.
 
     Attributes:
         initial_estimate: Initial effort estimate
@@ -162,18 +163,16 @@ class Time(Entity):
     ``assignable``). They are declared so an entry's origin is readable without
     a second fetch.
 
-    ``project`` is populated whichever shape the entry takes, so a null
-    ``assignable`` does not imply a null project: TP takes it from the
-    Assignable for a work-item entry, and from the custom activity's own
-    project for a ``CustomActivity`` entry - every ``CustomActivity`` carries
-    one, being scoped to a project and a user.
+    A null ``assignable`` does not imply a null ``project``: a
+    ``CustomActivity`` entry carries a project too, matching that activity's
+    own on every entry observed. Whether TP copies it from the activity or from
+    the project the entry was filed under cannot be told apart from that, since
+    an activity is itself scoped to one project. A narrowed read
+    (``result_include=``) leaves the reference ``None``, as it does any other.
 
     ``spent`` and ``remain`` carry no range constraint, for the reason
-    ``AssignableEntity`` gives: a constraint on a value the server supplies
-    fails the **whole entity** rather than the field, so one out-of-range
-    record would abort a whole ``list()`` page with a ``ParseError``. The
-    write path validates instead, where the value originates - see
-    ``times.upsert``.
+    ``AssignableEntity`` gives. ``times.upsert`` validates on the way in
+    instead, where the value originates.
 
     Attributes:
         spent: Hours spent
@@ -183,8 +182,8 @@ class Time(Entity):
         description: Free-text description of the work
         assignable: Assignable (work item) reference
         user: User the time is logged for
-        project: Project reference - from the Assignable, or from the
-            CustomActivity's own project on a custom-activity entry
+        project: Project reference - the Assignable's, or on a custom-activity
+            entry the activity's own project
         role: Role reference
         user_story: User story the entry was logged against, if any
         task: Task the entry was logged against, if any

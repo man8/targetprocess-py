@@ -210,7 +210,7 @@ _QUOTED_VALUE = re.compile(r"'[^']*'|\"[^\"]*\"")
 
 
 def check_filter_paths(where: str | None, ignored: Mapping[str, str], *, resource: str) -> None:
-    """Refuse a ``where=`` filter naming a path TargetProcess is known to ignore.
+    """Refuse a ``where=`` filter naming a path TargetProcess will not filter on.
 
     A name in ``ignored`` matches only as the leading segment of a dotted
     path, in any casing: never preceded by a word character or a dot, and
@@ -266,10 +266,11 @@ class BaseResource[T: Entity]:
             TP serves in a shape the model cannot hold, each mapped to the
             reason and the route to use instead; ``get`` and ``list`` refuse
             them with ``ValueError`` before any request is sent.
-        ignored_filter_paths: Leading ``where=`` path segments TP accepts
-            and silently ignores on this collection, each mapped to the
-            reason and the route to use instead; ``list`` refuses them with
-            ``ValueError`` before any request is sent.
+        ignored_filter_paths: Leading ``where=`` path segments TP will not
+            filter on for this collection - accepting and ignoring some,
+            rejecting others - each mapped to the reason and the route to use
+            instead; ``list`` refuses them with ``ValueError`` before any
+            request is sent.
     """
 
     entity_type: str  # Override in subclass
@@ -369,7 +370,7 @@ class BaseResource[T: Entity]:
 
     @classmethod
     def check_where(cls, where: str | None) -> None:
-        """Refuse a ``where=`` naming a path this collection silently ignores.
+        """Refuse a ``where=`` naming a path this collection will not filter on.
 
         Applies :func:`check_filter_paths` with ``ignored_filter_paths``. A
         collection with nothing declared there accepts every filter, as
@@ -538,7 +539,7 @@ class BaseResource[T: Entity]:
             ValueError: Both ``order_by`` and ``order_by_desc`` were passed,
                 ``skip`` is negative, ``innertake`` is negative, ``include``
                 names a field this collection cannot hydrate, or ``where``
-                names a path TP silently ignores on it (see
+                names a path TP will not filter on for it (see
                 ``ignored_filter_paths``) (raised when iteration begins)
             AuthenticationError: Invalid credentials
             ForbiddenError: Insufficient permissions

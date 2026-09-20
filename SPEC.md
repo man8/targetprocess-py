@@ -85,13 +85,12 @@ itself.
   local `skip` counter, since that can silently skip or repeat records if TP
   ever returns a non-linear continuation URL.
 - **Unrecognised query input**: TP answers a query parameter it does not
-  recognise, and a `where=` naming a nested collection path it does not
-  filter on, with HTTP 200 and the unfiltered, unsorted rows -
-  indistinguishable from success. The confirmed case is a filter on the
-  `Assignments` collection of an assignable, which returns the same rows as
-  the unfiltered request, while the `Assignment` entity's own
-  `GeneralUser.Id` filter applies. A collection `Count` is the loud exception:
-  `Assignments.Count` and `Comments.Count` are rejected with HTTP 400.
+  recognise, and a `where=` naming a nested collection path it does not filter
+  on, with HTTP 200 and the unfiltered, unsorted rows - indistinguishable from
+  success. The confirmed case is a filter on the `Assignments` collection of an
+  assignable, which returns the same rows as the unfiltered request, while the
+  `Assignment` entity's own `GeneralUser.Id` filter applies. A collection
+  `Count` is the loud exception, rejected with HTTP 400 - `Comments.Count` too.
 - **Bulk endpoint**: writable collections expose
   `POST /api/v1/{collection}/bulk`, taking a JSON array of entity objects -
   an object carrying an `Id` updates that entity, an object without one
@@ -507,10 +506,10 @@ entity back to TP.
 Fields TP computes and returns carry no `ge`/`le` bound. A constraint on a
 server-supplied value fails the **whole entity** rather than the field, so one
 out-of-range roll-up would abort an entire `list()` page with a `ParseError` -
-and TP documents no bounds on effort, progress or flow metrics to assert.
-`RoleEffort` and `Time` keep the bounds they were published with, and
-`times.upsert` validates on the write side, where the value originates and a
-range error is actionable.
+and TP documents no bounds on effort, progress or flow metrics to assert. The
+`RoleEffort` and `Time` join models carry none either; `times.upsert` validates
+on the write side, where the value originates and a range error is actionable.
+The attached-content byte-size fields still carry `ge=0`.
 
 `custom_fields` (`CustomFields`) sits on the `Entity` base, so custom-field
 values are reachable on every entity type: fetched with
@@ -697,9 +696,10 @@ six assignable managers (`UserStory`, `Bug`, `Task`, `Feature`, `Epic`,
 `order_by` or `include` - matching a path's leading segment in any casing
 outside quoted values, and refuses with a `ValueError` naming the collection
 and the route. `entities` mirrors the refusal for every spelling of those six
-collections and of each Assignable-derived collection with no typed manager,
-named in `_UNTYPED_ASSIGNABLE_COLLECTIONS`: `Assignable`, `PortfolioEpic`,
-`TestPlanRun`, `InboundAssignable` and `OutboundAssignable`.
+collections and of the untyped Assignable-derived collections confirmed so far -
+`Assignable`, `PortfolioEpic`, `TestPlanRun`, `InboundAssignable` and
+`OutboundAssignable`, in `_UNTYPED_ASSIGNABLE_COLLECTIONS`. That is what has
+been checked, not every candidate; the TestPlan family is unexamined.
 
 | Ignored path | Route instead |
 | --- | --- |

@@ -1,4 +1,4 @@
-"""Tests for the refusal of where= paths TargetProcess accepts and silently ignores.
+"""Tests for the refusal of where= paths TargetProcess will not filter on.
 
 A filter on the Assignments collection of an assignable answers HTTP 200 with the
 unfiltered rows, so the assignable managers and the generic entities path refuse
@@ -188,7 +188,7 @@ def test_the_reason_states_both_observed_failure_shapes():
     from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
 
     reason = ASSIGNABLE_IGNORED_FILTER_PATHS["Assignments"]
-    assert "ignored" in reason and "HTTP 200" in reason
+    assert "HTTP 200" in reason
     assert "Assignments.Count" in reason and "HTTP 400" in reason
     assert "client.assignments" in reason
 

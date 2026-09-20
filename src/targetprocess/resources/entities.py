@@ -101,6 +101,12 @@ def _check_include(entity_type: str, include: list[str] | None) -> None:
 # narrower argument that it returns a superset of the same rows as the six typed
 # collections, so it cannot behave differently from them.
 #
+# This is what has been checked, not every candidate: the collections were named
+# for checking rather than enumerated from the instance, so an untyped
+# Assignable-derived collection missing here is unproven, not cleared. The
+# TestPlan family is the obvious one left - ``TestPlanRun`` is covered and
+# ``TestPlan`` is not. Add one the same way, with its own unfiltered control.
+#
 # ``Inbound``/``OutboundAssignables`` are also read as ``include=`` collection
 # properties of an item, which is unaffected: the refusal is on ``list()``'s
 # ``where=`` only.
@@ -319,7 +325,7 @@ class EntitiesResource:
                 ``skip`` is negative, ``innertake`` is negative,
                 ``include`` names a field the typed resource for this
                 collection refuses to hydrate, or ``where`` names a path TP
-                silently ignores on an assignable collection (raised when
+                will not filter on for an assignable collection (raised when
                 iteration begins)
             AuthenticationError: Invalid credentials
             ForbiddenError: Insufficient permissions
