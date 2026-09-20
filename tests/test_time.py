@@ -3,7 +3,6 @@
 from datetime import datetime
 
 import pytest
-from pydantic import ValidationError
 
 from targetprocess.models import Time
 
@@ -71,10 +70,14 @@ def test_time_pascal_case_accessors() -> None:
     assert time.ResourceType == "Time"
 
 
-@pytest.mark.parametrize("field", ["Spent", "Remain"])
-def test_time_rejects_negative_hours(field: str) -> None:
-    with pytest.raises(ValidationError):
-        Time.model_validate({"Id": 2, "ResourceType": "Time", field: -1.0})
+@pytest.mark.parametrize(("alias", "attribute"), [("Spent", "spent"), ("Remain", "remain")])
+def test_time_parses_a_negative_duration_the_server_sent(alias: str, attribute: str) -> None:
+    # Neither field constrains its range, because both are server-supplied and a
+    # constraint would fail the whole entity rather than the field - one
+    # out-of-range record would abort a whole list() page. The range check lives
+    # on the write path, in times.upsert, where the value originates.
+    time = Time.model_validate({"Id": 2, "ResourceType": "Time", alias: -1.0})
+    assert getattr(time, attribute) == -1.0
 
 
 def test_time_declares_the_narrow_back_references() -> None:
@@ -96,12 +99,23 @@ def test_time_declares_the_narrow_back_references() -> None:
 def test_time_back_reference_covers_a_custom_activity_entry() -> None:
     # A CustomActivity entry has no Assignable at all - the back-reference is
     # the only record of what the time was logged against.
+    #
+    # Project is populated all the same, and this is the shape live TP sends: a
+    # null Assignable alongside a set Project, which TP takes from the custom
+    # activity's own project rather than from the (absent) Assignable. Asserted
+    # here so the docstring's claim has a test behind it.
     time = Time.model_validate(
-        {"Id": 4, "CustomActivity": {"Id": 47, "Name": "Admin"}, "Assignable": None}
+        {
+            "Id": 4,
+            "CustomActivity": {"Id": 47, "Name": "Admin"},
+            "Assignable": None,
+            "Project": {"Id": 300, "Name": "Platform"},
+        }
     )
     assert time.assignable is None
     assert time.custom_activity is not None
     assert time.custom_activity.name == "Admin"
+    assert time.project is not None and time.project.id == 300
 
 
 def test_time_tolerates_unmodelled_keys() -> None:

@@ -73,33 +73,38 @@ class RoleEffort(Entity):
 
     Breaks an Assignable's effort down by Role.
 
+    Every numeric field here is a server-supplied roll-up, so none carries a
+    range constraint - the rule ``AssignableEntity`` states for the same class
+    of field: a constraint on a value TP computes fails the **whole entity**
+    rather than the field, so one out-of-range roll-up would abort a whole
+    ``list()`` page with a ``ParseError``. Write-side range checks belong where
+    the value originates - see ``times.upsert``.
+
     Attributes:
-        initial_estimate: Initial effort estimate >= 0
-        effort: Total effort >= 0
-        effort_completed: Completed effort >= 0
-        effort_todo: Remaining effort >= 0
-        time_spent: Time spent >= 0
-        time_remain: Time remaining >= 0
+        initial_estimate: Initial effort estimate
+        effort: Total effort
+        effort_completed: Completed effort
+        effort_todo: Remaining effort
+        time_spent: Time spent
+        time_remain: Time remaining
         assignable: Assignable (work item) reference
         role: Role reference
     """
 
     # Effort / time tracking
     initial_estimate: float | None = Field(
-        default=None, alias="InitialEstimate", ge=0, description="Initial estimate"
+        default=None, alias="InitialEstimate", description="Initial estimate"
     )
-    effort: float | None = Field(default=None, alias="Effort", ge=0, description="Total effort")
+    effort: float | None = Field(default=None, alias="Effort", description="Total effort")
     effort_completed: float | None = Field(
-        default=None, alias="EffortCompleted", ge=0, description="Completed effort"
+        default=None, alias="EffortCompleted", description="Completed effort"
     )
     effort_todo: float | None = Field(
-        default=None, alias="EffortToDo", ge=0, description="Remaining effort"
+        default=None, alias="EffortToDo", description="Remaining effort"
     )
-    time_spent: float | None = Field(
-        default=None, alias="TimeSpent", ge=0, description="Time spent"
-    )
+    time_spent: float | None = Field(default=None, alias="TimeSpent", description="Time spent")
     time_remain: float | None = Field(
-        default=None, alias="TimeRemain", ge=0, description="Time remaining"
+        default=None, alias="TimeRemain", description="Time remaining"
     )
 
     # Relationships
@@ -157,15 +162,29 @@ class Time(Entity):
     ``assignable``). They are declared so an entry's origin is readable without
     a second fetch.
 
+    ``project`` is populated whichever shape the entry takes, so a null
+    ``assignable`` does not imply a null project: TP takes it from the
+    Assignable for a work-item entry, and from the custom activity's own
+    project for a ``CustomActivity`` entry - every ``CustomActivity`` carries
+    one, being scoped to a project and a user.
+
+    ``spent`` and ``remain`` carry no range constraint, for the reason
+    ``AssignableEntity`` gives: a constraint on a value the server supplies
+    fails the **whole entity** rather than the field, so one out-of-range
+    record would abort a whole ``list()`` page with a ``ParseError``. The
+    write path validates instead, where the value originates - see
+    ``times.upsert``.
+
     Attributes:
-        spent: Hours spent >= 0
-        remain: Hours remaining >= 0
+        spent: Hours spent
+        remain: Hours remaining
         is_estimation: Entry records an estimate rather than actual time
         date: Date/time the work is logged against
         description: Free-text description of the work
         assignable: Assignable (work item) reference
         user: User the time is logged for
-        project: Project reference (TP derives it from the Assignable)
+        project: Project reference - from the Assignable, or from the
+            CustomActivity's own project on a custom-activity entry
         role: Role reference
         user_story: User story the entry was logged against, if any
         task: Task the entry was logged against, if any
@@ -177,8 +196,8 @@ class Time(Entity):
     """
 
     # Effort / time tracking
-    spent: float | None = Field(default=None, alias="Spent", ge=0, description="Hours spent")
-    remain: float | None = Field(default=None, alias="Remain", ge=0, description="Hours remaining")
+    spent: float | None = Field(default=None, alias="Spent", description="Hours spent")
+    remain: float | None = Field(default=None, alias="Remain", description="Hours remaining")
     is_estimation: bool | None = Field(
         default=None, alias="IsEstimation", description="Entry is an estimation"
     )
@@ -194,7 +213,11 @@ class Time(Entity):
         default=None, alias="Assignable", description="Assignable (work item)"
     )
     user: UserRef | None = Field(default=None, alias="User", description="User")
-    project: EntityRef | None = Field(default=None, alias="Project", description="Project")
+    project: EntityRef | None = Field(
+        default=None,
+        alias="Project",
+        description="Project - from the Assignable, or the CustomActivity's own project",
+    )
     role: EntityRef | None = Field(default=None, alias="Role", description="Role")
 
     # Narrow back-references: at most one is populated per entry.
