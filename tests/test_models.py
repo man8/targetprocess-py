@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from targetprocess.models import Entity, NamedEntity, format_tp_date, parse_tp_date
+from targetprocess_py.models import Entity, NamedEntity, format_tp_date, parse_tp_date
 
 
 def test_entity_initialization() -> None:

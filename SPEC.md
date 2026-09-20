@@ -902,7 +902,7 @@ result = await client.times.upsert(
 
 ## Observability
 
-Runtime observability lives in `targetprocess/_observability.py` and is
+Runtime observability lives in `targetprocess_py/_observability.py` and is
 scoped to what a *library* should own. The application that embeds the
 library owns the rest (metrics, alerting, error tracking, deployment
 observability, product analytics) - it has the deployment context a

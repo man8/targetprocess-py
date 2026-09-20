@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock, Mock
 import httpx
 import pytest
 
-from targetprocess.client import TargetProcessClient
-from targetprocess.exceptions import AmbiguousMatchError, NotFoundError, ReadOnlyViolation
-from targetprocess.models import NamedEntity, UserStory
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.base import BaseResource, _resolve_by_name
-from targetprocess.types import ClientMode
+from targetprocess_py.client import TargetProcessClient
+from targetprocess_py.exceptions import AmbiguousMatchError, NotFoundError, ReadOnlyViolation
+from targetprocess_py.models import NamedEntity, UserStory
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.base import BaseResource, _resolve_by_name
+from targetprocess_py.types import ClientMode
 
 
 class TestResource(BaseResource[UserStory]):

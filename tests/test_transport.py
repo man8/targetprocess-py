@@ -3,7 +3,7 @@
 import httpx
 import pytest
 
-from targetprocess.transport import HTTPTransport
+from targetprocess_py.transport import HTTPTransport
 
 
 def _install_mock_transport(transport: HTTPTransport, handler: httpx.MockTransport) -> None:

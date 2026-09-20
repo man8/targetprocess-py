@@ -10,7 +10,7 @@ from typing import Any
 import httpx
 import pytest
 
-from targetprocess import (
+from targetprocess_py import (
     REQUEST_ID_HEADER,
     ScrubbingFilter,
     StructuredJsonFormatter,
@@ -19,17 +19,17 @@ from targetprocess import (
     new_request_id,
     request_id_context,
 )
-from targetprocess._observability import (
+from targetprocess_py._observability import (
     logger as tp_logger,
 )
-from targetprocess._observability import (
+from targetprocess_py._observability import (
     scrub_headers,
     scrub_message,
     scrub_url,
 )
-from targetprocess.exceptions import NetworkError
-from targetprocess.request_handler import RequestHandler
-from targetprocess.transport import HTTPTransport
+from targetprocess_py.exceptions import NetworkError
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.transport import HTTPTransport
 
 # ---------------------------------------------------------------------------
 # scrub_url
@@ -403,7 +403,7 @@ async def test_handler_logs_scrubbed_url_when_token_in_url(
     caplog.set_level(logging.DEBUG, logger="targetprocess")
     # Force a record whose url extra carries the token (as if a caller logged
     # the post-auth URL); the filter must redact it before it reaches caplog.
-    from targetprocess._observability import logger as tp_log
+    from targetprocess_py._observability import logger as tp_log
 
     with request_id_context("rid"):
         tp_log.debug("request.start", extra={"url": "https://x/?access_token=secret-token&take=5"})

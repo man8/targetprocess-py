@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess.client import TargetProcessClient
-from targetprocess.exceptions import AmbiguousMatchError, NotFoundError
-from targetprocess.models import EntityState
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.entity_states import EntityStatesResource
-from targetprocess.types import ClientMode
+from targetprocess_py.client import TargetProcessClient
+from targetprocess_py.exceptions import AmbiguousMatchError, NotFoundError
+from targetprocess_py.models import EntityState
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.entity_states import EntityStatesResource
+from targetprocess_py.types import ClientMode
 from tests._support.request_handler import scripted_list
 
 

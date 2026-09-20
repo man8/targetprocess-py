@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from targetprocess.models import Comment
+from targetprocess_py.models import Comment
 
 
 def test_comment_full_parsing() -> None:

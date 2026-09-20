@@ -43,8 +43,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from targetprocess import models, resources  # noqa: E402
-from targetprocess.resources.base import BaseResource  # noqa: E402
+from targetprocess_py import models, resources  # noqa: E402
+from targetprocess_py.resources.base import BaseResource  # noqa: E402
 
 if TYPE_CHECKING:  # pragma: no cover - import-time typing only
     from pydantic import BaseModel

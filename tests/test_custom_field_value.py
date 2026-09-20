@@ -1,6 +1,6 @@
 """Tests for CustomFieldValue model (embedded value element)."""
 
-from targetprocess.models import CustomFieldValue
+from targetprocess_py.models import CustomFieldValue
 
 
 def test_custom_field_value_string() -> None:

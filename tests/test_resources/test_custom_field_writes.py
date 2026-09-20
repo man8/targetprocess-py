@@ -11,9 +11,9 @@ from typing import Any
 import httpx
 import pytest
 
-from targetprocess import TargetProcessClient
-from targetprocess.exceptions import ReadOnlyViolation, VerificationError
-from targetprocess.types import ClientMode
+from targetprocess_py import TargetProcessClient
+from targetprocess_py.exceptions import ReadOnlyViolation, VerificationError
+from targetprocess_py.types import ClientMode
 
 _STORY = "/api/v1/UserStory/123"
 

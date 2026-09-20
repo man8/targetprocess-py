@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from targetprocess import ClientMode, ReadOnlyViolation, TargetProcessClient
+from targetprocess_py import ClientMode, ReadOnlyViolation, TargetProcessClient
 
 ENV_FILE = Path.home() / ".config" / "targetprocess" / ".env"
 

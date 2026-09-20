@@ -11,7 +11,7 @@ Why this matters:
   (tests/integration/, ALLOW_PROD_RECORDING=1) and then committed so the
   same tests can replay offline.
 - The client sends its token as an `access_token` query parameter (see
-  targetprocess.transport._QueryTokenAuth), so that's the primary leak
+  targetprocess_py.transport._QueryTokenAuth), so that's the primary leak
   surface; the authorization-header pattern and the loose base64 pattern
   are belt-and-braces for the Basic-auth alternative and any other
   token-shaped secret.

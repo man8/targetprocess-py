@@ -47,7 +47,7 @@ jobs:
       - run: uvx twine==7.0.0 check --strict dist/*
       # The version is read from the package, not the tag (see
       # [tool.hatch.version] in pyproject.toml), so a tag that disagrees with
-      # targetprocess.__version__ would publish a release whose files carry a
+      # targetprocess_py.__version__ would publish a release whose files carry a
       # different version from the tag that produced them. Refuse it.
       - name: Assert the tag matches the package version
         env:

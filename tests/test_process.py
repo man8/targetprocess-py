@@ -1,6 +1,6 @@
 """Tests for Process model."""
 
-from targetprocess.models import Process
+from targetprocess_py.models import Process
 
 
 def test_process_full_parsing() -> None:

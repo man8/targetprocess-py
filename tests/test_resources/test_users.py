@@ -7,12 +7,12 @@ from unittest.mock import AsyncMock, Mock
 import httpx
 import pytest
 
-from targetprocess import TargetProcessClient
-from targetprocess.exceptions import NotFoundError, ParseError
-from targetprocess.models import User
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.users import UsersResource
-from targetprocess.types import ClientMode
+from targetprocess_py import TargetProcessClient
+from targetprocess_py.exceptions import NotFoundError, ParseError
+from targetprocess_py.models import User
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.users import UsersResource
+from targetprocess_py.types import ClientMode
 
 _LOGGED_USER_PATH = "/api/v1/Users/LoggedUser"
 

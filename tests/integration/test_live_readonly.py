@@ -7,7 +7,7 @@ offline. Only list/get calls are made here - never create/update/delete.
 
 import pytest
 
-from targetprocess import ClientMode, TargetProcessClient
+from targetprocess_py import ClientMode, TargetProcessClient
 
 pytestmark = [pytest.mark.vcr, pytest.mark.integration]
 

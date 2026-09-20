@@ -36,7 +36,7 @@ For an environment-only install with no project, use `uv pip install targetproce
 ```python
 import asyncio
 
-from targetprocess import ClientMode, TargetProcessClient
+from targetprocess_py import ClientMode, TargetProcessClient
 
 
 async def main() -> None:
@@ -234,7 +234,7 @@ Every library error subclasses `TargetProcessError`, so you can catch a
 specific failure or the base class:
 
 ```python
-from targetprocess import (
+from targetprocess_py import (
     AuthenticationError,
     NotFoundError,
     RateLimitError,
@@ -302,7 +302,7 @@ minor releases; every change is recorded in [CHANGELOG.md](CHANGELOG.md).
    request has been resolved: the library refuses it before sending, verifies it
    after the write, or SPEC.md documents it as a limitation.
 3. The public surface is frozen: SPEC.md's Public API Surface matches
-   `targetprocess.__all__`, a Semantic Versioning promise for that surface is
+   `targetprocess_py.__all__`, a Semantic Versioning promise for that surface is
    stated, and a deprecation policy is written.
 4. Documentation and the recorded test cassettes are current: every public
    resource manager is documented in [docs/USAGE.md](docs/USAGE.md), the

@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import ClientMode, ReadOnlyViolation, TargetProcessClient
-from targetprocess.models import TeamAssignment
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.team_assignments import TeamAssignmentsResource
+from targetprocess_py import ClientMode, ReadOnlyViolation, TargetProcessClient
+from targetprocess_py.models import TeamAssignment
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.team_assignments import TeamAssignmentsResource
 
 
 @pytest.mark.asyncio

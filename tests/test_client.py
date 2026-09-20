@@ -2,7 +2,7 @@
 
 import pytest
 
-from targetprocess import ClientMode, ReadOnlyViolation, TargetProcessClient
+from targetprocess_py import ClientMode, ReadOnlyViolation, TargetProcessClient
 
 
 @pytest.mark.asyncio

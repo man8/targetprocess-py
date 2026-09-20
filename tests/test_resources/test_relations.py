@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import ClientMode, ReadOnlyViolation, TargetProcessClient
-from targetprocess.models import Relation
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.relations import RelationsResource
+from targetprocess_py import ClientMode, ReadOnlyViolation, TargetProcessClient
+from targetprocess_py.models import Relation
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.relations import RelationsResource
 from tests._support.request_handler import scripted_list
 
 

@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import ClientMode, RequestHandler, TargetProcessClient
-from targetprocess.models import Term
-from targetprocess.resources.terms import TermsResource
+from targetprocess_py import ClientMode, RequestHandler, TargetProcessClient
+from targetprocess_py.models import Term
+from targetprocess_py.resources.terms import TermsResource
 from tests._support.request_handler import scripted_list
 
 

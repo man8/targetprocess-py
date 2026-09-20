@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import RequestHandler, TargetProcessClient
-from targetprocess.models import CustomField
-from targetprocess.resources.custom_fields import CustomFieldsResource
+from targetprocess_py import RequestHandler, TargetProcessClient
+from targetprocess_py.models import CustomField
+from targetprocess_py.resources.custom_fields import CustomFieldsResource
 
 
 def test_custom_fields_resource_entity_type():

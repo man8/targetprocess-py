@@ -6,12 +6,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from targetprocess.client import TargetProcessClient
-from targetprocess.exceptions import AmbiguousMatchError, NotFoundError, ReadOnlyViolation
-from targetprocess.models import Role
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.roles import RolesResource
-from targetprocess.types import ClientMode
+from targetprocess_py.client import TargetProcessClient
+from targetprocess_py.exceptions import AmbiguousMatchError, NotFoundError, ReadOnlyViolation
+from targetprocess_py.models import Role
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.roles import RolesResource
+from targetprocess_py.types import ClientMode
 
 ROLES: list[dict[str, Any]] = [
     {"ResourceType": "Role", "Id": 1, "Name": "Developer"},

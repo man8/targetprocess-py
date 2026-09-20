@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from targetprocess.models import Attachment
+from targetprocess_py.models import Attachment
 
 
 def test_attachment_full_parsing() -> None:

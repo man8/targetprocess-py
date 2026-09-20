@@ -39,8 +39,8 @@ therefore the load-bearing evidence that an *update* did something.
 
 import pytest
 
-from targetprocess import ClientMode, TargetProcessClient
-from targetprocess.exceptions import NotFoundError
+from targetprocess_py import ClientMode, TargetProcessClient
+from targetprocess_py.exceptions import NotFoundError
 
 pytestmark = [pytest.mark.vcr, pytest.mark.integration]
 

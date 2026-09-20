@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from targetprocess.models import Project
+from targetprocess_py.models import Project
 
 
 def test_project_full_parsing() -> None:

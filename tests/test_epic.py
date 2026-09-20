@@ -1,6 +1,6 @@
 """Tests for Epic model."""
 
-from targetprocess.models import Epic
+from targetprocess_py.models import Epic
 
 
 def test_epic_full_parsing() -> None:

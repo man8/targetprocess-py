@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import ClientMode, RequestHandler, TargetProcessClient
-from targetprocess.models import Workflow
-from targetprocess.resources.workflows import WorkflowsResource
+from targetprocess_py import ClientMode, RequestHandler, TargetProcessClient
+from targetprocess_py.models import Workflow
+from targetprocess_py.resources.workflows import WorkflowsResource
 from tests._support.request_handler import scripted_list
 
 

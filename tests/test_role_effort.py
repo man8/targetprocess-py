@@ -2,7 +2,7 @@
 
 import pytest
 
-from targetprocess.models import RoleEffort
+from targetprocess_py.models import RoleEffort
 
 
 def test_role_effort_full_parsing() -> None:

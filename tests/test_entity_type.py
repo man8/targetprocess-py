@@ -1,6 +1,6 @@
 """Tests for EntityType model (the full record, as against EntityTypeRef)."""
 
-from targetprocess.models import EntityType
+from targetprocess_py.models import EntityType
 
 
 def test_entity_type_full_parsing() -> None:

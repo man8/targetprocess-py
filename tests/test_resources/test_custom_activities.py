@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import RequestHandler, TargetProcessClient
-from targetprocess.models import CustomActivity
-from targetprocess.resources.custom_activities import CustomActivitiesResource
+from targetprocess_py import RequestHandler, TargetProcessClient
+from targetprocess_py.models import CustomActivity
+from targetprocess_py.resources.custom_activities import CustomActivitiesResource
 
 
 def test_custom_activities_resource_entity_type():

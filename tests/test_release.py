@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 
-from targetprocess.models import Release
+from targetprocess_py.models import Release
 
 
 def test_release_full_parsing() -> None:

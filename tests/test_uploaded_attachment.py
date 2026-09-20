@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 from pydantic import ValidationError
 
-from targetprocess.models import UploadedAttachment, UploadedFileRef
+from targetprocess_py.models import UploadedAttachment, UploadedFileRef
 
 # The shape ``/UploadFile.ashx`` is recorded as answering with. Invented
 # values - the real recording is in

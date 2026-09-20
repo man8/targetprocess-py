@@ -1,6 +1,6 @@
 """Tests for TestCase model."""
 
-from targetprocess.models import TestCase
+from targetprocess_py.models import TestCase
 
 
 def test_test_case_full_parsing() -> None:

@@ -2,10 +2,10 @@
 
 import pytest
 
-from targetprocess import ClientMode, TargetProcessClient
-from targetprocess.models import Entity
-from targetprocess.request_handler import RequestHandler
-from targetprocess.response_parser import ResponseParser
+from targetprocess_py import ClientMode, TargetProcessClient
+from targetprocess_py.models import Entity
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.response_parser import ResponseParser
 
 
 @pytest.mark.asyncio
@@ -83,7 +83,7 @@ async def test_error_handling_integration() -> None:
 
     import httpx
 
-    from targetprocess.exceptions import NotFoundError
+    from targetprocess_py.exceptions import NotFoundError
 
     async with TargetProcessClient(
         domain="example.tpondemand.com",

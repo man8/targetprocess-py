@@ -1,4 +1,4 @@
-"""Tests for targetprocess exception classes."""
+"""Tests for targetprocess_py exception classes."""
 
 import inspect
 import pickle
@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from targetprocess.exceptions import (
+from targetprocess_py.exceptions import (
     AmbiguousMatchError,
     APIError,
     AuthenticationError,
@@ -48,15 +48,15 @@ def test_old_shadowing_names_gone() -> None:
     No aliasing/deprecation shims - the old names must not resolve from
     either the package root or the exceptions module.
     """
-    import targetprocess
+    import targetprocess_py
 
-    assert "PermissionError" not in targetprocess.__all__
-    assert "ValidationError" not in targetprocess.__all__
-    assert not hasattr(targetprocess.exceptions, "ValidationError")
+    assert "PermissionError" not in targetprocess_py.__all__
+    assert "ValidationError" not in targetprocess_py.__all__
+    assert not hasattr(targetprocess_py.exceptions, "ValidationError")
     # PermissionError is still reachable from the package as the untouched
-    # Python builtin (targetprocess never defines its own at module scope),
+    # Python builtin (targetprocess_py never defines its own at module scope),
     # so this only asserts the library did not (re-)introduce a shadowing one.
-    assert not hasattr(targetprocess.exceptions, "PermissionError")
+    assert not hasattr(targetprocess_py.exceptions, "PermissionError")
 
 
 def test_api_error_with_status_code() -> None:
@@ -133,7 +133,7 @@ def test_ambiguous_match_error_generic_form() -> None:
 
 
 def test_verification_error_carries_its_context() -> None:
-    import targetprocess
+    import targetprocess_py
 
     error = VerificationError(
         "update_many did not verify 1 of 2 entities",
@@ -148,8 +148,8 @@ def test_verification_error_carries_its_context() -> None:
     assert error.mismatches == {4: {"Effort": (1, VerificationError.ABSENT)}}
     assert error.verified_ids == [3]
     assert repr(VerificationError.ABSENT) == "<absent>"
-    assert "VerificationError" in targetprocess.__all__
-    assert targetprocess.VerificationError is VerificationError
+    assert "VerificationError" in targetprocess_py.__all__
+    assert targetprocess_py.VerificationError is VerificationError
 
 
 def test_verification_error_single_entity_form() -> None:
@@ -165,8 +165,8 @@ def test_verification_error_single_entity_form() -> None:
 
 
 def test_split_transition_error_carries_both_workflows() -> None:
-    import targetprocess
-    from targetprocess.exceptions import SplitTransitionError
+    import targetprocess_py
+    from targetprocess_py.exceptions import SplitTransitionError
 
     error = SplitTransitionError(
         "UserStory 123 has a team level in workflow 9",
@@ -178,8 +178,8 @@ def test_split_transition_error_carries_both_workflows() -> None:
     assert issubclass(SplitTransitionError, TargetProcessError)
     assert str(error) == "UserStory 123 has a team level in workflow 9"
     assert (error.entity_id, error.project_workflow_id, error.team_workflow_id) == (123, 5, 9)
-    assert "SplitTransitionError" in targetprocess.__all__
-    assert targetprocess.SplitTransitionError is SplitTransitionError
+    assert "SplitTransitionError" in targetprocess_py.__all__
+    assert targetprocess_py.SplitTransitionError is SplitTransitionError
 
 
 # Every protocol this interpreter can write, so an error shipped across processes
@@ -226,7 +226,7 @@ def test_verification_error_survives_a_pickle_round_trip(
 
 def _library_errors() -> dict[type[TargetProcessError], Callable[[], TargetProcessError]]:
     """One factory per exception class the module defines, each passing non-default arguments."""
-    from targetprocess.exceptions import SplitTransitionError
+    from targetprocess_py.exceptions import SplitTransitionError
 
     return {
         TargetProcessError: lambda: TargetProcessError("Something failed"),
@@ -286,7 +286,7 @@ def test_every_library_error_survives_a_pickle_round_trip(
 
 
 def test_the_pickle_table_covers_every_library_error() -> None:
-    import targetprocess.exceptions as module
+    import targetprocess_py.exceptions as module
 
     defined = {
         member

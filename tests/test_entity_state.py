@@ -1,6 +1,6 @@
 """Tests for EntityState model."""
 
-from targetprocess.models import EntityState
+from targetprocess_py.models import EntityState
 
 
 def test_entity_state_full_parsing() -> None:

@@ -11,15 +11,15 @@ from unittest.mock import Mock
 
 import pytest
 
-from targetprocess.client import TargetProcessClient
-from targetprocess.exceptions import AmbiguousMatchError, NotFoundError
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.base import BaseResource
-from targetprocess.resources.custom_activities import CustomActivitiesResource
-from targetprocess.resources.entity_types import EntityTypesResource
-from targetprocess.resources.processes import ProcessesResource
-from targetprocess.resources.severities import SeveritiesResource
-from targetprocess.types import ClientMode
+from targetprocess_py.client import TargetProcessClient
+from targetprocess_py.exceptions import AmbiguousMatchError, NotFoundError
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.base import BaseResource
+from targetprocess_py.resources.custom_activities import CustomActivitiesResource
+from targetprocess_py.resources.entity_types import EntityTypesResource
+from targetprocess_py.resources.processes import ProcessesResource
+from targetprocess_py.resources.severities import SeveritiesResource
+from targetprocess_py.types import ClientMode
 from tests._support.request_handler import scripted_list
 
 # (resource class, wire entity type, noun in messages, two sample names)

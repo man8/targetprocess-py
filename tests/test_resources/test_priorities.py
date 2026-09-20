@@ -6,12 +6,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from targetprocess.client import TargetProcessClient
-from targetprocess.exceptions import AmbiguousMatchError, NotFoundError
-from targetprocess.models import Priority
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.priorities import PrioritiesResource
-from targetprocess.types import ClientMode
+from targetprocess_py.client import TargetProcessClient
+from targetprocess_py.exceptions import AmbiguousMatchError, NotFoundError
+from targetprocess_py.models import Priority
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.priorities import PrioritiesResource
+from targetprocess_py.types import ClientMode
 
 USER_STORY_PRIORITIES: list[dict[str, Any]] = [
     {

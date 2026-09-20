@@ -15,12 +15,12 @@ from unittest.mock import AsyncMock, Mock
 import httpx
 import pytest
 
-from targetprocess import ClientMode, ReadOnlyViolation, RequestHandler, TargetProcessClient
-from targetprocess.resources.base import BaseResource
-from targetprocess.resources.custom_rules import CustomRulesResource
-from targetprocess.resources.entity_types import EntityTypesResource
-from targetprocess.resources.relation_types import RelationTypesResource
-from targetprocess.resources.terms import TermsResource
+from targetprocess_py import ClientMode, ReadOnlyViolation, RequestHandler, TargetProcessClient
+from targetprocess_py.resources.base import BaseResource
+from targetprocess_py.resources.custom_rules import CustomRulesResource
+from targetprocess_py.resources.entity_types import EntityTypesResource
+from targetprocess_py.resources.relation_types import RelationTypesResource
+from targetprocess_py.resources.terms import TermsResource
 
 # Every write on the shared surface, keyed by the operation each maps to.
 WRITES: dict[str, tuple[str, Callable[[Any], Awaitable[Any]]]] = {

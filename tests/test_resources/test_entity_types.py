@@ -9,9 +9,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import RequestHandler, TargetProcessClient
-from targetprocess.models import EntityType
-from targetprocess.resources.entity_types import EntityTypesResource
+from targetprocess_py import RequestHandler, TargetProcessClient
+from targetprocess_py.models import EntityType
+from targetprocess_py.resources.entity_types import EntityTypesResource
 
 
 def test_entity_types_resource_entity_type():

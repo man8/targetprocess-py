@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, Mock
 import httpx
 import pytest
 
-from targetprocess.exceptions import (
+from targetprocess_py.exceptions import (
     APIError,
     NetworkError,
     NotFoundError,
@@ -18,10 +18,10 @@ from targetprocess.exceptions import (
     ReadOnlyViolation,
     TargetProcessError,
 )
-from targetprocess.models import UserStory
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.base import BaseResource
-from targetprocess.transport import HTTPTransport
+from targetprocess_py.models import UserStory
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.base import BaseResource
+from targetprocess_py.transport import HTTPTransport
 from tests._support.request_handler import (
     handler_with_mock_transport as _handler_with_mock_transport,
 )
@@ -62,7 +62,7 @@ async def test_request_with_rate_limiting() -> None:
 @pytest.mark.asyncio
 async def test_request_raises_on_error_status() -> None:
     """Test _request raises exception on error status."""
-    from targetprocess.exceptions import NotFoundError
+    from targetprocess_py.exceptions import NotFoundError
 
     transport = Mock(HTTPTransport)
     transport._client = Mock()

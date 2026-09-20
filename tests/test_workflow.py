@@ -1,6 +1,6 @@
 """Tests for Workflow model."""
 
-from targetprocess.models import Workflow
+from targetprocess_py.models import Workflow
 
 
 def test_workflow_full_parsing() -> None:

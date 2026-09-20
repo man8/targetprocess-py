@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess.client import TargetProcessClient
-from targetprocess.exceptions import AmbiguousMatchError, ReadOnlyViolation
-from targetprocess.models import Time
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.times import TimesResource
-from targetprocess.types import ClientMode, UpsertAction
+from targetprocess_py.client import TargetProcessClient
+from targetprocess_py.exceptions import AmbiguousMatchError, ReadOnlyViolation
+from targetprocess_py.models import Time
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.times import TimesResource
+from targetprocess_py.types import ClientMode, UpsertAction
 
 
 def _resource(mode: ClientMode = ClientMode.READWRITE) -> tuple[TimesResource, Mock, AsyncMock]:

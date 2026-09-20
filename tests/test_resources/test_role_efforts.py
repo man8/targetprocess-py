@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import ClientMode, ReadOnlyViolation, TargetProcessClient
-from targetprocess.models import RoleEffort
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.role_efforts import RoleEffortsResource
+from targetprocess_py import ClientMode, ReadOnlyViolation, TargetProcessClient
+from targetprocess_py.models import RoleEffort
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.role_efforts import RoleEffortsResource
 
 
 @pytest.mark.asyncio

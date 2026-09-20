@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess.client import TargetProcessClient
-from targetprocess.exceptions import AmbiguousMatchError, NotFoundError, ReadOnlyViolation
-from targetprocess.models import RelationType
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.relation_types import RelationTypesResource
-from targetprocess.types import ClientMode
+from targetprocess_py.client import TargetProcessClient
+from targetprocess_py.exceptions import AmbiguousMatchError, NotFoundError, ReadOnlyViolation
+from targetprocess_py.models import RelationType
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.relation_types import RelationTypesResource
+from targetprocess_py.types import ClientMode
 
 # Reference data from one production instance (Dependency 1, Blocker 2,
 # Relation 3, Link 4, Duplicate 5 there). Ids are instance-specific, which is
