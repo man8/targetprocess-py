@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import ClientMode, RequestHandler, TargetProcessClient
-from targetprocess.models import TeamIteration
-from targetprocess.resources.team_iterations import TeamIterationsResource
+from targetprocess_py import ClientMode, RequestHandler, TargetProcessClient
+from targetprocess_py.models import TeamIteration
+from targetprocess_py.resources.team_iterations import TeamIterationsResource
 from tests._support.request_handler import scripted_list
 
 

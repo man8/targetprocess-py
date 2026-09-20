@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import RequestHandler, TargetProcessClient
-from targetprocess.models import CustomRule
-from targetprocess.resources.custom_rules import CustomRulesResource
+from targetprocess_py import RequestHandler, TargetProcessClient
+from targetprocess_py.models import CustomRule
+from targetprocess_py.resources.custom_rules import CustomRulesResource
 
 
 def test_custom_rules_resource_entity_type():

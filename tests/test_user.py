@@ -1,6 +1,6 @@
 """Tests for User model."""
 
-from targetprocess.models import User
+from targetprocess_py.models import User
 
 
 def test_user_full_parsing() -> None:

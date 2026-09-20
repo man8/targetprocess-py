@@ -7,8 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-20
+
 ### Changed
 
+- **BREAKING:** the import package is renamed from `targetprocess` to
+  `targetprocess_py`, the PEP 503 normalisation of the distribution name. The
+  distribution is still `targetprocess-py` on PyPI and the repository keeps its
+  name; only the import name changes. An import name that did not match the
+  distribution name made every tool that infers a dependency from a top-level
+  import ask PyPI for a package called `targetprocess`, which does not exist, so
+  such a consumer needed a hand-written override to install this library at all.
+  There is deliberately no compatibility shim: a `targetprocess` module
+  re-exporting the new package would keep alive exactly the import that cannot be
+  resolved. **Migration:** rewrite each `import targetprocess` as
+  `import targetprocess_py`, and each `from targetprocess.<module>` as
+  `from targetprocess_py.<module>`; nothing else about the public surface
+  changes.
+- **BREAKING:** the library's logger namespace is renamed from `targetprocess` to
+  `targetprocess_py`, following the package, so records no longer arrive under a
+  namespace naming a module that does not exist. This fails differently from the
+  import rename and needs its own attention: an import that no longer resolves
+  raises at startup, while logging configuration that no longer matches simply
+  goes silent, with nothing raised to say so. **Migration:** rename
+  `targetprocess` to `targetprocess_py` in every handler, level, filter and
+  `dictConfig` entry that names this library's logger.
 - `list()` refuses a `where=` filter naming the `Assignments` collection on four
   further collections - `PortfolioEpics`, `TestPlanRuns`, `InboundAssignables`
   and `OutboundAssignables` - raising `ValueError` before any request is sent,
@@ -208,7 +231,8 @@ The first public release.
 - Log scrubbing redacts the `access_token` query parameter and `Authorization`
   header values from the library's own log records.
 
-[Unreleased]: https://github.com/man8/targetprocess-py/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/man8/targetprocess-py/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/man8/targetprocess-py/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/man8/targetprocess-py/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/man8/targetprocess-py/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/man8/targetprocess-py/releases/tag/v0.1.0

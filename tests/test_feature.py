@@ -1,6 +1,6 @@
 """Tests for Feature model."""
 
-from targetprocess.models import Feature
+from targetprocess_py.models import Feature
 
 
 def test_feature_full_parsing() -> None:

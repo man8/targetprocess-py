@@ -1,6 +1,6 @@
 """Tests for CustomRule model."""
 
-from targetprocess.models import CustomRule
+from targetprocess_py.models import CustomRule
 
 
 def test_custom_rule_full_parsing() -> None:

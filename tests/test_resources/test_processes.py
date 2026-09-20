@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import RequestHandler, TargetProcessClient
-from targetprocess.models import Process
-from targetprocess.resources.processes import ProcessesResource
+from targetprocess_py import RequestHandler, TargetProcessClient
+from targetprocess_py.models import Process
+from targetprocess_py.resources.processes import ProcessesResource
 
 
 def test_processes_resource_entity_type():

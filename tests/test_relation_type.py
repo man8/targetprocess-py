@@ -1,6 +1,6 @@
 """Tests for RelationType model."""
 
-from targetprocess.models import RelationType
+from targetprocess_py.models import RelationType
 
 
 def test_relation_type_parsing() -> None:

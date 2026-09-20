@@ -14,8 +14,8 @@ from typing import Any
 import httpx
 import pytest
 
-from targetprocess import TargetProcessClient
-from targetprocess.exceptions import (
+from targetprocess_py import TargetProcessClient
+from targetprocess_py.exceptions import (
     AmbiguousMatchError,
     NotFoundError,
     ParseError,
@@ -23,16 +23,16 @@ from targetprocess.exceptions import (
     SplitTransitionError,
     VerificationError,
 )
-from targetprocess.models import EntityState
-from targetprocess.resources.assignables import AssignableResource
-from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
-from targetprocess.resources.bugs import BugsResource
-from targetprocess.resources.epics import EpicsResource
-from targetprocess.resources.features import FeaturesResource
-from targetprocess.resources.requests import RequestsResource
-from targetprocess.resources.tasks import TasksResource
-from targetprocess.resources.user_stories import UserStoriesResource
-from targetprocess.types import ClientMode, LevelState, StateLevels
+from targetprocess_py.models import EntityState
+from targetprocess_py.resources.assignables import AssignableResource
+from targetprocess_py.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
+from targetprocess_py.resources.bugs import BugsResource
+from targetprocess_py.resources.epics import EpicsResource
+from targetprocess_py.resources.features import FeaturesResource
+from targetprocess_py.resources.requests import RequestsResource
+from targetprocess_py.resources.tasks import TasksResource
+from targetprocess_py.resources.user_stories import UserStoriesResource
+from targetprocess_py.types import ClientMode, LevelState, StateLevels
 
 _PROJECT_WORKFLOW = 5
 _TEAM_WORKFLOW = 9
@@ -441,7 +441,7 @@ async def test_advance_on_a_readonly_client_reads_and_writes_nothing() -> None:
 
 
 def test_a_record_read_without_its_state_or_workflow_is_refused() -> None:
-    from targetprocess.resources.assignables import _level, _state_ref
+    from targetprocess_py.resources.assignables import _level, _state_ref
 
     with pytest.raises(ParseError, match="UserStory 123 was read without its EntityState"):
         _state_ref(None, owner="UserStory 123")

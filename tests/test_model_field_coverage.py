@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import ClientMode, TargetProcessClient
-from targetprocess.models import (
+from targetprocess_py import ClientMode, TargetProcessClient
+from targetprocess_py.models import (
     AssignableEntity,
     Attachment,
     Bug,
@@ -45,9 +45,9 @@ from targetprocess.models import (
     UserStory,
     Workflow,
 )
-from targetprocess.models import TestCase as TPTestCase
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.user_stories import UserStoriesResource
+from targetprocess_py.models import TestCase as TPTestCase
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.user_stories import UserStoriesResource
 from tests.live_payloads import (
     LIVE_BUG_PARTIAL_ENTITY_TYPE,
     LIVE_TASK_PARTIAL_ENTITY_TYPE,

@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess.models import Project
-from targetprocess.resources.projects import ProjectsResource
-from targetprocess.types import ClientMode
+from targetprocess_py.models import Project
+from targetprocess_py.resources.projects import ProjectsResource
+from targetprocess_py.types import ClientMode
 
 
 @pytest.mark.asyncio

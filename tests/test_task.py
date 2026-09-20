@@ -1,6 +1,6 @@
 """Tests for Task model."""
 
-from targetprocess.models import Task
+from targetprocess_py.models import Task
 
 
 def test_task_full_parsing() -> None:

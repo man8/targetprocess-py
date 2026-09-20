@@ -4,7 +4,7 @@ import httpx
 import pydantic
 import pytest
 
-from targetprocess.exceptions import (
+from targetprocess_py.exceptions import (
     APIError,
     AuthenticationError,
     ForbiddenError,
@@ -13,8 +13,8 @@ from targetprocess.exceptions import (
     RateLimitError,
     RequestValidationError,
 )
-from targetprocess.models import Entity, NamedEntity
-from targetprocess.response_parser import ResponseParser
+from targetprocess_py.models import Entity, NamedEntity
+from targetprocess_py.response_parser import ResponseParser
 
 
 def test_parse_single_entity() -> None:

@@ -6,9 +6,9 @@ from typing import Any
 import httpx
 import pytest
 
-from targetprocess.exceptions import APIError, ParseError, RateLimitError, ReadOnlyViolation
-from targetprocess.request_handler import RequestHandler
-from targetprocess.transport import HTTPTransport
+from targetprocess_py.exceptions import APIError, ParseError, RateLimitError, ReadOnlyViolation
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.transport import HTTPTransport
 from tests._support.request_handler import (
     handler_with_mock_transport as _handler_with_mock_transport,
 )

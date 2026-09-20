@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from targetprocess.models import Time
+from targetprocess_py.models import Time
 
 
 def test_time_full_parsing() -> None:

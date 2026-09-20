@@ -25,7 +25,7 @@ import os
 import sys
 from collections import Counter
 
-from targetprocess import ClientMode, TargetProcessClient, TargetProcessError
+from targetprocess_py import ClientMode, TargetProcessClient, TargetProcessError
 
 
 def _env(name: str) -> str:

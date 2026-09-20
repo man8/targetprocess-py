@@ -6,7 +6,7 @@ from typing import Any
 import httpx
 import pytest
 
-from targetprocess.request_handler import RequestHandler
+from targetprocess_py.request_handler import RequestHandler
 from tests._support.request_handler import handler_with_mock_transport
 
 

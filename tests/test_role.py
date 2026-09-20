@@ -1,6 +1,6 @@
 """Tests for Role model."""
 
-from targetprocess.models import Role
+from targetprocess_py.models import Role
 
 
 def test_role_parsing() -> None:

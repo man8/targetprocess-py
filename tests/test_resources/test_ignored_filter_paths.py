@@ -13,19 +13,19 @@ from unittest.mock import AsyncMock, Mock
 import httpx
 import pytest
 
-from targetprocess import resources
-from targetprocess.client import TargetProcessClient
-from targetprocess.models import UserStory
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.base import BaseResource
-from targetprocess.resources.bugs import BugsResource
-from targetprocess.resources.entities import EntitiesResource, _spellings
-from targetprocess.resources.epics import EpicsResource
-from targetprocess.resources.features import FeaturesResource
-from targetprocess.resources.requests import RequestsResource
-from targetprocess.resources.tasks import TasksResource
-from targetprocess.resources.user_stories import UserStoriesResource
-from targetprocess.types import ClientMode
+from targetprocess_py import resources
+from targetprocess_py.client import TargetProcessClient
+from targetprocess_py.models import UserStory
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.base import BaseResource
+from targetprocess_py.resources.bugs import BugsResource
+from targetprocess_py.resources.entities import EntitiesResource, _spellings
+from targetprocess_py.resources.epics import EpicsResource
+from targetprocess_py.resources.features import FeaturesResource
+from targetprocess_py.resources.requests import RequestsResource
+from targetprocess_py.resources.tasks import TasksResource
+from targetprocess_py.resources.user_stories import UserStoriesResource
+from targetprocess_py.types import ClientMode
 from tests._support.request_handler import scripted_list
 
 # Each assignable manager, with the collection (plural) name TP addresses it by.
@@ -115,7 +115,7 @@ def test_a_resource_declaring_nothing_accepts_every_filter():
 
 def test_check_filter_paths_matches_the_leading_segment_only():
     """Any casing of the leading segment is refused, Assignments.Count included; nothing else."""
-    from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, check_filter_paths
+    from targetprocess_py.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, check_filter_paths
 
     refused = (
         "Assignments.Count gt 0",
@@ -170,7 +170,7 @@ async def test_assignable_managers_forward_a_valid_filter_unchanged(
 
 def test_the_known_set_is_declared_once_and_shared():
     """The six managers reference one declaration, whose only entry is Assignments."""
-    from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
+    from targetprocess_py.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
 
     assert set(ASSIGNABLE_IGNORED_FILTER_PATHS) == {"Assignments"}
     assert "client.assignments" in ASSIGNABLE_IGNORED_FILTER_PATHS["Assignments"]
@@ -185,7 +185,7 @@ def test_the_reason_states_both_observed_failure_shapes():
     shapes fail differently, and a caller who wrote either should read
     something true. Pinned here so neither half can be dropped silently.
     """
-    from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
+    from targetprocess_py.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
 
     reason = ASSIGNABLE_IGNORED_FILTER_PATHS["Assignments"]
     assert "HTTP 200" in reason
@@ -278,9 +278,9 @@ def test_every_manager_with_ignored_filter_paths_is_mirrored_on_the_generic_path
     ``Assignments``) and the *collections* the refusal is applied to. Widening
     coverage to a collection adds spellings here and no path there.
     """
-    from targetprocess.resources.assignables import AssignableResource
-    from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
-    from targetprocess.resources.entities import (
+    from targetprocess_py.resources.assignables import AssignableResource
+    from targetprocess_py.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
+    from targetprocess_py.resources.entities import (
         _IGNORED_FILTER_PATHS,
         _UNTYPED_ASSIGNABLE_COLLECTIONS,
     )

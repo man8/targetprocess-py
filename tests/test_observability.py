@@ -10,7 +10,7 @@ from typing import Any
 import httpx
 import pytest
 
-from targetprocess import (
+from targetprocess_py import (
     REQUEST_ID_HEADER,
     ScrubbingFilter,
     StructuredJsonFormatter,
@@ -19,17 +19,17 @@ from targetprocess import (
     new_request_id,
     request_id_context,
 )
-from targetprocess._observability import (
+from targetprocess_py._observability import (
     logger as tp_logger,
 )
-from targetprocess._observability import (
+from targetprocess_py._observability import (
     scrub_headers,
     scrub_message,
     scrub_url,
 )
-from targetprocess.exceptions import NetworkError
-from targetprocess.request_handler import RequestHandler
-from targetprocess.transport import HTTPTransport
+from targetprocess_py.exceptions import NetworkError
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.transport import HTTPTransport
 
 # ---------------------------------------------------------------------------
 # scrub_url
@@ -136,7 +136,7 @@ def test_scrub_headers_does_not_mutate_input() -> None:
 
 def test_scrubbing_filter_redacts_record_message() -> None:
     record = logging.LogRecord(
-        name="targetprocess",
+        name="targetprocess_py",
         level=logging.INFO,
         pathname=__file__,
         lineno=1,
@@ -151,7 +151,7 @@ def test_scrubbing_filter_redacts_record_message() -> None:
 
 def test_scrubbing_filter_redacts_url_extra() -> None:
     record = logging.LogRecord(
-        name="targetprocess",
+        name="targetprocess_py",
         level=logging.INFO,
         pathname=__file__,
         lineno=1,
@@ -167,7 +167,7 @@ def test_scrubbing_filter_redacts_url_extra() -> None:
 
 def test_scrubbing_filter_redacts_headers_extra() -> None:
     record = logging.LogRecord(
-        name="targetprocess",
+        name="targetprocess_py",
         level=logging.INFO,
         pathname=__file__,
         lineno=1,
@@ -183,7 +183,7 @@ def test_scrubbing_filter_redacts_headers_extra() -> None:
 
 def test_scrubbing_filter_preformats_percent_args() -> None:
     record = logging.LogRecord(
-        name="targetprocess",
+        name="targetprocess_py",
         level=logging.INFO,
         pathname=__file__,
         lineno=1,
@@ -205,7 +205,7 @@ def test_scrubbing_filter_preformats_percent_args() -> None:
 
 def _make_record(msg: str, **extra: Any) -> logging.LogRecord:
     record = logging.LogRecord(
-        name="targetprocess",
+        name="targetprocess_py",
         level=logging.INFO,
         pathname=__file__,
         lineno=1,
@@ -223,7 +223,7 @@ def test_structured_json_formatter_emits_json_with_core_keys() -> None:
     line = StructuredJsonFormatter().format(record)
     payload = json.loads(line)
     assert payload["level"] == "INFO"
-    assert payload["logger"] == "targetprocess"
+    assert payload["logger"] == "targetprocess_py"
     assert payload["msg"] == "request.complete"
     assert payload["method"] == "GET"
     assert payload["status"] == 200
@@ -249,7 +249,7 @@ def test_structured_json_formatter_serialises_exception() -> None:
         import sys
 
         record = logging.LogRecord(
-            name="targetprocess",
+            name="targetprocess_py",
             level=logging.ERROR,
             pathname=__file__,
             lineno=1,
@@ -275,10 +275,10 @@ def test_library_logger_has_scrubbing_filter_attached() -> None:
     assert any(isinstance(f, ScrubbingFilter) for f in tp_logger.filters)
 
 
-def test_get_logger_returns_child_under_targetprocess() -> None:
+def test_get_logger_returns_child_under_targetprocess_py() -> None:
     child = get_logger("transport")
-    assert child.name == "targetprocess.transport"
-    assert get_logger().name == "targetprocess"
+    assert child.name == "targetprocess_py.transport"
+    assert get_logger().name == "targetprocess_py"
 
 
 def test_library_logger_does_not_emit_without_handler(caplog: pytest.LogCaptureFixture) -> None:
@@ -384,7 +384,7 @@ def _handler_with_mock_transport() -> tuple[RequestHandler, list[httpx.Request]]
 
 async def test_handler_logs_scrubbed_url_without_token(caplog: pytest.LogCaptureFixture) -> None:
     handler, _ = _handler_with_mock_transport()
-    caplog.set_level(logging.DEBUG, logger="targetprocess")
+    caplog.set_level(logging.DEBUG, logger="targetprocess_py")
     await handler.get("UserStories", 123)
     assert caplog.records  # something was logged
     # No record carries the token value, in either the message or any extra.
@@ -400,10 +400,10 @@ async def test_handler_logs_scrubbed_url_when_token_in_url(
 ) -> None:
     """A URL extra carrying the token is redacted by the scrubbing filter."""
     handler, _ = _handler_with_mock_transport()
-    caplog.set_level(logging.DEBUG, logger="targetprocess")
+    caplog.set_level(logging.DEBUG, logger="targetprocess_py")
     # Force a record whose url extra carries the token (as if a caller logged
     # the post-auth URL); the filter must redact it before it reaches caplog.
-    from targetprocess._observability import logger as tp_log
+    from targetprocess_py._observability import logger as tp_log
 
     with request_id_context("rid"):
         tp_log.debug("request.start", extra={"url": "https://x/?access_token=secret-token&take=5"})
@@ -415,7 +415,7 @@ async def test_handler_logs_scrubbed_url_when_token_in_url(
 
 async def test_handler_log_records_carry_request_id(caplog: pytest.LogCaptureFixture) -> None:
     handler, _ = _handler_with_mock_transport()
-    caplog.set_level(logging.DEBUG, logger="targetprocess")
+    caplog.set_level(logging.DEBUG, logger="targetprocess_py")
     with request_id_context("test-rid"):
         await handler.get("UserStories", 123)
     ids = {getattr(r, "request_id", None) for r in caplog.records}
@@ -439,7 +439,7 @@ async def test_handler_retries_emit_warning_log(caplog: pytest.LogCaptureFixture
         return None
 
     handler = RequestHandler(transport, sleep=fake_sleep)
-    caplog.set_level(logging.WARNING, logger="targetprocess")
+    caplog.set_level(logging.WARNING, logger="targetprocess_py")
     await handler.get("UserStories", 123)
     retry_records = [r for r in caplog.records if r.getMessage() == "request.retry"]
     assert len(retry_records) == 1
@@ -454,7 +454,7 @@ async def test_handler_transport_error_emits_error_log(caplog: pytest.LogCapture
     transport = HTTPTransport(domain="example.tpondemand.com", token="secret-token")
     transport._client._transport = httpx.MockTransport(handle)
     handler = RequestHandler(transport)
-    caplog.set_level(logging.ERROR, logger="targetprocess")
+    caplog.set_level(logging.ERROR, logger="targetprocess_py")
     with pytest.raises(NetworkError):
         await handler.get("UserStories", 123)
     error_records = [r for r in caplog.records if r.getMessage() == "request.transport_error"]
@@ -492,9 +492,9 @@ def test_child_logger_from_get_logger_scrubs_message(caplog: pytest.LogCaptureFi
     child, so the child needs its own; without it the token reaches handlers
     verbatim.
     """
-    caplog.set_level(logging.INFO, logger="targetprocess")
+    caplog.set_level(logging.INFO, logger="targetprocess_py")
     get_logger("transport").info("fetching %s", _TOKEN_URL)
-    (record,) = [r for r in caplog.records if r.name == "targetprocess.transport"]
+    (record,) = [r for r in caplog.records if r.name == "targetprocess_py.transport"]
     assert "secret-token" not in record.getMessage()
     assert "access_token=[REDACTED]" in record.getMessage()
 
@@ -512,7 +512,7 @@ def test_scrubbing_filter_redacts_arbitrary_string_extras() -> None:
     httpx transport error can carry the request URL in its message.
     """
     record = logging.LogRecord(
-        "targetprocess", logging.ERROR, __file__, 1, "request.transport_error", None, None
+        "targetprocess_py", logging.ERROR, __file__, 1, "request.transport_error", None, None
     )
     record.__dict__["error"] = f"ConnectError('failed to connect to {_TOKEN_URL}')"
     ScrubbingFilter().filter(record)
@@ -522,7 +522,9 @@ def test_scrubbing_filter_redacts_arbitrary_string_extras() -> None:
 
 
 def test_scrubbing_filter_leaves_standard_record_attributes_alone() -> None:
-    record = logging.LogRecord("targetprocess", logging.INFO, "/some/path.py", 7, "hi", None, None)
+    record = logging.LogRecord(
+        "targetprocess_py", logging.INFO, "/some/path.py", 7, "hi", None, None
+    )
     ScrubbingFilter().filter(record)
     assert record.pathname == "/some/path.py"
     assert record.levelname == "INFO"
@@ -538,7 +540,7 @@ def test_formatter_scrubs_exception_traceback() -> None:
         )
     except httpx.HTTPStatusError:
         record = logging.LogRecord(
-            "targetprocess", logging.ERROR, __file__, 1, "request failed", None, sys.exc_info()
+            "targetprocess_py", logging.ERROR, __file__, 1, "request failed", None, sys.exc_info()
         )
     payload = json.loads(StructuredJsonFormatter().format(record))
     assert "secret-token" not in payload["exc"]
@@ -554,7 +556,7 @@ async def test_transport_error_log_does_not_leak_token(caplog: pytest.LogCapture
     transport = HTTPTransport(domain="example.tpondemand.com", token="secret-token")
     transport._client._transport = httpx.MockTransport(handle)
     handler = RequestHandler(transport)
-    caplog.set_level(logging.ERROR, logger="targetprocess")
+    caplog.set_level(logging.ERROR, logger="targetprocess_py")
     with pytest.raises(NetworkError):
         await handler.get("UserStories", 123)
     (record,) = [r for r in caplog.records if r.getMessage() == "request.transport_error"]
@@ -616,7 +618,7 @@ def test_scrubbing_filter_redacts_secret_named_extras(key: str) -> None:
     value, so the free-text patterns cannot recognise it and the key is the
     only signal that it is a secret.
     """
-    record = logging.LogRecord("targetprocess", logging.INFO, __file__, 1, "auth", None, None)
+    record = logging.LogRecord("targetprocess_py", logging.INFO, __file__, 1, "auth", None, None)
     record.__dict__[key] = "Bearer supersecret"
     ScrubbingFilter().filter(record)
     assert record.__dict__[key] == "[REDACTED]"
@@ -624,7 +626,7 @@ def test_scrubbing_filter_redacts_secret_named_extras(key: str) -> None:
 
 def test_scrubbing_filter_keeps_non_secret_named_extras() -> None:
     """Redaction is keyed on credential header names, not on every extra."""
-    record = logging.LogRecord("targetprocess", logging.INFO, __file__, 1, "req", None, None)
+    record = logging.LogRecord("targetprocess_py", logging.INFO, __file__, 1, "req", None, None)
     record.__dict__["method"] = "GET"
     record.__dict__["status"] = 200
     ScrubbingFilter().filter(record)

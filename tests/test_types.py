@@ -1,11 +1,11 @@
-"""Tests for targetprocess type definitions."""
+"""Tests for targetprocess_py type definitions."""
 
 from dataclasses import FrozenInstanceError
 
 import pytest
 
-from targetprocess.models import Time
-from targetprocess.types import ClientMode, UpsertAction, UpsertResult
+from targetprocess_py.models import Time
+from targetprocess_py.types import ClientMode, UpsertAction, UpsertResult
 
 
 def test_client_mode_values() -> None:

@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import RequestHandler, TargetProcessClient
-from targetprocess.models import Severity
-from targetprocess.resources.severities import SeveritiesResource
+from targetprocess_py import RequestHandler, TargetProcessClient
+from targetprocess_py.models import Severity
+from targetprocess_py.resources.severities import SeveritiesResource
 
 
 def test_severities_resource_entity_type():

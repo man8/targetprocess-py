@@ -46,7 +46,7 @@ package build run in CI.
 | Lint | `uv run ruff check .` |
 | Format | `uv run ruff format --check .` |
 | Types | `uv run mypy --strict src` |
-| Tests and coverage | `uv run pytest -q --cov=targetprocess --cov-report=term --cov-fail-under=90` |
+| Tests and coverage | `uv run pytest -q --cov=targetprocess_py --cov-report=term --cov-fail-under=90` |
 | Hook suite, commit stage | `uv run pre-commit run --all-files --hook-stage pre-commit` |
 | Hook suite, push stage | `uv run pre-commit run --all-files --hook-stage pre-push` |
 | Commit message | `uv run pre-commit run --hook-stage commit-msg --commit-msg-filename <file>` (CI runs it over the pull request title) |
@@ -297,7 +297,7 @@ feat!: require an explicit mode on the client
 
 A release is a pull request followed by a tag.
 
-1. In a pull request, set `__version__` in `src/targetprocess/__init__.py`
+1. In a pull request, set `__version__` in `src/targetprocess_py/__init__.py`
    (the only version string; the build reads it). Move the `[Unreleased]`
    entries in `CHANGELOG.md` under a `## [X.Y.Z] - YYYY-MM-DD` heading dated
    the release day, and update the link references at its foot. When the minor

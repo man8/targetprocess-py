@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from targetprocess.models import Bug
+from targetprocess_py.models import Bug
 
 
 def test_bug_full_parsing() -> None:

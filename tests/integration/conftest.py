@@ -8,7 +8,7 @@ records create/update/delete, confined to a throwaway sandbox project and
 deleting every entity it creates (see its module docstring).
 
 The client sends its token as an ``access_token`` query parameter (see
-``targetprocess.transport._QueryTokenAuth``), so ``filter_query_parameters``
+``targetprocess_py.transport._QueryTokenAuth``), so ``filter_query_parameters``
 is the load-bearing sanitisation here — it substitutes ``REDACTED`` for the
 token both when a cassette is written *and* when an incoming request is
 matched against one already on disk (vcrpy runs the same

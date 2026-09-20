@@ -49,9 +49,9 @@ from typing import Protocol
 
 import pytest
 
-from targetprocess import ClientMode, TargetProcessClient
-from targetprocess.exceptions import NotFoundError
-from targetprocess.models import EntityState
+from targetprocess_py import ClientMode, TargetProcessClient
+from targetprocess_py.exceptions import NotFoundError
+from targetprocess_py.models import EntityState
 
 pytestmark = [pytest.mark.vcr, pytest.mark.integration]
 

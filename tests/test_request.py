@@ -1,6 +1,6 @@
 """Tests for Request model."""
 
-from targetprocess.models import Request
+from targetprocess_py.models import Request
 
 
 def test_request_full_parsing() -> None:

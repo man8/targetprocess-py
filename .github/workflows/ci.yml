@@ -32,7 +32,7 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy --strict src
-      - run: uv run pytest -q --cov=targetprocess --cov-report=term --cov-fail-under=90
+      - run: uv run pytest -q --cov=targetprocess_py --cov-report=term --cov-fail-under=90
 
   # Runs the same hooks a developer gets locally from `pre-commit install`, so a
   # contributor who skipped the install still meets the same bar, and the hook
@@ -103,4 +103,4 @@ jobs:
           set -euo pipefail
           wheel=$(ls dist/*.whl)
           uv run --isolated --no-project --with "$wheel" python -c \
-            "import targetprocess; print(targetprocess.__version__)"
+            "import targetprocess_py; print(targetprocess_py.__version__)"

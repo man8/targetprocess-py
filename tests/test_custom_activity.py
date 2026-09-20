@@ -1,6 +1,6 @@
 """Tests for CustomActivity model."""
 
-from targetprocess.models import CustomActivity
+from targetprocess_py.models import CustomActivity
 
 
 def test_custom_activity_full_parsing() -> None:

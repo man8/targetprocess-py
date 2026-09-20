@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess.models import Epic
-from targetprocess.resources.epics import EpicsResource
-from targetprocess.types import ClientMode
+from targetprocess_py.models import Epic
+from targetprocess_py.resources.epics import EpicsResource
+from targetprocess_py.types import ClientMode
 
 
 @pytest.mark.asyncio

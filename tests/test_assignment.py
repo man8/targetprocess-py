@@ -1,6 +1,6 @@
 """Tests for Assignment model."""
 
-from targetprocess.models import Assignment
+from targetprocess_py.models import Assignment
 
 
 def test_assignment_full_parsing() -> None:

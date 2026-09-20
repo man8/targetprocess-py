@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from targetprocess.models import Iteration
+from targetprocess_py.models import Iteration
 
 
 def test_iteration_full_parsing() -> None:

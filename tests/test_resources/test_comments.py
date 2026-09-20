@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import ClientMode, ReadOnlyViolation, RequestHandler, TargetProcessClient
-from targetprocess.models import Comment
-from targetprocess.resources.comments import CommentsResource
+from targetprocess_py import ClientMode, ReadOnlyViolation, RequestHandler, TargetProcessClient
+from targetprocess_py.models import Comment
+from targetprocess_py.resources.comments import CommentsResource
 
 
 @pytest.mark.asyncio

@@ -5,11 +5,11 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from targetprocess import ClientMode, ReadOnlyViolation, TargetProcessClient
-from targetprocess.exceptions import ParseError
-from targetprocess.models import Attachment
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.attachments import AttachmentsResource
+from targetprocess_py import ClientMode, ReadOnlyViolation, TargetProcessClient
+from targetprocess_py.exceptions import ParseError
+from targetprocess_py.models import Attachment
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.attachments import AttachmentsResource
 
 
 @pytest.mark.asyncio

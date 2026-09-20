@@ -9,6 +9,6 @@
 # specific approval — not merely any review — is mandatory.
 #
 # If additional maintainers or team-based ownership are added later, split this
-# into per-path rules (e.g. `src/targetprocess/  @man8  @someone`, `.github/  @man8`).
+# into per-path rules (e.g. `src/targetprocess_py/  @man8  @someone`, `.github/  @man8`).
 
 *       @man8

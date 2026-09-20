@@ -5,7 +5,7 @@ from typing import Any
 import httpx
 import pytest
 
-from targetprocess.exceptions import AuthenticationError
+from targetprocess_py.exceptions import AuthenticationError
 from tests._support.request_handler import (
     handler_with_mock_transport as _handler_with_mock_transport,
 )

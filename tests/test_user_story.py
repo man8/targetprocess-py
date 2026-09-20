@@ -1,6 +1,6 @@
 """Tests for UserStory model."""
 
-from targetprocess.models import UserStory
+from targetprocess_py.models import UserStory
 
 
 def test_user_story_full_parsing() -> None:

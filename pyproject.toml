@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "targetprocess-py"
-# Single source of truth is targetprocess.__version__; hatchling reads it at
+# Single source of truth is targetprocess_py.__version__; hatchling reads it at
 # build time (see [tool.hatch.version]), so a release bumps that one string.
 dynamic = ["version"]
 description = "A Python library for the TargetProcess v1 REST API"
@@ -65,10 +65,10 @@ Changelog = "https://github.com/man8/targetprocess-py/blob/main/CHANGELOG.md"
 Issues = "https://github.com/man8/targetprocess-py/issues"
 
 [tool.hatch.version]
-path = "src/targetprocess/__init__.py"
+path = "src/targetprocess_py/__init__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/targetprocess"]
+packages = ["src/targetprocess_py"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -142,7 +142,7 @@ max-complexity = 10
 # CustomFields, Name) deliberately mirror the wire format the TP API returns,
 # so N802's lowercase rule does not apply to them. They live on the Entity /
 # NamedEntity bases in _base.py; models.py is the re-export surface.
-"src/targetprocess/_base.py" = ["N802"]
+"src/targetprocess_py/_base.py" = ["N802"]
 
 [tool.coverage.run]
 source = ["src"]

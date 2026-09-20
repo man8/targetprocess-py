@@ -6,24 +6,24 @@ from unittest.mock import AsyncMock, Mock
 import httpx
 import pytest
 
-from targetprocess import resources
-from targetprocess.client import TargetProcessClient
-from targetprocess.exceptions import ReadOnlyViolation
-from targetprocess.models import Bug, NamedEntity, UserStory
-from targetprocess.request_handler import RequestHandler
-from targetprocess.resources.base import BaseResource
-from targetprocess.resources.custom_rules import CustomRulesResource
-from targetprocess.resources.entities import (
+from targetprocess_py import resources
+from targetprocess_py.client import TargetProcessClient
+from targetprocess_py.exceptions import ReadOnlyViolation
+from targetprocess_py.models import Bug, NamedEntity, UserStory
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.resources.base import BaseResource
+from targetprocess_py.resources.custom_rules import CustomRulesResource
+from targetprocess_py.resources.entities import (
     _SERVER_GUARDED_RESOURCES,
     _UNHYDRATABLE_RESOURCES,
     EntitiesResource,
     _spellings,
 )
-from targetprocess.resources.entity_types import EntityTypesResource
-from targetprocess.resources.processes import ProcessesResource
-from targetprocess.resources.relation_types import RelationTypesResource
-from targetprocess.resources.terms import TermsResource
-from targetprocess.types import ClientMode
+from targetprocess_py.resources.entity_types import EntityTypesResource
+from targetprocess_py.resources.processes import ProcessesResource
+from targetprocess_py.resources.relation_types import RelationTypesResource
+from targetprocess_py.resources.terms import TermsResource
+from targetprocess_py.types import ClientMode
 from tests._support.request_handler import scripted_list
 
 

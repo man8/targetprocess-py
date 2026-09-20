@@ -10,8 +10,8 @@ from datetime import datetime
 
 import pytest
 
-from targetprocess import models
-from targetprocess.models import (
+from targetprocess_py import models
+from targetprocess_py.models import (
     AssignableEntity,
     Assignment,
     Attachment,
@@ -50,7 +50,7 @@ from targetprocess.models import (
     Workflow,
     format_tp_date,
 )
-from targetprocess.models import (
+from targetprocess_py.models import (
     TestCase as TPTestCase,  # aliased so pytest does not try to collect it
 )
 from tests.live_payloads import LIVE_USER_STORY, UNDECLARED_KEYS
@@ -222,7 +222,7 @@ def _discover_entity_types() -> set[type[Entity]]:
     stack: list[type[Entity]] = [Entity]
     while stack:
         for subclass in stack.pop().__subclasses__():
-            if subclass.__module__.startswith("targetprocess.") and subclass not in discovered:
+            if subclass.__module__.startswith("targetprocess_py.") and subclass not in discovered:
                 discovered.add(subclass)
                 stack.append(subclass)
     return discovered
@@ -237,7 +237,7 @@ def test_all_entity_types_list_is_complete() -> None:
 
 
 def test_every_entity_type_is_exported_from_models() -> None:
-    # The definitions are split across private modules; targetprocess.models is
+    # The definitions are split across private modules; targetprocess_py.models is
     # the single public import surface, and every model must be reachable
     # through it by name and listed in its __all__.
     for entity_type in _discover_entity_types():

@@ -1,6 +1,6 @@
 """Tests for Team model."""
 
-from targetprocess.models import Team
+from targetprocess_py.models import Team
 
 
 def test_team_full_parsing() -> None:

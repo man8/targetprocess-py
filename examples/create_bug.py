@@ -35,7 +35,7 @@ import asyncio
 import os
 import sys
 
-from targetprocess import ClientMode, TargetProcessClient, TargetProcessError
+from targetprocess_py import ClientMode, TargetProcessClient, TargetProcessError
 
 
 def _env(name: str) -> str:

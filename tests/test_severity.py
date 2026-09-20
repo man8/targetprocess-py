@@ -1,6 +1,6 @@
 """Tests for Severity model."""
 
-from targetprocess.models import Severity
+from targetprocess_py.models import Severity
 
 
 def test_severity_full_parsing() -> None:

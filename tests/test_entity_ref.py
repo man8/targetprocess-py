@@ -1,6 +1,6 @@
 """Tests for EntityRef model."""
 
-from targetprocess.models import EntityRef
+from targetprocess_py.models import EntityRef
 
 
 def test_entity_ref_parsing() -> None:
@@ -21,7 +21,7 @@ def test_entity_ref_optional_fields() -> None:
 
 def test_all_models_exported() -> None:
     """Test all models are exported from package."""
-    from targetprocess import (
+    from targetprocess_py import (
         Attachment,
         Bug,
         Comment,
@@ -75,7 +75,7 @@ def test_all_models_exported() -> None:
     assert CustomField is not None
     assert CustomFieldValue is not None
 
-    import targetprocess
+    import targetprocess_py
 
     assert {
         "TeamIteration",
@@ -85,4 +85,4 @@ def test_all_models_exported() -> None:
         "Attachment",
         "CustomField",
         "CustomFieldValue",
-    }.issubset(targetprocess.__all__)
+    }.issubset(targetprocess_py.__all__)

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from targetprocess.models import TeamAssignment
+from targetprocess_py.models import TeamAssignment
 
 
 def test_team_assignment_full_parsing() -> None:

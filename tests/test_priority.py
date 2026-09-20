@@ -1,7 +1,7 @@
 """Tests for the Priority model."""
 
-from targetprocess.exceptions import AmbiguousMatchError, TargetProcessError
-from targetprocess.models import Priority
+from targetprocess_py.exceptions import AmbiguousMatchError, TargetProcessError
+from targetprocess_py.models import Priority
 
 
 def test_priority_parses_wire_shape():

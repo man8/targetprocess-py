@@ -12,15 +12,15 @@ from typing import Any
 import httpx
 import pytest
 
-from targetprocess import TargetProcessClient
-from targetprocess.exceptions import ReadOnlyViolation, VerificationError
-from targetprocess.resources._verify import (
+from targetprocess_py import TargetProcessClient
+from targetprocess_py.exceptions import ReadOnlyViolation, VerificationError
+from targetprocess_py.resources._verify import (
     compare_fields,
     custom_field_mismatch,
     describe,
     values_match,
 )
-from targetprocess.types import ClientMode
+from targetprocess_py.types import ClientMode
 
 _STORY = "/api/v1/UserStory/123"
 _ABSENT = VerificationError.ABSENT

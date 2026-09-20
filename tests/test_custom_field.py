@@ -1,6 +1,6 @@
 """Tests for CustomField model (field definition)."""
 
-from targetprocess.models import CustomField
+from targetprocess_py.models import CustomField
 
 
 def test_custom_field_full_parsing() -> None:

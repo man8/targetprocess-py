@@ -1,6 +1,6 @@
 """Tests for Term model."""
 
-from targetprocess.models import Term
+from targetprocess_py.models import Term
 
 
 def test_term_full_parsing() -> None:

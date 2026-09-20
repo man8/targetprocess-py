@@ -12,8 +12,8 @@ from typing import Any
 import httpx
 import pytest
 
-from targetprocess.request_handler import RequestHandler
-from targetprocess.transport import HTTPTransport
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.transport import HTTPTransport
 
 
 def _capturing(handler_cls: type[RequestHandler]) -> tuple[RequestHandler, list[httpx.Request]]:
@@ -31,7 +31,7 @@ def _capturing(handler_cls: type[RequestHandler]) -> tuple[RequestHandler, list[
 
 def test_query_parameters_pin_exactly_what_the_builders_emit() -> None:
     """The allowlist equals every name the builders emit: no dead entry, no undeclared one."""
-    from targetprocess.request_handler import QUERY_PARAMETERS
+    from targetprocess_py.request_handler import QUERY_PARAMETERS
 
     shaping: dict[str, Any] = {
         "include": ["Name"],
@@ -91,7 +91,7 @@ async def test_valid_query_reaches_the_wire_unchanged(
     handler_with_capture: tuple[RequestHandler, list[httpx.Request]],
 ) -> None:
     """Every declared parameter is sent as rendered, and nothing outside the allowlist is."""
-    from targetprocess.request_handler import QUERY_PARAMETERS
+    from targetprocess_py.request_handler import QUERY_PARAMETERS
 
     handler, captured = handler_with_capture
     where = "(EntityState.IsFinal eq 'false') and (AssignedUser.Id eq 7)"

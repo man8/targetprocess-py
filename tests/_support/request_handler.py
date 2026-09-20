@@ -5,8 +5,8 @@ from typing import Any
 
 import httpx
 
-from targetprocess.request_handler import RequestHandler
-from targetprocess.transport import HTTPTransport
+from targetprocess_py.request_handler import RequestHandler
+from targetprocess_py.transport import HTTPTransport
 
 
 def handler_with_mock_transport(

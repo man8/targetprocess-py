@@ -32,7 +32,7 @@ default, so every client declares its safety posture up front.
 ```python
 import asyncio
 
-from targetprocess import ClientMode, TargetProcessClient
+from targetprocess_py import ClientMode, TargetProcessClient
 
 
 async def main() -> None:
@@ -188,7 +188,7 @@ Because the re-read is narrowed, that model carries its `id` and
 `get` the entity again when you need the rest.
 
 ```python
-from targetprocess import VerificationError
+from targetprocess_py import VerificationError
 
 try:
     story = await client.user_stories.update(123, Effort=5, EntityState={"Id": 82}, verify=True)
@@ -584,7 +584,7 @@ custom activity goes through the ordinary `create` and `list`. Send
 the key rather than sending it as `None`:
 
 ```python
-from targetprocess.models import format_tp_date
+from targetprocess_py.models import format_tp_date
 
 entry = await client.times.create(
     CustomActivity={"Id": 42},
@@ -811,7 +811,7 @@ catch a specific failure or the base class. HTTP status codes map to types:
 ```python
 import logging
 
-from targetprocess import (
+from targetprocess_py import (
     AuthenticationError,
     NotFoundError,
     RateLimitError,
@@ -862,7 +862,7 @@ To call the library from otherwise-synchronous code, drive it with
 ```python
 import asyncio
 
-from targetprocess import ClientMode, TargetProcessClient
+from targetprocess_py import ClientMode, TargetProcessClient
 
 
 async def fetch_open_bugs() -> list[str]:
@@ -908,7 +908,7 @@ directly — do not nest `asyncio.run()`.
   attribute assignment, not a hard sandbox.)
 
 ```python
-from targetprocess import ClientMode, ReadOnlyViolation, TargetProcessClient
+from targetprocess_py import ClientMode, ReadOnlyViolation, TargetProcessClient
 
 reporter = TargetProcessClient(
     domain="example.tpondemand.com", token="…", mode=ClientMode.READONLY
