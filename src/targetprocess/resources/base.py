@@ -179,17 +179,25 @@ def _resolve_by_name[N: NamedEntity](candidates: Sequence[N], name: str, *, what
     return matches[0]
 
 
-# The where= paths TargetProcess accepts and silently ignores on every collection
-# whose entity type is an Assignable, keyed by the path's leading collection
-# segment and mapped to the reason and the route to use instead. This is the one
-# place the known set is declared: the assignable managers reference it and the
-# generic entities path mirrors it. An entry is added only with live evidence -
-# an unfiltered control returning the same rows.
+# The where= paths TargetProcess will not filter on for a collection whose
+# entity type is an Assignable, keyed by the path's leading collection segment
+# and mapped to the reason and the route to use instead. This is the one place
+# the known set is declared: the assignable managers reference it, and the
+# generic entities path mirrors it for those managers' collections and for the
+# Assignable-derived collections that have no typed manager. An entry is added
+# only with live evidence - an unfiltered control returning the same rows.
+#
+# The refusal covers the whole Assignments prefix because no path under it is
+# usable, though the two failure shapes differ: a filter on one of the
+# collection's fields is accepted and ignored, while Assignments.Count is
+# refused by the query parser. Both are stated, so the message is true
+# whichever path a caller wrote.
 ASSIGNABLE_IGNORED_FILTER_PATHS: dict[str, str] = {
     "Assignments": (
-        "TargetProcess accepts a filter on the Assignments collection and "
-        "ignores it, answering HTTP 200 with the unfiltered rows; query the "
-        "join entity instead - client.assignments.list("
+        "TargetProcess does not filter on the Assignments collection: a filter "
+        "on one of its fields is accepted and ignored, answering HTTP 200 with "
+        "the unfiltered rows, and Assignments.Count is rejected outright with "
+        "HTTP 400; query the join entity instead - client.assignments.list("
         'where="GeneralUser.Id eq <id>", include=["Assignable"]) - and read '
         "the work item off each assignment's assignable"
     ),

@@ -88,13 +88,38 @@ def _check_include(entity_type: str, include: list[str] | None) -> None:
         guarded.check_include(include)
 
 
+# Assignable-derived collections with no typed manager, so reachable only
+# through this accessor - which makes keying them here the only place the
+# refusal can be applied. Each one's ``/meta`` declares an ``Assignments``
+# collection alongside the rest of the assignable surface (``AssignedUser``,
+# ``Times``, ``RoleEfforts``, ``Impediments``, ``TeamStates``). Named in the
+# singular; ``_spellings`` derives the plural TP addresses the collection by.
+#
+# ``PortfolioEpic``, ``TestPlanRun``, ``InboundAssignable`` and
+# ``OutboundAssignable`` were each confirmed live, against an unfiltered control
+# on the same collection. The polymorphic ``Assignable`` is carried on the
+# narrower argument that it returns a superset of the same rows as the six typed
+# collections, so it cannot behave differently from them.
+#
+# ``Inbound``/``OutboundAssignables`` are also read as ``include=`` collection
+# properties of an item, which is unaffected: the refusal is on ``list()``'s
+# ``where=`` only.
+_UNTYPED_ASSIGNABLE_COLLECTIONS: tuple[str, ...] = (
+    "Assignable",
+    "PortfolioEpic",
+    "TestPlanRun",
+    "InboundAssignable",
+    "OutboundAssignable",
+)
+
+
 # The where= counterpart: the ignored-filter declaration of every assignable
 # collection (``BaseResource.ignored_filter_paths``), keyed by each spelling the
 # caller may use, so the generic path refuses the same filters before any
 # request rather than returning the unfiltered rows TP answers with. Keyed
-# spelling -> reasons rather than spelling -> class, because the polymorphic
-# ``Assignables`` collection has no typed manager and is the same server
-# behaviour on a superset of the same rows. The walk test in
+# spelling -> reasons rather than spelling -> class, because the collections in
+# ``_UNTYPED_ASSIGNABLE_COLLECTIONS`` have no typed manager to consult and are
+# the same server behaviour on the same rows. The walk test in
 # ``tests/test_resources/test_ignored_filter_paths.py`` covers this map.
 _IGNORED_FILTER_PATHS: dict[str, dict[str, str]] = {
     spelling: resource.ignored_filter_paths
@@ -107,7 +132,11 @@ _IGNORED_FILTER_PATHS: dict[str, dict[str, str]] = {
         RequestsResource,
     )
     for spelling in _spellings(resource.entity_type)
-} | dict.fromkeys(_spellings("Assignable"), ASSIGNABLE_IGNORED_FILTER_PATHS)
+} | {
+    spelling: ASSIGNABLE_IGNORED_FILTER_PATHS
+    for collection in _UNTYPED_ASSIGNABLE_COLLECTIONS
+    for spelling in _spellings(collection)
+}
 
 
 def _check_where(entity_type: str, where: str | None) -> None:

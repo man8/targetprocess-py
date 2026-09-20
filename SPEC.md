@@ -90,7 +90,8 @@ itself.
   indistinguishable from success. The confirmed case is a filter on the
   `Assignments` collection of an assignable, which returns the same rows as
   the unfiltered request, while the `Assignment` entity's own
-  `GeneralUser.Id` filter applies.
+  `GeneralUser.Id` filter applies. A collection `Count` is the loud exception:
+  `Assignments.Count` and `Comments.Count` are rejected with HTTP 400.
 - **Bulk endpoint**: writable collections expose
   `POST /api/v1/{collection}/bulk`, taking a JSON array of entity objects -
   an object carrying an `Id` updates that entity, an object without one
@@ -688,7 +689,7 @@ at send time, and outside the set; `prettify` stays deliberately absent (see
 above).
 
 **Filter paths.** `BaseResource.ignored_filter_paths` maps the leading segment
-of a `where=` path TP silently ignores on a collection to the reason and the
+of a `where=` path TP will not filter on for a collection to the reason and the
 route to use instead. The known set is declared once, as
 `ASSIGNABLE_IGNORED_FILTER_PATHS` in `resources/base.py`, and referenced by the
 six assignable managers (`UserStory`, `Bug`, `Task`, `Feature`, `Epic`,
@@ -696,7 +697,9 @@ six assignable managers (`UserStory`, `Bug`, `Task`, `Feature`, `Epic`,
 `order_by` or `include` - matching a path's leading segment in any casing
 outside quoted values, and refuses with a `ValueError` naming the collection
 and the route. `entities` mirrors the refusal for every spelling of those six
-collections and for the polymorphic `Assignable` / `Assignables` collection.
+collections and of each Assignable-derived collection with no typed manager,
+named in `_UNTYPED_ASSIGNABLE_COLLECTIONS`: `Assignable`, `PortfolioEpic`,
+`TestPlanRun`, `InboundAssignable` and `OutboundAssignable`.
 
 | Ignored path | Route instead |
 | --- | --- |
