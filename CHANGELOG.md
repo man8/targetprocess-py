@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `list()` refuses a `where=` filter naming the `Assignments` collection on four
+  further collections - `PortfolioEpics`, `TestPlanRuns`, `InboundAssignables`
+  and `OutboundAssignables` - raising `ValueError` before any request is sent,
+  as it already did for the six typed assignable collections. TargetProcess
+  answers such a filter with HTTP 200 and the *unfiltered* rows, so code that
+  appeared to narrow one of these collections by assignee was in fact receiving
+  every row; it now raises rather than returning silently-wrong results. Each
+  collection was confirmed against an unfiltered control on the same collection
+  before being added. Only `list()`'s `where=` is affected - reading
+  `InboundAssignables` or `OutboundAssignables` through `include=` is unchanged.
+- The refusal's message states both ways a path under `Assignments` fails: a
+  filter on one of the collection's fields is accepted and ignored (HTTP 200),
+  while `Assignments.Count` is rejected by the query parser (HTTP 400).
+
+### Fixed
+
+- The eight numeric fields on the `RoleEffort` and `Time` read models no longer
+  carry a `ge=0` bound - `InitialEstimate`, `Effort`, `EffortCompleted`,
+  `EffortToDo`, `TimeSpent` and `TimeRemain` on `RoleEffort`, and `Spent` and
+  `Remain` on `Time`. Each is supplied by the server, and a constraint on a
+  server-supplied value fails the *whole entity* rather than the field, so one
+  out-of-range record would have aborted an entire `list()` page with a
+  `ParseError` - the rule `AssignableEntity` already stated and these two models
+  broke. A consumer relying on `ValidationError` for a negative value on these
+  fields, including on assignment, no longer receives one; `times.upsert` keeps
+  its write-side check, where a range error is actionable.
+- `Time`'s class docstring and its `project` field description say what a
+  custom-activity entry's `project` holds. Such an entry has no `Assignable`,
+  and the field is populated all the same, matching that activity's own project
+  on every entry observed.
+
 ## [0.2.1] - 2026-09-18
 
 ### Fixed

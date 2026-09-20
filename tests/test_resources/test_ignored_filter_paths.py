@@ -1,4 +1,4 @@
-"""Tests for the refusal of where= paths TargetProcess accepts and silently ignores.
+"""Tests for the refusal of where= paths TargetProcess will not filter on.
 
 A filter on the Assignments collection of an assignable answers HTTP 200 with the
 unfiltered rows, so the assignable managers and the generic entities path refuse
@@ -36,6 +36,18 @@ ASSIGNABLE_COLLECTIONS: dict[type[BaseResource[Any]], str] = {
     FeaturesResource: "Features",
     EpicsResource: "Epics",
     RequestsResource: "Requests",
+}
+
+# The Assignable-derived collections with no typed manager, so reachable only
+# through the generic accessor: the collection name TP addresses, mapped to the
+# singular entity type it is declared as. The four beyond Assignable were each
+# confirmed live against an unfiltered control on the same collection.
+UNTYPED_ASSIGNABLE_COLLECTIONS: dict[str, str] = {
+    "Assignables": "Assignable",
+    "PortfolioEpics": "PortfolioEpic",
+    "TestPlanRuns": "TestPlanRun",
+    "InboundAssignables": "InboundAssignable",
+    "OutboundAssignables": "OutboundAssignable",
 }
 IGNORED_WHERE = "Assignments.GeneralUser.Id eq 1"
 
@@ -166,6 +178,21 @@ def test_the_known_set_is_declared_once_and_shared():
         assert resource_cls.ignored_filter_paths is ASSIGNABLE_IGNORED_FILTER_PATHS, resource_cls
 
 
+def test_the_reason_states_both_observed_failure_shapes():
+    """One message covers both: a field filter is ignored, Assignments.Count is rejected.
+
+    The prefix is refused whole because no path under it filters, but the two
+    shapes fail differently, and a caller who wrote either should read
+    something true. Pinned here so neither half can be dropped silently.
+    """
+    from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
+
+    reason = ASSIGNABLE_IGNORED_FILTER_PATHS["Assignments"]
+    assert "HTTP 200" in reason
+    assert "Assignments.Count" in reason and "HTTP 400" in reason
+    assert "client.assignments" in reason
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "entity_type",
@@ -194,6 +221,45 @@ async def test_entities_refuse_the_filter_for_every_assignable_spelling(entity_t
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "entity_type",
+    [
+        spelling
+        for collection, singular in UNTYPED_ASSIGNABLE_COLLECTIONS.items()
+        for spelling in (collection, singular)
+    ],
+)
+async def test_untyped_assignable_collections_refuse_a_filter_on_assignments(entity_type: str):
+    """Each Assignable-derived collection without a typed manager refuses it too.
+
+    These have no resource class to carry the declaration, so the generic
+    accessor's map is the only place the refusal can live - and the only route
+    a caller has to them. Both spellings TP accepts are covered.
+    """
+    handler = AsyncMock(spec=RequestHandler)
+    entities = EntitiesResource(Mock(spec=TargetProcessClient), handler)
+
+    with pytest.raises(ValueError, match="client.assignments") as excinfo:
+        async for _ in entities.list(entity_type, where=IGNORED_WHERE):
+            pass
+    assert f"is not supported on {entity_type}:" in str(excinfo.value)
+    handler.list.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("entity_type", sorted(UNTYPED_ASSIGNABLE_COLLECTIONS))
+async def test_untyped_assignable_collections_forward_a_valid_filter_unchanged(entity_type: str):
+    """Only the Assignments prefix is refused on them; their own fields pass through."""
+    where = "(EntityState.IsFinal eq 'false') and (AssignedUser.Id eq 7)"
+    handler = AsyncMock(spec=RequestHandler)
+    handler.list, seen = scripted_list([])
+    entities = EntitiesResource(Mock(spec=TargetProcessClient), handler)
+
+    assert [item async for item in entities.list(entity_type, where=where)] == []
+    assert (seen["entity_type"], seen["where"]) == (entity_type, where)
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("entity_type", ["Comment", "Project"])
 async def test_entities_forward_the_filter_where_nothing_is_declared(entity_type: str):
     """Collections with no declaration receive the same filter untouched."""
@@ -206,10 +272,18 @@ async def test_entities_forward_the_filter_where_nothing_is_declared(entity_type
 
 
 def test_every_manager_with_ignored_filter_paths_is_mirrored_on_the_generic_path():
-    """The generic map reaches each declaring manager by every spelling, plus Assignables."""
+    """The generic map reaches each declaring manager, and each untyped collection.
+
+    Two dimensions, and they are independent: the *paths* refused (one,
+    ``Assignments``) and the *collections* the refusal is applied to. Widening
+    coverage to a collection adds spellings here and no path there.
+    """
     from targetprocess.resources.assignables import AssignableResource
     from targetprocess.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS
-    from targetprocess.resources.entities import _IGNORED_FILTER_PATHS
+    from targetprocess.resources.entities import (
+        _IGNORED_FILTER_PATHS,
+        _UNTYPED_ASSIGNABLE_COLLECTIONS,
+    )
 
     # AssignableResource declares the set once for the six managers; it is their
     # base class rather than a manager, so it has no collection to mirror.
@@ -227,11 +301,18 @@ def test_every_manager_with_ignored_filter_paths_is_mirrored_on_the_generic_path
         for spelling in {*_spellings(resource_cls.entity_type), collection, collection.upper()}:
             reached = _IGNORED_FILTER_PATHS.get(spelling.casefold())
             assert reached is resource_cls.ignored_filter_paths, spelling
-    for spelling in ("assignable", "assignables"):
-        assert _IGNORED_FILTER_PATHS[spelling] is ASSIGNABLE_IGNORED_FILTER_PATHS
+    # The untyped collections this suite names are exactly the ones the module
+    # declares, so the two cannot drift apart unnoticed.
+    assert set(_UNTYPED_ASSIGNABLE_COLLECTIONS) == set(UNTYPED_ASSIGNABLE_COLLECTIONS.values())
+
+    for singular in UNTYPED_ASSIGNABLE_COLLECTIONS.values():
+        for spelling in {*_spellings(singular), singular.upper()}:
+            reached = _IGNORED_FILTER_PATHS.get(spelling.casefold())
+            assert reached is ASSIGNABLE_IGNORED_FILTER_PATHS, spelling
 
     declared_spellings = frozenset().union(
-        *(_spellings(cls.entity_type) for cls in ASSIGNABLE_COLLECTIONS), _spellings("Assignable")
+        *(_spellings(cls.entity_type) for cls in ASSIGNABLE_COLLECTIONS),
+        *(_spellings(singular) for singular in UNTYPED_ASSIGNABLE_COLLECTIONS.values()),
     )
     assert set(_IGNORED_FILTER_PATHS) <= declared_spellings
 

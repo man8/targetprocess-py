@@ -179,17 +179,25 @@ def _resolve_by_name[N: NamedEntity](candidates: Sequence[N], name: str, *, what
     return matches[0]
 
 
-# The where= paths TargetProcess accepts and silently ignores on every collection
-# whose entity type is an Assignable, keyed by the path's leading collection
-# segment and mapped to the reason and the route to use instead. This is the one
-# place the known set is declared: the assignable managers reference it and the
-# generic entities path mirrors it. An entry is added only with live evidence -
-# an unfiltered control returning the same rows.
+# The where= paths TargetProcess will not filter on for a collection whose
+# entity type is an Assignable, keyed by the path's leading collection segment
+# and mapped to the reason and the route to use instead. This is the one place
+# the known set is declared: the assignable managers reference it, and the
+# generic entities path mirrors it for those managers' collections and for the
+# Assignable-derived collections that have no typed manager. An entry is added
+# only with live evidence - an unfiltered control returning the same rows.
+#
+# The refusal covers the whole Assignments prefix because no path under it is
+# usable, though the two failure shapes differ: a filter on one of the
+# collection's fields is accepted and ignored, while Assignments.Count is
+# refused by the query parser. Both are stated, so the message is true
+# whichever path a caller wrote.
 ASSIGNABLE_IGNORED_FILTER_PATHS: dict[str, str] = {
     "Assignments": (
-        "TargetProcess accepts a filter on the Assignments collection and "
-        "ignores it, answering HTTP 200 with the unfiltered rows; query the "
-        "join entity instead - client.assignments.list("
+        "TargetProcess does not filter on the Assignments collection: a filter "
+        "on one of its fields is accepted and ignored, answering HTTP 200 with "
+        "the unfiltered rows, and Assignments.Count is rejected outright with "
+        "HTTP 400; query the join entity instead - client.assignments.list("
         'where="GeneralUser.Id eq <id>", include=["Assignable"]) - and read '
         "the work item off each assignment's assignable"
     ),
@@ -202,7 +210,7 @@ _QUOTED_VALUE = re.compile(r"'[^']*'|\"[^\"]*\"")
 
 
 def check_filter_paths(where: str | None, ignored: Mapping[str, str], *, resource: str) -> None:
-    """Refuse a ``where=`` filter naming a path TargetProcess is known to ignore.
+    """Refuse a ``where=`` filter naming a path TargetProcess will not filter on.
 
     A name in ``ignored`` matches only as the leading segment of a dotted
     path, in any casing: never preceded by a word character or a dot, and
@@ -258,10 +266,11 @@ class BaseResource[T: Entity]:
             TP serves in a shape the model cannot hold, each mapped to the
             reason and the route to use instead; ``get`` and ``list`` refuse
             them with ``ValueError`` before any request is sent.
-        ignored_filter_paths: Leading ``where=`` path segments TP accepts
-            and silently ignores on this collection, each mapped to the
-            reason and the route to use instead; ``list`` refuses them with
-            ``ValueError`` before any request is sent.
+        ignored_filter_paths: Leading ``where=`` path segments TP will not
+            filter on for this collection - accepting and ignoring some,
+            rejecting others - each mapped to the reason and the route to use
+            instead; ``list`` refuses them with ``ValueError`` before any
+            request is sent.
     """
 
     entity_type: str  # Override in subclass
@@ -361,7 +370,7 @@ class BaseResource[T: Entity]:
 
     @classmethod
     def check_where(cls, where: str | None) -> None:
-        """Refuse a ``where=`` naming a path this collection silently ignores.
+        """Refuse a ``where=`` naming a path this collection will not filter on.
 
         Applies :func:`check_filter_paths` with ``ignored_filter_paths``. A
         collection with nothing declared there accepts every filter, as
@@ -530,7 +539,7 @@ class BaseResource[T: Entity]:
             ValueError: Both ``order_by`` and ``order_by_desc`` were passed,
                 ``skip`` is negative, ``innertake`` is negative, ``include``
                 names a field this collection cannot hydrate, or ``where``
-                names a path TP silently ignores on it (see
+                names a path TP will not filter on for it (see
                 ``ignored_filter_paths``) (raised when iteration begins)
             AuthenticationError: Invalid credentials
             ForbiddenError: Insufficient permissions
