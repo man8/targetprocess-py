@@ -5,12 +5,12 @@ hooks live. Three concerns, each scoped to what a client library should
 own (applications own metrics, alerting, error tracking, and deployment
 observability - see SPEC.md "Observability"):
 
-* **Structured logging** - a dedicated ``targetprocess`` logger, emitted as
+* **Structured logging** - a dedicated ``targetprocess_py`` logger, emitted as
   JSON when a handler is attached, silent (``NullHandler``) by default so
   the library never writes to stderr unless the application opts in.
 * **Log scrubbing** - a :class:`ScrubbingFilter` that redacts the
   ``access_token`` query param and ``Authorization`` headers from records
-  emitted through this library's own loggers (the ``targetprocess`` logger
+  emitted through this library's own loggers (the ``targetprocess_py`` logger
   and every child :func:`get_logger` returns), so the token-leak surface
   documented in the README cannot recur through them. Records from other
   libraries - notably ``httpx`` / ``httpcore`` - are outside its reach; see
@@ -172,7 +172,7 @@ class ScrubbingFilter(logging.Filter):
     A filter attached to a *logger* only sees records logged through that
     logger, not records propagated up from its children, so this filter is
     attached to each logger :func:`get_logger` hands out as well as to the
-    ``targetprocess`` parent. An application that wants the same redaction
+    ``targetprocess_py`` parent. An application that wants the same redaction
     applied to records from other libraries (``httpx``, ``httpcore``)
     should attach an instance to its own handler, where every propagated
     record passes through.
@@ -215,7 +215,7 @@ def _attach_scrubbing(target: logging.Logger) -> logging.Logger:
 # logger (or a child via :func:`get_logger`); the NullHandler keeps the
 # library silent by default, per the stdlib logging best practice for
 # libraries.
-logger = logging.getLogger("targetprocess")
+logger = logging.getLogger("targetprocess_py")
 if not logger.handlers:
     logger.addHandler(logging.NullHandler())
 # Scrub records logged through this logger. Children get their own filter
@@ -232,7 +232,7 @@ class StructuredJsonFormatter(logging.Formatter):
     caller attached. An attached exception (``logger.exception``) is
     serialised under ``exc``.
 
-    Attach this formatter to a handler on the ``targetprocess`` logger to
+    Attach this formatter to a handler on the ``targetprocess_py`` logger to
     get structured output; pair it with :class:`ScrubbingFilter` (already
     attached to the library logger) so secrets are redacted before
     serialisation.
@@ -291,26 +291,26 @@ class StructuredJsonFormatter(logging.Formatter):
 
 
 def get_logger(name: str | None = None) -> logging.Logger:
-    """Return a logger under the ``targetprocess`` namespace.
+    """Return a logger under the ``targetprocess_py`` namespace.
 
-    Attach a handler to ``logging.getLogger("targetprocess")`` or the
+    Attach a handler to ``logging.getLogger("targetprocess_py")`` or the
     returned child to enable output; the library is silent by default.
 
     The returned logger carries its own :class:`ScrubbingFilter`. A child
-    obtained by calling ``logging.getLogger("targetprocess.x")`` directly
+    obtained by calling ``logging.getLogger("targetprocess_py.x")`` directly
     does not, because a filter on the parent logger is not applied to
     records propagated from a child - so use this function rather than the
     stdlib call to keep the redaction guarantee.
 
     Args:
         name: Optional child name (e.g. ``"transport"``); ``None`` returns
-            the ``targetprocess`` logger itself.
+            the ``targetprocess_py`` logger itself.
 
     Returns:
         The requested ``logging.Logger``, with scrubbing attached.
     """
     return _attach_scrubbing(
-        logging.getLogger("targetprocess" if name is None else f"targetprocess.{name}")
+        logging.getLogger("targetprocess_py" if name is None else f"targetprocess_py.{name}")
     )
 
 

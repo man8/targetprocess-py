@@ -910,17 +910,17 @@ library cannot assume.
 
 ### Implemented signals
 
-- **Structured logging.** A dedicated `logging.getLogger("targetprocess")`
+- **Structured logging.** A dedicated `logging.getLogger("targetprocess_py")`
   with a `NullHandler` by default (silent unless the application attaches a
   handler). `StructuredJsonFormatter` emits one JSON line per record
   (`ts`, `level`, `logger`, `msg`, `request_id`, plus caller extras).
-  `get_logger("name")` returns a child under the `targetprocess` namespace.
+  `get_logger("name")` returns a child under the `targetprocess_py` namespace.
   `RequestHandler._request` emits structured `request.start` /
   `request.complete` / `request.retry` / `request.error` /
   `request.transport_error` records.
 - **Log scrubbing.** `ScrubbingFilter` redacts the `access_token` query
   param and `Authorization: Basic|Bearer` header values from the records
-  this library emits. It is attached to the `targetprocess` logger and to
+  this library emits. It is attached to the `targetprocess_py` logger and to
   every child `get_logger()` returns - both, because a filter on a logger
   runs only for records logged *through* that logger, not for records
   propagated up from a child. It pre-formats and redacts the message, the
@@ -938,7 +938,7 @@ library cannot assume.
   for httpx request-URL logging, *in this library's own records*. The filter
   cannot reach records emitted by other libraries - `httpx` and `httpcore`
   log their own request URLs - nor a logger obtained by calling
-  `logging.getLogger("targetprocess.x")` directly instead of via
+  `logging.getLogger("targetprocess_py.x")` directly instead of via
   `get_logger()`. An application that wants blanket redaction should attach
   a `ScrubbingFilter()` instance to its own handler, which every propagated
   record passes through whatever logger produced it.

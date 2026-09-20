@@ -24,6 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `import targetprocess_py`, and each `from targetprocess.<module>` as
   `from targetprocess_py.<module>`; nothing else about the public surface
   changes.
+- **BREAKING:** the library's logger namespace is renamed from `targetprocess` to
+  `targetprocess_py`, following the package, so records no longer arrive under a
+  namespace naming a module that does not exist. This fails differently from the
+  import rename and needs its own attention: an import that no longer resolves
+  raises at startup, while logging configuration that no longer matches simply
+  goes silent, with nothing raised to say so. **Migration:** rename
+  `targetprocess` to `targetprocess_py` in every handler, level, filter and
+  `dictConfig` entry that names this library's logger.
 - `list()` refuses a `where=` filter naming the `Assignments` collection on four
   further collections - `PortfolioEpics`, `TestPlanRuns`, `InboundAssignables`
   and `OutboundAssignables` - raising `ValueError` before any request is sent,
