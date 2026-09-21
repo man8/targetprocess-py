@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** `create`, `update`, `create_many` and `update_many` refuse a
+  field TargetProcess derives from another collection, raising `ValueError`
+  before any request is sent. The declared set is a work item's `Effort`,
+  `EffortCompleted` and `EffortToDo` — each the sum of the corresponding field
+  over the item's `RoleEfforts` — and the refusal applies on the six work-item
+  managers and on `entities` for every spelling of their collections and of the
+  untyped Assignable-derived ones, so the generic accessor is not a way round
+  it. A direct write to such a field is answered with a success status whether
+  TargetProcess stored the value (the item has no `RoleEffort` rows to override
+  it) or recomputed the field from those rows and changed nothing, and the
+  response does not say which: the outcome depends on the entity's other
+  records rather than on the request, which is why this fails before sending
+  rather than being verified afterwards. **Migration:** write the role's own
+  row through `client.role_efforts` — the error message carries the query that
+  finds it — or pass `allow_derived=True` to send the write as before and take
+  the outcome as TargetProcess gives it. `RoleEffort`'s own `Effort` fields are
+  stored as written and are unaffected.
+
 ## [0.3.0] - 2026-09-20
 
 ### Changed

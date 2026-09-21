@@ -63,6 +63,17 @@ _UPDATED_DESCRIPTION = "Synthetic record updated by an integration recording run
 # accepted it. A numeric field is the only kind that can do that job here:
 # the scrubber replaces the Name and Description an update sent, so reading
 # either back would compare a placeholder with itself.
+#
+# Effort is the roll-up of an item's RoleEfforts, so the resource layer refuses
+# a direct write to it (see ``resources/_derived.py``) and every send below
+# passes ``allow_derived=True``. That is not a way round the guard, it is the
+# case the guard's escape hatch exists for: each entity here is created in this
+# run and carries no RoleEffort, so nothing recomputes the field and TP stores
+# what was sent - which is exactly what makes the read-back provable. These
+# recordings are also the evidence for that claim, and the reason the guard
+# refuses rather than merely warns: the same request against an item that *does*
+# carry RoleEfforts is answered with the same success status and a different
+# outcome, and the caller cannot tell which from the response.
 _UPDATED_EFFORT = 3.0
 
 
@@ -94,6 +105,7 @@ async def test_user_story_create_update_delete_round_trip(live_credentials) -> N
                 Name=f"{_NAME_PREFIX} user story (updated)",
                 Description=_UPDATED_DESCRIPTION,
                 Effort=_UPDATED_EFFORT,
+                allow_derived=True,
             )
 
             # Same entity back, and TP advanced EntityVersion - the evidence
@@ -157,6 +169,7 @@ async def test_request_create_update_delete_round_trip(live_credentials) -> None
                 Name=f"{_NAME_PREFIX} request (updated)",
                 Description=_UPDATED_DESCRIPTION,
                 Effort=_UPDATED_EFFORT,
+                allow_derived=True,
             )
 
             assert updated.id == request.id
@@ -226,7 +239,8 @@ async def test_bulk_create_and_update_tasks_under_a_story(live_credentials) -> N
                         "Effort": _UPDATED_EFFORT,
                     }
                     for position, task in enumerate(tasks, start=1)
-                ]
+                ],
+                allow_derived=True,
             )
 
             assert [task.id for task in updated] == [task.id for task in tasks]
@@ -300,7 +314,7 @@ async def test_verified_update_returns_the_re_read(live_credentials) -> None:
             assert story.entity_version is not None
 
             updated = await client.user_stories.update(
-                story.id, Effort=_UPDATED_EFFORT, verify=True
+                story.id, Effort=_UPDATED_EFFORT, verify=True, allow_derived=True
             )
 
             assert updated.id == story.id

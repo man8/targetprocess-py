@@ -7,6 +7,7 @@ from targetprocess_py.exceptions import (
     SplitTransitionError,
 )
 from targetprocess_py.models import AssignableEntity, EntityRef, EntityState, TeamAssignment
+from targetprocess_py.resources._derived import ASSIGNABLE_DERIVED_FIELDS
 from targetprocess_py.resources.base import ASSIGNABLE_IGNORED_FILTER_PATHS, BaseResource
 from targetprocess_py.resources.entity_states import _STATE_INCLUDE
 from targetprocess_py.types import LevelState, StateLevels
@@ -52,6 +53,13 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
     A ``where=`` on the ``Assignments`` collection is refused before any
     request on every work-item manager, since TargetProcess ignores it.
 
+    A work item's ``Effort``, ``EffortCompleted`` and ``EffortToDo`` are the
+    roll-up of its ``RoleEfforts``, so every write method refuses a field
+    naming one before any request is sent and names the RoleEffort route
+    instead; ``allow_derived=True`` sends the write anyway. See
+    ``resources/_derived.py`` for why the refusal is before the request rather
+    than a verification after it.
+
     Example:
         client = TargetProcessClient(...)
         levels = await client.user_stories.entity_state_levels(123)
@@ -62,6 +70,7 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
     """
 
     ignored_filter_paths = ASSIGNABLE_IGNORED_FILTER_PATHS
+    derived_fields = ASSIGNABLE_DERIVED_FIELDS
 
     async def entity_state_levels(self, id: int) -> StateLevels:
         """Read a work item's project and team entity-state levels.

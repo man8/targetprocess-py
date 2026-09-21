@@ -176,6 +176,40 @@ await client.user_stories.update_many(
 )
 ```
 
+### Derived fields are not writable
+
+Some fields TargetProcess reports are computed from records in another
+collection rather than stored. A work item's `Effort`, `EffortCompleted` and
+`EffortToDo` are the sums of the corresponding field over its `RoleEffort`
+rows — one per role the process assigns effort to.
+
+A direct write to one is answered with a success status either way, and the
+response cannot tell you which of two things happened: TargetProcess stored the
+value because the item has no `RoleEffort` rows to override it, or it recomputed
+the field from those rows and your write changed nothing. The outcome depends on
+the item's other records, not on the request. So `create`, `update`,
+`create_many` and `update_many` refuse such a field before any request is sent —
+on the typed work-item managers and on `client.entities` alike — with a
+`ValueError` naming the route that does work:
+
+```python
+await client.user_stories.update(123, Effort=5)
+# ValueError: Effort is not writable on UserStory: TargetProcess derives Effort
+# from the entity's RoleEfforts, ... set the role's own row instead ...
+
+# The route that does: find the (Assignable, Role) row and write it there.
+async for row in client.role_efforts.list(
+    where="Assignable.Id eq 123", include=["Role"]
+):
+    await client.role_efforts.update(row.id, Effort=5, verify=True)
+```
+
+Pass `allow_derived=True` to send the write anyway, when you know the item
+carries no `RoleEffort` rows and you accept the outcome as TargetProcess gives
+it. Only the three roll-ups above are refused; TargetProcess computes other
+numbers too (`Progress`, `TimeSpent`, `TimeRemain`) and those are sent as
+written.
+
 ### Verified writes
 
 An update returns TargetProcess's own response to the write: its echo of the
@@ -191,8 +225,10 @@ Because the re-read is narrowed, that model carries its `id` and
 from targetprocess_py import VerificationError
 
 try:
-    story = await client.user_stories.update(123, Effort=5, EntityState={"Id": 82}, verify=True)
-    await client.tasks.update_many([{"Id": 456, "Effort": 2}], verify=True)
+    story = await client.user_stories.update(
+        123, NumericPriority=5, EntityState={"Id": 82}, verify=True
+    )
+    await client.tasks.update_many([{"Id": 456, "Name": "Groomed"}], verify=True)
 except VerificationError as exc:
     for entity_id, fields in exc.mismatches.items():
         for field, (requested, observed) in fields.items():
