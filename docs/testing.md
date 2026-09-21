@@ -44,7 +44,11 @@ operational recipe for running and re-recording.
   second, so a create and an update moments later share one). `EntityVersion`
   shows only *acceptance*, so each update also sends a numeric `Effort` and
   reads it back — a number is recorded verbatim, making it the one value a
-  test can prove TP applied. A delete is evidenced by a read-back raising
+  test can prove TP applied. `Effort` is a derived roll-up the resource layer
+  refuses a direct write to, so those sends pass `allow_derived=True`: each
+  entity is created in the same run and carries no `RoleEffort` to recompute the
+  field, so TP stores what was sent, and these recordings are the evidence for
+  that. A delete is evidenced by a read-back raising
   `NotFoundError`, never its status alone; its `{"ResourceType", "Id"}` body
   is recorded but unasserted, `RequestHandler.delete` discarding it. Two
   undocumented shapes are pinned: create and update each echo a fully
