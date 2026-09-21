@@ -5,6 +5,8 @@ from targetprocess_py.exceptions import (
     NotFoundError,
     ParseError,
     SplitTransitionError,
+    TeamIterationCascadeError,
+    VerificationError,
 )
 from targetprocess_py.models import AssignableEntity, EntityRef, EntityState, TeamAssignment
 from targetprocess_py.resources._derived import ASSIGNABLE_DERIVED_FIELDS
@@ -59,6 +61,11 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
     instead; ``allow_derived=True`` sends the write anyway. See
     ``resources/_derived.py`` for why the refusal is before the request rather
     than a verification after it.
+
+    A ``TeamIteration`` is cascaded onto a work item by its parent, so clearing
+    one is the other shape of silent write failure and needs the opposite
+    treatment - a check *after* the write rather than a refusal before it. Use
+    ``clear_team_iteration``, which verifies the clear landed.
 
     Example:
         client = TargetProcessClient(...)
@@ -118,6 +125,67 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
             team_assignment_id=assignment.id,
             collapsed=team.workflow_id == project.workflow_id,
         )
+
+    async def clear_team_iteration(self, id: int) -> T:
+        """Unschedule a work item, verifying that the ``TeamIteration`` actually cleared.
+
+        TargetProcess cascades a parent's team iteration onto its children, and
+        a child's explicit ``null`` is answered with a success status whether
+        the field cleared, was discarded, or cleared and was immediately
+        re-acquired from the parent. So the clear is sent and then *checked*:
+        this is ``update(id, TeamIteration=None, verify=True)`` - the same
+        write, the same single narrowed re-read and the same comparison as any
+        other verified write - with the failure reported as
+        ``TeamIterationCascadeError`` rather than a bare
+        ``VerificationError``, because the remedy is not a retry. There is no
+        ``verify=False``: an unverified clear is indistinguishable from a
+        failed one, which is the whole reason this method exists. A caller who
+        wants the write without the check can still call ``update`` directly
+        and take that risk.
+
+        A field the re-read does not carry at all counts as cleared, as it does
+        for any requested ``None``. An item that already had no team iteration
+        verifies too, so the call is idempotent.
+
+        Args:
+            id: The work item's Id
+
+        Returns:
+            The re-read of the item, narrowed to ``TeamIteration``: it carries
+            that field (``None``), its ``Id`` and its ``ResourceType``, and
+            every other field is ``None``. Fetch the item again for a full
+            read.
+
+        Raises:
+            TeamIterationCascadeError: The re-read shows the field still
+                carrying a value. The value is in ``mismatches`` under
+                ``TeamIteration``; clearing or detaching the parent, or moving
+                the item out from under it, is the remedy.
+            ReadOnlyViolation: Client is in readonly mode (before the write).
+            NotFoundError: Item not found
+            RequestValidationError: TP refused the write
+            AuthenticationError: Invalid credentials
+            ForbiddenError: Insufficient permissions
+            NetworkError: Transport-level failure
+            ParseError: Response failed model validation
+            APIError: Other API errors
+        """
+        try:
+            return await self.update(id, TeamIteration=None, verify=True)
+        except VerificationError as error:
+            # The write sent exactly one field, so a verification failure can
+            # only be that field's: there is no other mismatch this could be.
+            mismatch = error.mismatches.get(id, {}).get("TeamIteration")
+            observed = mismatch[1] if mismatch else None
+            raise TeamIterationCascadeError(
+                f"{self.entity_type} {id} still carries a TeamIteration after the clear "
+                f"({observed!r}); TargetProcess cascades a parent's team iteration onto its "
+                "children and answers a child's explicit null with a success status - clear or "
+                "detach the parent, or move the item out from under it",
+                entity_type=self.entity_type,
+                entity_id=id,
+                mismatches=error.mismatches,
+            ) from error
 
     async def _team_assignment(self, id: int) -> TeamAssignment | None:
         """Return the work item's one team assignment, ``None`` without one, refusing several.

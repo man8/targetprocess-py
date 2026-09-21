@@ -16,6 +16,7 @@ hard-coded.
 - [Pagination](#pagination)
 - [Logging time](#logging-time)
 - [Moving an item through its workflow](#moving-an-item-through-its-workflow)
+- [Unscheduling an item](#unscheduling-an-item)
 - [Relations](#relations)
 - [Rich-text descriptions and comments](#rich-text-descriptions-and-comments)
 - [Attachments](#attachments)
@@ -695,6 +696,36 @@ returned are those re-reads. The two writes are not locked together, so a
 failure after the item's write - the team write, or a re-read - leaves the item
 moved and its team level not.
 
+## Unscheduling an item
+
+TargetProcess cascades a parent's `TeamIteration` onto its children, so an
+explicit `null` on a child is answered with a success status whether the field
+cleared, was discarded, or cleared and was immediately re-acquired from the
+parent. `clear_team_iteration` sends the clear and then checks it, through the
+same verified-write path as any other checked write - one write, one independent
+re-read narrowed to the field - and raises `TeamIterationCascadeError` when the
+field is still set:
+
+```python
+from targetprocess_py import TeamIterationCascadeError
+
+try:
+    story = await client.user_stories.clear_team_iteration(123)
+    assert story.team_iteration is None
+except TeamIterationCascadeError as exc:
+    # The value the field was observed to hold, from the parent.
+    print(exc.mismatches[123]["TeamIteration"])
+```
+
+The remedy is not a retry: unscheduling a child under a scheduled parent means
+clearing or detaching the parent as well, or moving the item out from under it.
+`TeamIterationCascadeError` is a `VerificationError`, so a caller already
+handling "the re-read did not show the write" catches it too. The returned model
+is the narrowed re-read, carrying `id`, `resource_type` and `team_iteration`
+only. There is no `verify=False`: an unverified clear cannot be told from a
+failed one, which is why this method exists — call `update(123,
+TeamIteration=None)` directly if you want the write without the check.
+
 ## Relations
 
 `client.relations` reads and writes `Relation` records directly: a
@@ -842,6 +873,7 @@ catch a specific failure or the base class. HTTP status codes map to types:
 | `ParseError` | a response body failed Pydantic model validation |
 | `ReadOnlyViolation` | a write was attempted on a `READONLY` client |
 | `VerificationError` | a verified write (`verify=True`, or `set_custom_field` by default) read back an entity not showing a requested field; carries `mismatches` |
+| `TeamIterationCascadeError` | a `VerificationError`: `clear_team_iteration` read the field back still set, TargetProcess having cascaded it from the parent |
 | `SplitTransitionError` | `advance_state` would move one entity-state level without the other; carries `entity_id`, `project_workflow_id` and `team_workflow_id` |
 
 ```python

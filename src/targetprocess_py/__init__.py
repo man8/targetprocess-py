@@ -23,6 +23,7 @@ from targetprocess_py.exceptions import (
     RequestValidationError,
     SplitTransitionError,
     TargetProcessError,
+    TeamIterationCascadeError,
     VerificationError,
 )
 from targetprocess_py.models import (
@@ -128,6 +129,7 @@ __all__ = [
     "RequestValidationError",
     "SplitTransitionError",
     "TargetProcessError",
+    "TeamIterationCascadeError",
     "VerificationError",
     # Models - Base
     "Entity",
