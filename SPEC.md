@@ -181,10 +181,11 @@ Typed resource managers, each exposed as a property on the client:
 - `list(*, where=None, include=None, exclude=None, result_include=None,
   append=None, innertake=None, order_by=None, order_by_desc=None, skip=None,
   limit=None, page_size=25) -> AsyncIterator[T]`
-- `create(**fields) -> T` (READWRITE only)
-- `update(id, *, verify=False, **fields) -> T` (READWRITE only)
+- `create(*, allow_derived=False, **fields) -> T` (READWRITE only)
+- `update(id, *, verify=False, allow_derived=False, **fields) -> T` (READWRITE only)
 - `delete(id) -> None` (READWRITE only)
-- `create_many(items) -> list[T]` / `update_many(items, *, verify=False) -> list[T]`
+- `create_many(items, *, allow_derived=False) -> list[T]` /
+  `update_many(items, *, verify=False, allow_derived=False) -> list[T]`
   (READWRITE only) - one bulk request for the whole batch; see "Bulk write
   semantics" below. On a collection the server restricts (next paragraph)
   they raise `ReadOnlyViolation` in every mode, as the single-item writes do
@@ -202,6 +203,11 @@ and `terms`. One is partial: `custom_rules` accepts `update` / `update_many`
 (toggling `IsEnabled`, the one settable field) and refuses `create`,
 `create_many` and `delete`. Every other typed collection is fully writable.
 The flags are read from `/meta`, never established by probing a write.
+
+A write is bounded at the field level too: `BaseResource.derived_fields` names the
+fields TP computes from another collection, which the four write methods refuse
+with `ValueError` unless the call passes `allow_derived=True` - see "Derived-field
+writes" below.
 
 `times` additionally provides `find_for_day` and `upsert` - see "Time upsert
 semantics" below.
@@ -602,6 +608,9 @@ All library exceptions extend `TargetProcessError`:
   caller has that context.
 - `VerificationError` - an update with `verify=True` read back an entity not
   showing a requested field; carries `mismatches` and `verified_ids`.
+- `TeamIterationCascadeError` - a `VerificationError`: `clear_team_iteration`
+  read the `TeamIteration` back still set, TP having cascaded it onto the item
+  from its parent; the observed value is in `mismatches`.
 - `SplitTransitionError` - `advance_state` would move one entity-state level
   without the other; carries `entity_id` and both workflow Ids.
 
@@ -709,6 +718,45 @@ An entry is added only with live evidence: an unfiltered control returning the
 same rows. `RequestHandler.list` itself still passes `where` verbatim; the
 refusal is the resource layer's, as the include refusal is.
 
+### Derived-field writes
+
+`BaseResource.derived_fields` maps a wire field name TP computes from another
+collection to the reason and the route that sets the value. The known set is
+declared once, as `ASSIGNABLE_DERIVED_FIELDS` in `resources/_derived.py`: a work
+item's three effort roll-ups - `Effort`, `EffortCompleted`, `EffortToDo` - each
+the sum of the corresponding field over its `RoleEfforts`. `AssignableResource`
+carries it for the six work-item managers, and `entities` mirrors it for every
+spelling of their collections and of the untyped Assignable-derived ones, so the
+generic accessor cannot sidestep the typed guard.
+
+`create`, `update`, `create_many` and `update_many` refuse a field named there
+with `ValueError` before any request is sent (`check_derived_fields`, and per
+batch item `check_derived_items`), matching the name case-insensitively and
+stripped as the verification comparison does. The message names the field, the
+collection, the reason and the RoleEffort route; a bulk refusal names the item's
+zero-based position, as that path's `Id` guards do. `ValueError` rather than
+`ReadOnlyViolation`, which answers "this client, or this collection, may not
+write at all". The route is the `(Assignable, Role)` row, through `role_efforts`.
+
+The refusal is before the request because nothing after it settles the question.
+The recorded write suite evidences that such a write *can* land - it sends
+`Effort` and an independent re-read shows it - while the same field is reported as
+a sum over `RoleEfforts`, so a write can equally be recomputed away. Both carry a
+success status, and no re-read separates "stored because nothing overrode it" from
+"recomputed back to the same number". That a write lands where the item has no
+`RoleEffort` rows and is reconciled away where it has is the likely explanation,
+but it is inference from those recordings, not established behaviour, and this
+contract does not rest on it.
+
+`allow_derived=True` on any of the four methods sends the write anyway, for a
+caller who knows the item's `RoleEfforts`; the recorded write suite is that
+caller, which is what keeps `Effort` usable there as the numeric field a test can
+prove TP applied. Only the declared set is refused - `Progress`, `TimeSpent`,
+`TimeRemain`, `LeadTime` and `CycleTime` are computed too and are not declared,
+each needing its own route in its own message and the same live evidence an
+ignored-filter entry is added on - and `RoleEffort`'s own effort fields are stored
+as written.
+
 ### Bulk write semantics
 
 `create_many` / `update_many` (on every typed resource and, with a leading
@@ -767,6 +815,22 @@ string, bytes or bytearray) entry by entry by name; any other absent key fails.
 Nothing converts between forms, so a string never matches a number. A
 `Description` sent without the Markdown marker is stored HTML-encoded, so it can
 fail on its own encoding.
+
+### Unscheduling: the TeamIteration cascade
+
+TP cascades a parent's `TeamIteration` onto its children, so a child's explicit
+`null` is answered with a success status whether the field cleared, was
+discarded, or cleared and was immediately re-acquired from the parent - and an
+item that should be unscheduled silently stays scheduled. The six work-item
+managers therefore expose `clear_team_iteration(id) -> T`, which is
+`update(id, TeamIteration=None, verify=True)` and nothing more: the same write,
+the same single narrowed re-read and the same comparison as any other verified
+write, so an absent key counts as cleared and an item that already had none
+verifies. The failure is re-raised as `TeamIterationCascadeError`, because the
+remedy is not a retry but clearing or detaching the parent, or moving the item
+out from under it. There is deliberately no `verify=False`: an unverified clear
+cannot be told from a failed one, which is the method's whole reason for
+existing, so a caller wanting the bare write calls `update` directly.
 
 ### Entity-state transitions
 
