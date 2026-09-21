@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `clear_team_iteration(id)` on the six work-item managers: it clears an item's
+  `TeamIteration` and verifies that the clear landed, raising the new
+  `TeamIterationCascadeError` when the field is read back still carrying a
+  value. TargetProcess cascades a parent's team iteration onto its children, so
+  a child's explicit `null` is answered with a success status whether the field
+  cleared, was discarded, or cleared and was immediately re-acquired from the
+  parent — and an item that should be unscheduled silently stays scheduled. The
+  method is the existing verified-write path (`update(..., verify=True)`), with
+  the failure reported under a type of its own because the remedy is not a
+  retry: the parent's iteration has to be cleared or detached, or the item moved
+  out from under it. `TeamIterationCascadeError` subclasses `VerificationError`,
+  so a caller already handling that catches this too, and the observed value is
+  in `mismatches` under `TeamIteration`. There is deliberately no `verify=False`
+  — an unverified clear cannot be told from a failed one, which is the reason
+  the method exists.
+
+### Changed
+
+- **BREAKING:** `create`, `update`, `create_many` and `update_many` refuse a
+  field TargetProcess derives from another collection, raising `ValueError`
+  before any request is sent. The declared set is a work item's `Effort`,
+  `EffortCompleted` and `EffortToDo` — each the sum of the corresponding field
+  over the item's `RoleEfforts` — and the refusal applies on the six work-item
+  managers and on `entities` for every spelling of their collections and of the
+  untyped Assignable-derived ones, so the generic accessor is not a way round
+  it. A direct write to such a field is answered with a success status whether
+  TargetProcess stored the value (the item has no `RoleEffort` rows to override
+  it) or recomputed the field from those rows and changed nothing, and the
+  response does not say which: the outcome depends on the entity's other
+  records rather than on the request, which is why this fails before sending
+  rather than being verified afterwards. **Migration:** write the role's own
+  row through `client.role_efforts` — the error message carries the query that
+  finds it — or pass `allow_derived=True` to send the write as before and take
+  the outcome as TargetProcess gives it. `RoleEffort`'s own `Effort` fields are
+  stored as written and are unaffected.
+
 ## [0.3.0] - 2026-09-20
 
 ### Changed

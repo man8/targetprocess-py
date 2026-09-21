@@ -12,6 +12,7 @@ from targetprocess_py.exceptions import (
     VerificationError,
 )
 from targetprocess_py.models import Entity, NamedEntity
+from targetprocess_py.resources._derived import check_derived_fields, check_derived_items
 from targetprocess_py.resources._verify import (
     compare_fields,
     custom_field_name,
@@ -271,6 +272,11 @@ class BaseResource[T: Entity]:
             rejecting others - each mapped to the reason and the route to use
             instead; ``list`` refuses them with ``ValueError`` before any
             request is sent.
+        derived_fields: Wire field names TP computes from another collection
+            rather than storing, each mapped to the reason and the route that
+            sets the value; the four write methods refuse them with
+            ``ValueError`` before any request is sent, unless the call passes
+            ``allow_derived=True``.
     """
 
     entity_type: str  # Override in subclass
@@ -285,6 +291,13 @@ class BaseResource[T: Entity]:
     # before any request is sent, because TP would answer HTTP 200 with the
     # unfiltered rows. Empty on every collection but the assignable ones.
     ignored_filter_paths: dict[str, str] = {}
+    # Wire field name -> why TP derives the value from another collection (and
+    # the route that sets it). create(), update(), create_many() and
+    # update_many() refuse a field named here before any request is sent,
+    # because TP answers such a write with a success status whether it stored
+    # the value or recomputed it away. Empty on every collection but the
+    # assignable ones; see resources/_derived.py.
+    derived_fields: dict[str, str] = {}
     server_read_only: bool = False  # Override in server-side read-only subclasses
     # Per-operation server capability, from the collection's /meta. A
     # collection TP declares partially writable (CustomRules: update only)
@@ -565,18 +578,22 @@ class BaseResource[T: Entity]:
         ):
             yield ResponseParser.parse_single(item_data, self.model_class)
 
-    async def create(self, **fields: Any) -> T:
+    async def create(self, *, allow_derived: bool = False, **fields: Any) -> T:
         """Create new entity.
 
         Requires client mode to be READWRITE.
 
         Args:
+            allow_derived: Send a field this collection declares derived
+                instead of refusing it (default False; see ``derived_fields``)
             **fields: Entity field values (name, description, etc.)
 
         Returns:
             Created entity instance of type T
 
         Raises:
+            ValueError: A field is one TP derives for this collection and
+                ``allow_derived`` is False (raised before the request)
             ReadOnlyViolation: Client is in readonly mode, or the collection
                 is read-only on the server (any mode)
             RequestValidationError: Invalid field values
@@ -588,10 +605,14 @@ class BaseResource[T: Entity]:
         """
         self._check_server_writable("create")
         self._client._check_write_permission()
+        if not allow_derived:
+            check_derived_fields(fields, self.derived_fields, resource=self.entity_type)
         data = await self._request_handler.create(self.entity_type, fields)
         return ResponseParser.parse_single(data, self.model_class)
 
-    async def update(self, id: int, *, verify: bool = False, **fields: Any) -> T:
+    async def update(
+        self, id: int, *, verify: bool = False, allow_derived: bool = False, **fields: Any
+    ) -> T:
         """Update existing entity.
 
         Requires client mode to be READWRITE.
@@ -623,6 +644,8 @@ class BaseResource[T: Entity]:
             id: Entity ID
             verify: Re-read the entity after the write and raise when it does
                 not show the requested fields (default False)
+            allow_derived: Send a field this collection declares derived
+                instead of refusing it (default False; see ``derived_fields``)
             **fields: Entity field values to update
 
         Returns:
@@ -631,10 +654,11 @@ class BaseResource[T: Entity]:
             otherwise
 
         Raises:
-            ValueError: ``verify`` is True and a requested key is a field
-                this collection cannot hydrate, or a ``CustomFields`` entry is
-                not a mapping carrying a string ``Name`` (raised before the
-                write)
+            ValueError: A field is one TP derives for this collection and
+                ``allow_derived`` is False; or ``verify`` is True and a
+                requested key is a field this collection cannot hydrate, or a
+                ``CustomFields`` entry is not a mapping carrying a string
+                ``Name`` (all raised before the write)
             VerificationError: ``verify`` is True and the re-read does not
                 show every requested field
             ReadOnlyViolation: Client is in readonly mode, or the collection
@@ -649,6 +673,8 @@ class BaseResource[T: Entity]:
         """
         self._check_server_writable("update")
         self._client._check_write_permission()
+        if not allow_derived:
+            check_derived_fields(fields, self.derived_fields, resource=self.entity_type)
         if verify:
             self.check_include(list(fields))
             self.check_custom_field_names(fields)
@@ -720,7 +746,9 @@ class BaseResource[T: Entity]:
 
     # Return annotations on methods defined after ``list`` above must spell
     # ``builtins.list``: in class scope the method name shadows the builtin.
-    async def create_many(self, items: Sequence[dict[str, Any]]) -> builtins.list[T]:
+    async def create_many(
+        self, items: Sequence[dict[str, Any]], *, allow_derived: bool = False
+    ) -> builtins.list[T]:
         """Create several entities in one bulk request.
 
         Requires client mode to be READWRITE. The whole batch is sent as a
@@ -743,12 +771,15 @@ class BaseResource[T: Entity]:
             items: Field dicts, one per entity to create, in the wire shape
                 ``create``'s keyword arguments take (e.g.
                 ``{"Name": "Story", "Project": {"Id": 42}}``)
+            allow_derived: Send a field this collection declares derived
+                instead of refusing it (default False; see ``derived_fields``)
 
         Returns:
             The created entities, parsed as type T, as the API returned them.
 
         Raises:
-            ValueError: An item carries an ``Id`` key.
+            ValueError: An item carries an ``Id`` key, or names a field TP
+                derives for this collection while ``allow_derived`` is False.
             ReadOnlyViolation: Client is in readonly mode, or the collection
                 is read-only on the server (any mode)
             RequestValidationError: Invalid field values
@@ -763,11 +794,19 @@ class BaseResource[T: Entity]:
         self._client._check_write_permission()
         items = list(items)  # materialise once: validated and sent as the same batch
         _require_no_ids(items)
+        if not allow_derived:
+            check_derived_items(
+                items, self.derived_fields, resource=self.entity_type, operation="create_many"
+            )
         data = await self._request_handler.bulk(self.entity_type, items)
         return [ResponseParser.parse_single(item, self.model_class) for item in data]
 
     async def update_many(
-        self, items: Sequence[dict[str, Any]], *, verify: bool = False
+        self,
+        items: Sequence[dict[str, Any]],
+        *,
+        verify: bool = False,
+        allow_derived: bool = False,
     ) -> builtins.list[T]:
         """Update several entities in one bulk request.
 
@@ -803,6 +842,8 @@ class BaseResource[T: Entity]:
                 ``{"Id": 123, "Name": "Renamed"}``)
             verify: Re-read each entity after the batch and raise when any
                 does not show its requested fields (default False)
+            allow_derived: Send a field this collection declares derived
+                instead of refusing it (default False; see ``derived_fields``)
 
         Returns:
             The updated entities, parsed as type T - in item order as re-read
@@ -810,10 +851,12 @@ class BaseResource[T: Entity]:
             returned them otherwise.
 
         Raises:
-            ValueError: An item has no ``Id`` key; or ``verify`` is True and an
-                item's ``Id`` is not an integer, two items name the same
-                entity, an item names a field this collection cannot
-                hydrate, or an item's ``CustomFields`` entry is not a mapping
+            ValueError: An item has no ``Id`` key, or names a field TP derives
+                for this collection while ``allow_derived`` is False; or
+                ``verify`` is True and an item's ``Id`` is not an integer, two
+                items name the same entity, an item names a field this
+                collection cannot hydrate, or an item's ``CustomFields`` entry
+                is not a mapping
                 carrying a string ``Name`` (all raised before any request is
                 sent).
             VerificationError: ``verify`` is True and at least one re-read
@@ -834,6 +877,10 @@ class BaseResource[T: Entity]:
         items = list(items)  # materialise once: validated and sent as the same batch
         _require_ids(items)
         items = [_with_canonical_id(item) for item in items]
+        if not allow_derived:
+            check_derived_items(
+                items, self.derived_fields, resource=self.entity_type, operation="update_many"
+            )
         ids: builtins.list[int] = []
         if verify:
             ids = _verification_ids(items)

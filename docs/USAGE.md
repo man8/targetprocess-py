@@ -16,6 +16,7 @@ hard-coded.
 - [Pagination](#pagination)
 - [Logging time](#logging-time)
 - [Moving an item through its workflow](#moving-an-item-through-its-workflow)
+- [Unscheduling an item](#unscheduling-an-item)
 - [Relations](#relations)
 - [Rich-text descriptions and comments](#rich-text-descriptions-and-comments)
 - [Attachments](#attachments)
@@ -176,6 +177,40 @@ await client.user_stories.update_many(
 )
 ```
 
+### Derived fields are not writable
+
+Some fields TargetProcess reports are computed from records in another
+collection rather than stored. A work item's `Effort`, `EffortCompleted` and
+`EffortToDo` are the sums of the corresponding field over its `RoleEffort`
+rows — one per role the process assigns effort to.
+
+A direct write to one is answered with a success status either way, and the
+response cannot tell you which of two things happened: TargetProcess stored the
+value because the item has no `RoleEffort` rows to override it, or it recomputed
+the field from those rows and your write changed nothing. The outcome depends on
+the item's other records, not on the request. So `create`, `update`,
+`create_many` and `update_many` refuse such a field before any request is sent —
+on the typed work-item managers and on `client.entities` alike — with a
+`ValueError` naming the route that does work:
+
+```python
+await client.user_stories.update(123, Effort=5)
+# ValueError: Effort is not writable on UserStory: TargetProcess derives Effort
+# from the entity's RoleEfforts, ... set the role's own row instead ...
+
+# The route that does: find the (Assignable, Role) row and write it there.
+async for row in client.role_efforts.list(
+    where="Assignable.Id eq 123", include=["Role"]
+):
+    await client.role_efforts.update(row.id, Effort=5, verify=True)
+```
+
+Pass `allow_derived=True` to send the write anyway, when you know the item
+carries no `RoleEffort` rows and you accept the outcome as TargetProcess gives
+it. Only the three roll-ups above are refused; TargetProcess computes other
+numbers too (`Progress`, `TimeSpent`, `TimeRemain`) and those are sent as
+written.
+
 ### Verified writes
 
 An update returns TargetProcess's own response to the write: its echo of the
@@ -191,8 +226,10 @@ Because the re-read is narrowed, that model carries its `id` and
 from targetprocess_py import VerificationError
 
 try:
-    story = await client.user_stories.update(123, Effort=5, EntityState={"Id": 82}, verify=True)
-    await client.tasks.update_many([{"Id": 456, "Effort": 2}], verify=True)
+    story = await client.user_stories.update(
+        123, NumericPriority=5, EntityState={"Id": 82}, verify=True
+    )
+    await client.tasks.update_many([{"Id": 456, "Name": "Groomed"}], verify=True)
 except VerificationError as exc:
     for entity_id, fields in exc.mismatches.items():
         for field, (requested, observed) in fields.items():
@@ -256,7 +293,7 @@ The value is compared as sent, with no conversion between forms, so a string
 value does not verify against a numeric field's number. A date-typed field
 reads back in TargetProcess's `/Date(ms±HHMM)/` wire form, so it verifies
 only when you send that form - `format_tp_date` of a timezone-aware `datetime`
-(see [Time against a custom activity](#time-against-a-custom-activity)) rather
+(see [Time against a custom activity](time.md#time-against-a-custom-activity)) rather
 than `"2026-10-01"` - or with `verify=False`. The verified return value is the
 narrowed re-read: its `id`, `resource_type` and `custom_fields`, and no other
 field.
@@ -512,108 +549,8 @@ with `limit` unless you genuinely need to start mid-collection.
 
 ## Logging time
 
-`client.times` provides the usual CRUD surface, plus `upsert` — an idempotent
-sync keyed on `(assignable, user, day)`. Use it when a source system is the
-truth and the same day may be synced repeatedly: a second run updates the
-existing entry rather than adding a duplicate.
-
-```python
-from datetime import datetime, timedelta, timezone
-
-sast = timezone(timedelta(hours=2))
-
-result = await client.times.upsert(
-    assignable_id=51383,
-    user_id=1,
-    when=datetime(2026, 8, 9, 14, 0, tzinfo=sast),
-    spent=2.5,
-    description="Investigated the failing sync",
-)
-print(result.action, sorted(result.changed_fields))
-```
-
-`when` must be timezone-aware — it is what defines which calendar day the
-entry is keyed on. Pass `tz=` to key on a different timezone from the one
-`when` carries.
-
-Choose `tz` carefully, and keep it the same for every call that touches a
-given day: it defines the calendar day an entry is matched against, and TP
-stores the instant you send rather than normalising it to a day boundary.
-Read in the same zone you wrote in — projecting into a different zone
-resolves a near-midnight entry onto the adjacent day, so `upsert` misses it
-and creates a duplicate. See
-[SPEC.md](../SPEC.md#time-upsert-semantics) for the full rationale.
-
-Only the fields you supply are compared and written, so the call above syncs
-the description too, while omitting `description` would leave a drifted one
-alone. A supplied `description` is stripped of leading/trailing whitespace
-before comparing and writing — a stored description always reads back
-stripped, so an unstripped value would otherwise look changed on every call.
-
-Plan a run without writing anything — this works on a READONLY client:
-
-```python
-planned = await client.times.upsert(
-    assignable_id=51383,
-    user_id=1,
-    when=datetime(2026, 8, 9, 14, 0, tzinfo=sast),
-    spent=2.5,
-    dry_run=True,
-)
-assert planned.action in {"would_create", "would_update", "unchanged"}
-```
-
-To read a day's entries without syncing, use `find_for_day`:
-
-```python
-from datetime import date
-
-entries = await client.times.find_for_day(
-    assignable_id=51383, user_id=1, day=date(2026, 8, 9), tz=sast
-)
-```
-
-If the day already holds more than one entry for that assignable and user,
-`upsert` raises `AmbiguousMatchError` rather than guessing which to update.
-
-### Time against a custom activity
-
-`upsert` and `find_for_day` key on an assignable, so an entry logged against a
-custom activity goes through the ordinary `create` and `list`. Send
-`CustomActivity` and leave `Assignable` out of the payload altogether - omit
-the key rather than sending it as `None`:
-
-```python
-from targetprocess_py.models import format_tp_date
-
-entry = await client.times.create(
-    CustomActivity={"Id": 42},
-    User={"Id": 7},
-    Date=format_tp_date(datetime(2026, 8, 9, 9, 0, tzinfo=sast)),
-    Spent=0.5,
-    Description="Weekly planning",
-)
-```
-
-The entry reads back with a null `assignable` and its `custom_activity`
-back-reference set (see [SPEC.md](../SPEC.md#models)). To read a day's entries
-against an activity, filter on the window `find_for_day` uses, a day wider on
-each side, then keep the exact day by projecting each `date` into the zone the
-entries were written in:
-
-```python
-day = date(2026, 8, 9)
-where = (
-    "(CustomActivity.Id eq 42) and (User.Id eq 7)"
-    f" and (Date gte '{day - timedelta(days=1)}')"
-    f" and (Date lt '{day + timedelta(days=2)}')"
-)
-entries = [
-    entry
-    async for entry in client.times.list(where=where)
-    if entry.date is not None and entry.date.astimezone(sast).date() == day
-]
-```
+Moved to [time.md](time.md): the `client.times` CRUD surface, the idempotent
+`upsert` keyed on `(assignable, user, day)`, and time against a custom activity.
 
 ## Moving an item through its workflow
 
@@ -658,6 +595,36 @@ the team level is written, leaving both levels where they were, and the levels
 returned are those re-reads. The two writes are not locked together, so a
 failure after the item's write - the team write, or a re-read - leaves the item
 moved and its team level not.
+
+## Unscheduling an item
+
+TargetProcess cascades a parent's `TeamIteration` onto its children, so an
+explicit `null` on a child is answered with a success status whether the field
+cleared, was discarded, or cleared and was immediately re-acquired from the
+parent. `clear_team_iteration` sends the clear and then checks it, through the
+same verified-write path as any other checked write - one write, one independent
+re-read narrowed to the field - and raises `TeamIterationCascadeError` when the
+field is still set:
+
+```python
+from targetprocess_py import TeamIterationCascadeError
+
+try:
+    story = await client.user_stories.clear_team_iteration(123)
+    assert story.team_iteration is None
+except TeamIterationCascadeError as exc:
+    # The value the field was observed to hold, from the parent.
+    print(exc.mismatches[123]["TeamIteration"])
+```
+
+The remedy is not a retry: unscheduling a child under a scheduled parent means
+clearing or detaching the parent as well, or moving the item out from under it.
+`TeamIterationCascadeError` is a `VerificationError`, so a caller already
+handling "the re-read did not show the write" catches it too. The returned model
+is the narrowed re-read, carrying `id`, `resource_type` and `team_iteration`
+only. There is no `verify=False`: an unverified clear cannot be told from a
+failed one, which is why this method exists — call `update(123,
+TeamIteration=None)` directly if you want the write without the check.
 
 ## Relations
 
@@ -806,6 +773,7 @@ catch a specific failure or the base class. HTTP status codes map to types:
 | `ParseError` | a response body failed Pydantic model validation |
 | `ReadOnlyViolation` | a write was attempted on a `READONLY` client |
 | `VerificationError` | a verified write (`verify=True`, or `set_custom_field` by default) read back an entity not showing a requested field; carries `mismatches` |
+| `TeamIterationCascadeError` | a `VerificationError`: `clear_team_iteration` read the field back still set, TargetProcess having cascaded it from the parent |
 | `SplitTransitionError` | `advance_state` would move one entity-state level without the other; carries `entity_id`, `project_workflow_id` and `team_workflow_id` |
 
 ```python

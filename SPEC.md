@@ -181,10 +181,11 @@ Typed resource managers, each exposed as a property on the client:
 - `list(*, where=None, include=None, exclude=None, result_include=None,
   append=None, innertake=None, order_by=None, order_by_desc=None, skip=None,
   limit=None, page_size=25) -> AsyncIterator[T]`
-- `create(**fields) -> T` (READWRITE only)
-- `update(id, *, verify=False, **fields) -> T` (READWRITE only)
+- `create(*, allow_derived=False, **fields) -> T` (READWRITE only)
+- `update(id, *, verify=False, allow_derived=False, **fields) -> T` (READWRITE only)
 - `delete(id) -> None` (READWRITE only)
-- `create_many(items) -> list[T]` / `update_many(items, *, verify=False) -> list[T]`
+- `create_many(items, *, allow_derived=False) -> list[T]` /
+  `update_many(items, *, verify=False, allow_derived=False) -> list[T]`
   (READWRITE only) - one bulk request for the whole batch; see "Bulk write
   semantics" below. On a collection the server restricts (next paragraph)
   they raise `ReadOnlyViolation` in every mode, as the single-item writes do
@@ -202,6 +203,11 @@ and `terms`. One is partial: `custom_rules` accepts `update` / `update_many`
 (toggling `IsEnabled`, the one settable field) and refuses `create`,
 `create_many` and `delete`. Every other typed collection is fully writable.
 The flags are read from `/meta`, never established by probing a write.
+
+A write is bounded at the field level too: `BaseResource.derived_fields` names the
+fields TP computes from another collection, which the four write methods refuse
+with `ValueError` unless the call passes `allow_derived=True` - see "Derived-field
+writes" below.
 
 `times` additionally provides `find_for_day` and `upsert` - see "Time upsert
 semantics" below.
@@ -602,6 +608,9 @@ All library exceptions extend `TargetProcessError`:
   caller has that context.
 - `VerificationError` - an update with `verify=True` read back an entity not
   showing a requested field; carries `mismatches` and `verified_ids`.
+- `TeamIterationCascadeError` - a `VerificationError`: `clear_team_iteration`
+  read the `TeamIteration` back still set, TP having cascaded it onto the item
+  from its parent; the observed value is in `mismatches`.
 - `SplitTransitionError` - `advance_state` would move one entity-state level
   without the other; carries `entity_id` and both workflow Ids.
 
@@ -709,6 +718,45 @@ An entry is added only with live evidence: an unfiltered control returning the
 same rows. `RequestHandler.list` itself still passes `where` verbatim; the
 refusal is the resource layer's, as the include refusal is.
 
+### Derived-field writes
+
+`BaseResource.derived_fields` maps a wire field name TP computes from another
+collection to the reason and the route that sets the value. The known set is
+declared once, as `ASSIGNABLE_DERIVED_FIELDS` in `resources/_derived.py`: a work
+item's three effort roll-ups - `Effort`, `EffortCompleted`, `EffortToDo` - each
+the sum of the corresponding field over its `RoleEfforts`. `AssignableResource`
+carries it for the six work-item managers, and `entities` mirrors it for every
+spelling of their collections and of the untyped Assignable-derived ones, so the
+generic accessor cannot sidestep the typed guard.
+
+`create`, `update`, `create_many` and `update_many` refuse a field named there
+with `ValueError` before any request is sent (`check_derived_fields`, and per
+batch item `check_derived_items`), matching the name case-insensitively and
+stripped as the verification comparison does. The message names the field, the
+collection, the reason and the RoleEffort route; a bulk refusal names the item's
+zero-based position, as that path's `Id` guards do. `ValueError` rather than
+`ReadOnlyViolation`, which answers "this client, or this collection, may not
+write at all". The route is the `(Assignable, Role)` row, through `role_efforts`.
+
+The refusal is before the request because nothing after it settles the question.
+The recorded write suite evidences that such a write *can* land - it sends
+`Effort` and an independent re-read shows it - while the same field is reported as
+a sum over `RoleEfforts`, so a write can equally be recomputed away. Both carry a
+success status, and no re-read separates "stored because nothing overrode it" from
+"recomputed back to the same number". That a write lands where the item has no
+`RoleEffort` rows and is reconciled away where it has is the likely explanation,
+but it is inference from those recordings, not established behaviour, and this
+contract does not rest on it.
+
+`allow_derived=True` on any of the four methods sends the write anyway, for a
+caller who knows the item's `RoleEfforts`; the recorded write suite is that
+caller, which is what keeps `Effort` usable there as the numeric field a test can
+prove TP applied. Only the declared set is refused - `Progress`, `TimeSpent`,
+`TimeRemain`, `LeadTime` and `CycleTime` are computed too and are not declared,
+each needing its own route in its own message and the same live evidence an
+ignored-filter entry is added on - and `RoleEffort`'s own effort fields are stored
+as written.
+
 ### Bulk write semantics
 
 `create_many` / `update_many` (on every typed resource and, with a leading
@@ -767,6 +815,22 @@ string, bytes or bytearray) entry by entry by name; any other absent key fails.
 Nothing converts between forms, so a string never matches a number. A
 `Description` sent without the Markdown marker is stored HTML-encoded, so it can
 fail on its own encoding.
+
+### Unscheduling: the TeamIteration cascade
+
+TP cascades a parent's `TeamIteration` onto its children, so a child's explicit
+`null` is answered with a success status whether the field cleared, was
+discarded, or cleared and was immediately re-acquired from the parent - and an
+item that should be unscheduled silently stays scheduled. The six work-item
+managers therefore expose `clear_team_iteration(id) -> T`, which is
+`update(id, TeamIteration=None, verify=True)` and nothing more: the same write,
+the same single narrowed re-read and the same comparison as any other verified
+write, so an absent key counts as cleared and an item that already had none
+verifies. The failure is re-raised as `TeamIterationCascadeError`, because the
+remedy is not a retry but clearing or detaching the parent, or moving the item
+out from under it. There is deliberately no `verify=False`: an unverified clear
+cannot be told from a failed one, which is the method's whole reason for
+existing, so a caller wanting the bare write calls `update` directly.
 
 ### Entity-state transitions
 
@@ -902,91 +966,9 @@ result = await client.times.upsert(
 
 ## Observability
 
-Runtime observability lives in `targetprocess_py/_observability.py` and is
-scoped to what a *library* should own. The application that embeds the
-library owns the rest (metrics, alerting, error tracking, deployment
-observability, product analytics) - it has the deployment context a
-library cannot assume.
-
-### Implemented signals
-
-- **Structured logging.** A dedicated `logging.getLogger("targetprocess_py")`
-  with a `NullHandler` by default (silent unless the application attaches a
-  handler). `StructuredJsonFormatter` emits one JSON line per record
-  (`ts`, `level`, `logger`, `msg`, `request_id`, plus caller extras).
-  `get_logger("name")` returns a child under the `targetprocess_py` namespace.
-  `RequestHandler._request` emits structured `request.start` /
-  `request.complete` / `request.retry` / `request.error` /
-  `request.transport_error` records.
-- **Log scrubbing.** `ScrubbingFilter` redacts the `access_token` query
-  param and `Authorization: Basic|Bearer` header values from the records
-  this library emits. It is attached to the `targetprocess_py` logger and to
-  every child `get_logger()` returns - both, because a filter on a logger
-  runs only for records logged *through* that logger, not for records
-  propagated up from a child. It pre-formats and redacts the message, the
-  `url` extra, the `headers` extra, and every other string-valued extra
-  (an extra such as `{"error": repr(exc)}` can carry a request URL the
-  message never mentions); `StructuredJsonFormatter` additionally scrubs
-  the formatted traceback, which is rendered from `exc_info` after the
-  filter has run. `scrub_url`, `scrub_message`, and `scrub_headers` are the
-  underlying helpers. The scrub is deliberately
-  narrow to the two real secret surfaces this library produces (TP carries
-  the token as a query param, and Basic auth is the header alternative); it
-  does not run a generic token-shaped regex, which would redact legitimate
-  entity IDs, hashes, and long identifiers that appear in normal log
-  content. This closes the token-leak surface the README already warns about
-  for httpx request-URL logging, *in this library's own records*. The filter
-  cannot reach records emitted by other libraries - `httpx` and `httpcore`
-  log their own request URLs - nor a logger obtained by calling
-  `logging.getLogger("targetprocess_py.x")` directly instead of via
-  `get_logger()`. An application that wants blanket redaction should attach
-  a `ScrubbingFilter()` instance to its own handler, which every propagated
-  record passes through whatever logger produced it.
-- **Distributed tracing (correlation-ID propagation).** A `ContextVar`
-  request ID is stamped on every outgoing request as an `X-Request-ID`
-  header by the transport's request event hook, and bound to every log
-  record `RequestHandler` emits. `new_request_id()` generates an ID,
-  `current_request_id()` reads the bound one, and
-  `request_id_context(rid)` binds one for a scope (so a caller's request
-  context flows into both the wire header and the library's logs). A
-  caller-supplied `X-Request-ID` header is never overwritten. When no ID is
-  bound, the transport generates one so every request is still traceable.
-  Because the bound ID typically originates from an inbound request, it is
-  untrusted input: `request_id_context` strips characters outside the
-  printable-ASCII header field-value range, trims and length-caps the
-  result, and falls back to a generated ID if nothing usable remains - so a
-  CR/LF cannot split the header or fail every request in that scope.
-
-### Won't-fix (not applicable to a client library)
-
-The remaining Debugging & Observability readiness signals are deliberately
-not implemented, because they are deployment/organisation concerns owned by
-the application that embeds this library, not by the library itself. A
-library that shipped its own Sentry, alerting, or product-analytics
-integration would impose a specific vendor and deployment shape on every
-caller - the opposite of the minimal-dependency posture this library takes
-(`httpx`, `pydantic`, `easylimit`, and the stdlib only).
-
-- **metrics_collection** - won't-fix. A library has no global runtime to
-  sample; metrics belong to the embedding application, which already has a
-  metrics backend. `RequestHandler`'s structured logs (`status`,
-  `attempt`, `delay`, `request_id`) are the lightweight, vendor-neutral
-  substrate an application can count into its own metrics.
-- **error_tracking_contextualized** - won't-fix. Bundling Sentry/Bugsnag
-  would add a hard dependency and a vendor choice the library should not
-  make. Callers catch `TargetProcessError` (or a subclass) and forward it
-  to whatever error tracker they run; the `request_id` on the log records
-  gives the correlation context.
-- **alerting_configured** - won't-fix. Alerting is a property of an
-  operated system, not a library. There is no deployment here to alert on.
-- **deployment_observability** - won't-fix. The library has no deployment
-  pipeline, runtime, or infrastructure to observe.
-- **product_analytics_instrumentation** - won't-fix. A library does not
-  have end-users to instrument; product analytics are the application's
-  responsibility.
-- **error_to_insight_pipeline** - won't-fix. This is an aggregation
-  concern over an organisation's error/metrics stores; it operates on the
-  application's observability backends, not on a library's emit site.
+Moved to [docs/observability.md](docs/observability.md): the structured logger,
+the log scrubbing, request-ID propagation, and the readiness signals left to the
+application that embeds the library.
 
 ## Testing Approach
 

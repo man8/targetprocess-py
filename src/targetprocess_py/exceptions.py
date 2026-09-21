@@ -234,6 +234,26 @@ class VerificationError(TargetProcessError):
         self.verified_ids = list(verified_ids)
 
 
+class TeamIterationCascadeError(VerificationError):
+    """A cleared ``TeamIteration`` came back still carrying one.
+
+    Raised by ``AssignableResource.clear_team_iteration`` when the verifying
+    re-read after the write shows the field holding a value. TargetProcess
+    cascades a parent's team iteration onto its children, so an explicit
+    ``null`` on a child is discarded - or applied and immediately re-acquired
+    from the parent - and answered with a success status either way, with
+    nothing on the response to say the field did not clear.
+
+    A :class:`VerificationError`, so a caller already handling "the re-read did
+    not show the write" catches this too. The distinct type is for the caller
+    that treats the cascade differently, since the remedy is not a retry:
+    unscheduling a child under a scheduled parent means clearing the parent's
+    iteration as well, or moving the child out from under it. The value the
+    field was observed to hold is in :attr:`VerificationError.mismatches`,
+    under ``TeamIteration``, as the observed side of the pair.
+    """
+
+
 class SplitTransitionError(TargetProcessError):
     """An entity-state advance that would leave a work item's two levels apart.
 

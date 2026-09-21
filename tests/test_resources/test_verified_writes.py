@@ -57,16 +57,16 @@ def _story(**fields: Any) -> dict[str, Any]:
 async def test_default_update_posts_once_and_returns_the_echo() -> None:
     client, log = _client(
         {
-            ("POST", _STORY): _story(Effort=1.0),
-            ("GET", _STORY): _story(Effort=3.0),
+            ("POST", _STORY): _story(NumericPriority=1.0),
+            ("GET", _STORY): _story(NumericPriority=3.0),
         }
     )
 
-    story = await client.user_stories.update(123, Effort=3.0)
+    story = await client.user_stories.update(123, NumericPriority=3.0)
 
     assert [request.method for request in log] == ["POST"]
-    assert json.loads(log[0].content) == {"Effort": 3.0}
-    assert story.effort == 1.0  # the echo, unverified, exactly as before
+    assert json.loads(log[0].content) == {"NumericPriority": 3.0}
+    assert story.numeric_priority == 1.0  # the echo, unverified, exactly as before
 
 
 # --- update(verify=True) ---------------------------------------------------------------------
@@ -75,18 +75,22 @@ async def test_default_update_posts_once_and_returns_the_echo() -> None:
 async def test_verified_update_rereads_narrowed_to_the_requested_keys() -> None:
     client, log = _client(
         {
-            ("POST", _STORY): _story(Effort=1.0),
-            ("GET", _STORY): _story(Effort=3.0, EntityState={"Id": 52, "Name": "Sanitised Name"}),
+            ("POST", _STORY): _story(NumericPriority=1.0),
+            ("GET", _STORY): _story(
+                NumericPriority=3.0, EntityState={"Id": 52, "Name": "Sanitised Name"}
+            ),
         }
     )
 
-    story = await client.user_stories.update(123, Effort=3.0, EntityState={"Id": 52}, verify=True)
+    story = await client.user_stories.update(
+        123, NumericPriority=3.0, EntityState={"Id": 52}, verify=True
+    )
 
     assert [request.method for request in log] == ["POST", "GET"]
-    assert json.loads(log[0].content) == {"Effort": 3.0, "EntityState": {"Id": 52}}
-    assert log[1].url.params["include"] == "[Effort,EntityState]"
+    assert json.loads(log[0].content) == {"NumericPriority": 3.0, "EntityState": {"Id": 52}}
+    assert log[1].url.params["include"] == "[NumericPriority,EntityState]"
     # The re-read model, never the echo.
-    assert story.effort == 3.0
+    assert story.numeric_priority == 3.0
     assert story.entity_state is not None
     assert story.entity_state.id == 52
 
@@ -94,21 +98,21 @@ async def test_verified_update_rereads_narrowed_to_the_requested_keys() -> None:
 async def test_verified_update_raises_on_a_mismatch() -> None:
     client, _ = _client(
         {
-            ("POST", _STORY): _story(Effort=3.0),
-            ("GET", _STORY): _story(Effort=2.0),
+            ("POST", _STORY): _story(NumericPriority=3.0),
+            ("GET", _STORY): _story(NumericPriority=2.0),
         }
     )
 
     with pytest.raises(VerificationError) as caught:
-        await client.user_stories.update(123, Effort=3.0, verify=True)
+        await client.user_stories.update(123, NumericPriority=3.0, verify=True)
 
     error = caught.value
     assert error.entity_type == "UserStory"
     assert error.entity_id == 123
-    assert error.mismatches == {123: {"Effort": (3.0, 2.0)}}
+    assert error.mismatches == {123: {"NumericPriority": (3.0, 2.0)}}
     assert error.verified_ids == []
     assert "UserStory 123" in str(error)
-    assert "Effort: requested 3.0, observed 2.0" in str(error)
+    assert "NumericPriority: requested 3.0, observed 2.0" in str(error)
 
 
 async def test_verified_update_reports_a_key_the_reread_does_not_carry() -> None:
@@ -163,7 +167,7 @@ async def test_verified_update_on_a_readonly_client_sends_nothing() -> None:
     client, log = _client({}, mode=ClientMode.READONLY)
 
     with pytest.raises(ReadOnlyViolation):
-        await client.user_stories.update(123, Effort=3.0, verify=True)
+        await client.user_stories.update(123, NumericPriority=3.0, verify=True)
 
     assert log == []
 
@@ -201,13 +205,13 @@ async def test_verified_update_refuses_a_custom_field_entry_without_a_string_nam
 
 
 async def test_unverified_update_sends_a_custom_field_entry_without_a_string_name() -> None:
-    client, log = _client({("POST", _STORY): _story(Effort=1.0)})
+    client, log = _client({("POST", _STORY): _story(NumericPriority=1.0)})
 
     story = await client.user_stories.update(123, CustomFields=[{"Value": "v"}])
 
     assert [request.method for request in log] == ["POST"]
     assert json.loads(log[0].content) == {"CustomFields": [{"Value": "v"}]}
-    assert story.effort == 1.0  # the echo
+    assert story.numeric_priority == 1.0  # the echo
 
 
 @pytest.mark.parametrize(
@@ -281,26 +285,26 @@ async def test_verified_update_sends_a_custom_fields_mapping_and_compares_it_who
 # --- update_many(verify=True) ----------------------------------------------------------------
 
 
-def _reread(efforts: dict[int, float | None]) -> Callable[[httpx.Request], dict[str, Any]]:
+def _reread(ranks: dict[int, float | None]) -> Callable[[httpx.Request], dict[str, Any]]:
     def respond(request: httpx.Request) -> dict[str, Any]:
         entity_id = int(request.url.path.rsplit("/", 1)[1])
-        effort = efforts[entity_id]
+        rank = ranks[entity_id]
         body: dict[str, Any] = {"ResourceType": "UserStory", "Id": entity_id}
-        if effort is not None:
-            body["Effort"] = effort
+        if rank is not None:
+            body["NumericPriority"] = rank
         return body
 
     return respond
 
 
-def _many_routes(efforts: dict[int, float | None]) -> dict[tuple[str, str], Responder]:
+def _many_routes(ranks: dict[int, float | None]) -> dict[tuple[str, str], Responder]:
     routes: dict[tuple[str, str], Responder] = {
         ("POST", "/api/v1/UserStory/bulk"): {
-            "Items": [{"ResourceType": "UserStory", "Id": i, "Effort": 1.0} for i in efforts]
+            "Items": [{"ResourceType": "UserStory", "Id": i, "NumericPriority": 1.0} for i in ranks]
         },
     }
-    for entity_id in efforts:
-        routes[("GET", f"/api/v1/UserStory/{entity_id}")] = _reread(efforts)
+    for entity_id in ranks:
+        routes[("GET", f"/api/v1/UserStory/{entity_id}")] = _reread(ranks)
     return routes
 
 
@@ -308,18 +312,18 @@ async def test_default_update_many_posts_once_and_returns_the_echo() -> None:
     client, log = _client(_many_routes({5: 3.0, 6: 3.0}))
 
     stories = await client.user_stories.update_many(
-        [{"Id": 5, "Effort": 3.0}, {"Id": 6, "Effort": 3.0}]
+        [{"Id": 5, "NumericPriority": 3.0}, {"Id": 6, "NumericPriority": 3.0}]
     )
 
     assert [request.method for request in log] == ["POST"]
-    assert [story.effort for story in stories] == [1.0, 1.0]
+    assert [story.numeric_priority for story in stories] == [1.0, 1.0]
 
 
 async def test_verified_update_many_rereads_each_item_after_the_batch() -> None:
     client, log = _client(_many_routes({5: 3.0, 6: 4.0}))
 
     stories = await client.user_stories.update_many(
-        [{"Id": 5, "Effort": 3.0}, {"id": 6, "Effort": 4.0}], verify=True
+        [{"Id": 5, "NumericPriority": 3.0}, {"id": 6, "NumericPriority": 4.0}], verify=True
     )
 
     assert [(request.method, request.url.path) for request in log] == [
@@ -327,8 +331,11 @@ async def test_verified_update_many_rereads_each_item_after_the_batch() -> None:
         ("GET", "/api/v1/UserStory/5"),
         ("GET", "/api/v1/UserStory/6"),
     ]
-    assert [request.url.params["include"] for request in log[1:]] == ["[Effort]", "[Effort]"]
-    assert [(story.id, story.effort) for story in stories] == [(5, 3.0), (6, 4.0)]
+    assert [request.url.params["include"] for request in log[1:]] == [
+        "[NumericPriority]",
+        "[NumericPriority]",
+    ]
+    assert [(story.id, story.numeric_priority) for story in stories] == [(5, 3.0), (6, 4.0)]
 
 
 async def test_verified_update_many_checks_every_item_before_raising() -> None:
@@ -336,7 +343,11 @@ async def test_verified_update_many_checks_every_item_before_raising() -> None:
 
     with pytest.raises(VerificationError) as caught:
         await client.user_stories.update_many(
-            [{"Id": 5, "Effort": 3.0}, {"Id": 6, "Effort": 3.0}, {"Id": 7, "Effort": 3.0}],
+            [
+                {"Id": 5, "NumericPriority": 3.0},
+                {"Id": 6, "NumericPriority": 3.0},
+                {"Id": 7, "NumericPriority": 3.0},
+            ],
             verify=True,
         )
 
@@ -344,10 +355,13 @@ async def test_verified_update_many_checks_every_item_before_raising() -> None:
     error = caught.value
     assert error.entity_type == "UserStory"
     assert error.entity_id is None
-    assert error.mismatches == {5: {"Effort": (3.0, 2.0)}, 7: {"Effort": (3.0, _ABSENT)}}
+    assert error.mismatches == {
+        5: {"NumericPriority": (3.0, 2.0)},
+        7: {"NumericPriority": (3.0, _ABSENT)},
+    }
     assert error.verified_ids == [6]
-    assert "UserStory 5: Effort: requested 3.0, observed 2.0" in str(error)
-    assert "UserStory 7: Effort: requested 3.0, observed <absent>" in str(error)
+    assert "UserStory 5: NumericPriority: requested 3.0, observed 2.0" in str(error)
+    assert "UserStory 7: NumericPriority: requested 3.0, observed <absent>" in str(error)
 
 
 async def test_verified_update_many_keys_mismatches_and_verified_ids_by_integer_id() -> None:
@@ -355,7 +369,7 @@ async def test_verified_update_many_keys_mismatches_and_verified_ids_by_integer_
 
     with pytest.raises(VerificationError) as caught:
         await client.user_stories.update_many(
-            [{"Id": "5", "Effort": 3.0}, {"Id": 6, "Effort": 3.0}], verify=True
+            [{"Id": "5", "NumericPriority": 3.0}, {"Id": 6, "NumericPriority": 3.0}], verify=True
         )
 
     assert [request.url.path for request in log[1:]] == [
@@ -363,7 +377,7 @@ async def test_verified_update_many_keys_mismatches_and_verified_ids_by_integer_
         "/api/v1/UserStory/6",
     ]
     error = caught.value
-    assert error.mismatches == {5: {"Effort": (3.0, 2.0)}}
+    assert error.mismatches == {5: {"NumericPriority": (3.0, 2.0)}}
     assert [type(key) for key in error.mismatches] == [int]
     assert error.verified_ids == [6]
 
@@ -376,7 +390,7 @@ async def test_verified_update_many_refuses_an_entity_named_twice_before_the_wri
 
     with pytest.raises(ValueError, match="items 0 and 1 both name Id 5"):
         await client.user_stories.update_many(
-            [{"Id": 5, "Effort": 3.0}, {"Id": second_id, "Name": "Invented"}], verify=True
+            [{"Id": 5, "NumericPriority": 3.0}, {"Id": second_id, "Name": "Invented"}], verify=True
         )
 
     assert log == []
@@ -389,7 +403,9 @@ async def test_verified_update_many_refuses_a_non_integer_id_before_the_write(
     client, log = _client({})
 
     with pytest.raises(ValueError, match="verify=True needs an integer Id"):
-        await client.user_stories.update_many([{"Id": entity_id, "Effort": 3.0}], verify=True)
+        await client.user_stories.update_many(
+            [{"Id": entity_id, "NumericPriority": 3.0}], verify=True
+        )
 
     assert log == []
 
@@ -398,7 +414,7 @@ async def test_verified_update_many_on_a_readonly_client_sends_nothing() -> None
     client, log = _client({}, mode=ClientMode.READONLY)
 
     with pytest.raises(ReadOnlyViolation):
-        await client.user_stories.update_many([{"Id": 5, "Effort": 3.0}], verify=True)
+        await client.user_stories.update_many([{"Id": 5, "NumericPriority": 3.0}], verify=True)
 
     assert log == []
 

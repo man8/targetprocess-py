@@ -234,10 +234,18 @@ class AssignableEntity(GeneralEntity):
     API never promised. Write-side range checks belong where the value
     originates - see ``times.upsert``, which validates before sending.
 
+    ``effort``, ``effort_completed`` and ``effort_todo`` are **derived**: each
+    is the sum of the corresponding field over the item's ``RoleEffort``
+    records, one per role the process assigns effort to. So they are read here
+    and written there - ``client.role_efforts`` - and the resource layer
+    refuses a write naming one before any request is sent, because TP answers
+    such a write with a success status whether it stored the value (nothing in
+    the collection overrode it) or recomputed it away.
+
     Attributes:
-        effort: Total effort estimate
-        effort_completed: Completed effort
-        effort_todo: Remaining effort
+        effort: Total effort - the sum over the item's RoleEfforts
+        effort_completed: Completed effort - the RoleEfforts' sum
+        effort_todo: Remaining effort - the RoleEfforts' sum
         progress: Completion ratio TP derives from effort (0.0 - 1.0)
         time_spent: Hours logged against the item
         time_remain: Hours still expected

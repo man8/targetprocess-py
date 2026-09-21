@@ -6,6 +6,11 @@ from typing import TYPE_CHECKING, Any
 
 from targetprocess_py._entity_types import require_entity_type
 from targetprocess_py.models import NamedEntity
+from targetprocess_py.resources._derived import (
+    ASSIGNABLE_DERIVED_FIELDS,
+    check_derived_fields,
+    check_derived_items,
+)
 from targetprocess_py.resources.base import (
     ASSIGNABLE_IGNORED_FILTER_PATHS,
     BaseResource,
@@ -152,6 +157,36 @@ def _check_where(entity_type: str, where: str | None) -> None:
     )
 
 
+# The write-side counterpart, keyed and populated exactly as
+# ``_IGNORED_FILTER_PATHS`` is: the derived-field declaration of every
+# assignable collection, so the generic path refuses the same write before any
+# request rather than letting TP answer a success status that means nothing.
+# Without this the generic accessor would be the way round the typed guard,
+# which is the one thing it must not be. The walk test in
+# ``tests/test_resources/test_role_efforts.py`` covers this map.
+_DERIVED_FIELDS: dict[str, dict[str, str]] = {
+    spelling: resource.derived_fields
+    for resource in (
+        UserStoriesResource,
+        BugsResource,
+        TasksResource,
+        FeaturesResource,
+        EpicsResource,
+        RequestsResource,
+    )
+    for spelling in _spellings(resource.entity_type)
+} | {
+    spelling: ASSIGNABLE_DERIVED_FIELDS
+    for collection in _UNTYPED_ASSIGNABLE_COLLECTIONS
+    for spelling in _spellings(collection)
+}
+
+
+def _derived_for(entity_type: str) -> dict[str, str]:
+    """Return the derived-field declaration for a collection, empty when it has none."""
+    return _DERIVED_FIELDS.get(entity_type.casefold(), {})
+
+
 class EntitiesResource:
     """Generic resource for any entity type known only at runtime.
 
@@ -162,6 +197,10 @@ class EntitiesResource:
     ``ClientMode.READWRITE`` check as the typed resources, and an operation
     TP itself declares a collection incapable of is refused in every mode,
     exactly as its typed resource refuses it (see ``_check_server_writable``).
+    A write naming a field TP derives from another collection is refused here
+    too, for every spelling of the assignable collections, so the generic
+    accessor is not a way round the typed guard; ``allow_derived=True`` sends
+    it anyway.
 
     Reads parse into :class:`NamedEntity` rather than bare :class:`Entity`,
     so named types (Bug, UserStory, ...) keep their ``.name``. Payloads with
@@ -351,13 +390,17 @@ class EntitiesResource:
         ):
             yield ResponseParser.parse_single(item_data, NamedEntity)
 
-    async def create(self, entity_type: str, /, **fields: Any) -> NamedEntity:
+    async def create(
+        self, entity_type: str, /, *, allow_derived: bool = False, **fields: Any
+    ) -> NamedEntity:
         """Create a new entity of any type.
 
         Requires client mode to be READWRITE.
 
         Args:
             entity_type: TP entity type name (e.g., "Objective")
+            allow_derived: Send a field the collection declares derived
+                instead of refusing it (default False)
             **fields: Entity field values, in the API's wire shape
                 (e.g. ``Name="Q3 goal", Project={"Id": 2}``)
 
@@ -365,6 +408,9 @@ class EntitiesResource:
             The created entity, as a NamedEntity
 
         Raises:
+            ValueError: ``entity_type`` is not a plain TP identifier, or a
+                field is one TP derives for that collection and
+                ``allow_derived`` is False (raised before the request)
             ReadOnlyViolation: Client is in readonly mode, or the collection
                 is read-only on the server (any mode)
             RequestValidationError: Invalid field values
@@ -376,10 +422,14 @@ class EntitiesResource:
         """
         self._check_server_writable(entity_type, "create")
         self._client._check_write_permission()
+        if not allow_derived:
+            check_derived_fields(fields, _derived_for(entity_type), resource=entity_type)
         data = await self._request_handler.create(entity_type, fields)
         return ResponseParser.parse_single(data, NamedEntity)
 
-    async def update(self, entity_type: str, id: int, /, **fields: Any) -> NamedEntity:
+    async def update(
+        self, entity_type: str, id: int, /, *, allow_derived: bool = False, **fields: Any
+    ) -> NamedEntity:
         """Update an existing entity of any type.
 
         Requires client mode to be READWRITE.
@@ -387,12 +437,17 @@ class EntitiesResource:
         Args:
             entity_type: TP entity type name (e.g., "Objective")
             id: Entity ID
+            allow_derived: Send a field the collection declares derived
+                instead of refusing it (default False)
             **fields: Entity field values to update, in the API's wire shape
 
         Returns:
             The updated entity, as a NamedEntity
 
         Raises:
+            ValueError: ``entity_type`` is not a plain TP identifier, or a
+                field is one TP derives for that collection and
+                ``allow_derived`` is False (raised before the request)
             ReadOnlyViolation: Client is in readonly mode, or the collection
                 is read-only on the server (any mode)
             NotFoundError: Entity not found
@@ -405,6 +460,8 @@ class EntitiesResource:
         """
         self._check_server_writable(entity_type, "update")
         self._client._check_write_permission()
+        if not allow_derived:
+            check_derived_fields(fields, _derived_for(entity_type), resource=entity_type)
         data = await self._request_handler.update(entity_type, id, fields)
         return ResponseParser.parse_single(data, NamedEntity)
 
@@ -433,7 +490,11 @@ class EntitiesResource:
     # Return annotations on methods defined after ``list`` above must spell
     # ``builtins.list``: in class scope the method name shadows the builtin.
     async def create_many(
-        self, entity_type: str, items: Sequence[dict[str, Any]]
+        self,
+        entity_type: str,
+        items: Sequence[dict[str, Any]],
+        *,
+        allow_derived: bool = False,
     ) -> builtins.list[NamedEntity]:
         """Create several entities of any type in one bulk request.
 
@@ -445,12 +506,15 @@ class EntitiesResource:
         Args:
             entity_type: TP entity type name (e.g., "Objective")
             items: Field dicts, one per entity to create
+            allow_derived: Send a field the collection declares derived
+                instead of refusing it (default False)
 
         Returns:
             The created entities, as NamedEntity instances
 
         Raises:
-            ValueError: An item carries an ``Id`` key.
+            ValueError: An item carries an ``Id`` key, or names a field TP
+                derives for that collection while ``allow_derived`` is False.
             ReadOnlyViolation: Client is in readonly mode, or the collection
                 is read-only on the server (any mode)
             RequestValidationError: Invalid field values
@@ -465,11 +529,19 @@ class EntitiesResource:
         self._client._check_write_permission()
         items = list(items)  # materialise once: validated and sent as the same batch
         _require_no_ids(items)
+        if not allow_derived:
+            check_derived_items(
+                items, _derived_for(entity_type), resource=entity_type, operation="create_many"
+            )
         data = await self._request_handler.bulk(entity_type, items)
         return [ResponseParser.parse_single(item, NamedEntity) for item in data]
 
     async def update_many(
-        self, entity_type: str, items: Sequence[dict[str, Any]]
+        self,
+        entity_type: str,
+        items: Sequence[dict[str, Any]],
+        *,
+        allow_derived: bool = False,
     ) -> builtins.list[NamedEntity]:
         """Update several entities of any type in one bulk request.
 
@@ -482,12 +554,15 @@ class EntitiesResource:
             entity_type: TP entity type name (e.g., "Objective")
             items: Field dicts, one per entity to update, each carrying the
                 target's ``Id``
+            allow_derived: Send a field the collection declares derived
+                instead of refusing it (default False)
 
         Returns:
             The updated entities, as NamedEntity instances
 
         Raises:
-            ValueError: An item has no ``Id`` key.
+            ValueError: An item has no ``Id`` key, or names a field TP derives
+                for that collection while ``allow_derived`` is False.
             ReadOnlyViolation: Client is in readonly mode, or the collection
                 is read-only on the server (any mode)
             NotFoundError: A referenced entity was not found
@@ -504,5 +579,9 @@ class EntitiesResource:
         items = list(items)  # materialise once: validated and sent as the same batch
         _require_ids(items)
         items = [_with_canonical_id(item) for item in items]
+        if not allow_derived:
+            check_derived_items(
+                items, _derived_for(entity_type), resource=entity_type, operation="update_many"
+            )
         data = await self._request_handler.bulk(entity_type, items)
         return [ResponseParser.parse_single(item, NamedEntity) for item in data]

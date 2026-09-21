@@ -226,7 +226,7 @@ def test_verification_error_survives_a_pickle_round_trip(
 
 def _library_errors() -> dict[type[TargetProcessError], Callable[[], TargetProcessError]]:
     """One factory per exception class the module defines, each passing non-default arguments."""
-    from targetprocess_py.exceptions import SplitTransitionError
+    from targetprocess_py.exceptions import SplitTransitionError, TeamIterationCascadeError
 
     return {
         TargetProcessError: lambda: TargetProcessError("Something failed"),
@@ -256,6 +256,12 @@ def _library_errors() -> dict[type[TargetProcessError], Callable[[], TargetProce
             entity_id=4,
             mismatches={4: {"Effort": (1, VerificationError.ABSENT)}},
             verified_ids=[3],
+        ),
+        TeamIterationCascadeError: lambda: TeamIterationCascadeError(
+            "UserStory 123 still carries a TeamIteration after the clear",
+            entity_type="UserStory",
+            entity_id=123,
+            mismatches={123: {"TeamIteration": (None, {"Id": 77})}},
         ),
         SplitTransitionError: lambda: SplitTransitionError(
             "UserStory 123 has a team level in workflow 9",
