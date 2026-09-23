@@ -408,3 +408,122 @@ async def test_custom_field_set_and_clear_round_trip(live_credentials) -> None:
 
         with pytest.raises(NotFoundError):
             await client.user_stories.get(story.id)
+
+
+@pytest.mark.asyncio
+async def test_clear_team_iteration_lands_on_a_child_of_a_scheduled_parent(
+    live_credentials,
+) -> None:
+    """``clear_team_iteration`` on a child whose parent holds a ``TeamIteration``.
+
+    Recorded to settle what TargetProcess does with a child's explicit
+    ``null`` while its parent is scheduled, which no cassette covered and no
+    unit test can answer: the unit suite drives a mock transport, so it
+    asserts what the client does with a discarded ``null`` rather than whether
+    TargetProcess discards one.
+
+    On this instance it does not. The child is a Task under a UserStory, both
+    in the same team and the same sprint; the clear is answered with the field
+    genuinely unset, and the verifying re-read carries ``"TeamIteration":
+    null`` - the key *present* and null, so the "a field the re-read does not
+    carry counts as cleared" lenience is not what passed it. So
+    ``clear_team_iteration`` returns the re-read rather than raising, and this
+    test asserts that.
+
+    What this does **not** establish is that the cascade never happens. Two
+    configurations were tried live and neither produced it: a child created
+    with no ``Team`` came back with no ``TeamIteration`` at all (nothing to
+    cascade onto), and the child recorded here was given the sprint
+    explicitly, so the value it cleared was one TargetProcess had *stored* for
+    it. The case left untested is a child that holds a team assignment but was
+    never given a sprint of its own - where a value shown against it could be
+    the parent's rather than its own, and a ``null`` would have nothing to
+    unset. ``TeamIterationCascadeError`` and the prose describing it are
+    deliberately untouched by this test; it records an observation, and
+    whether that observation narrows the documented behaviour is not a
+    question a fixture should answer on its own.
+
+    The run also never re-read the *parent* after the child's clear, so the
+    cassette shows the parent scheduled before the clear and not after.
+    Nothing in the run writes to the parent in between.
+
+    Two pieces of instance state are read, never written, as everywhere else
+    on this path. The team comes out of the sandbox project's own
+    ``TeamProject`` row rather than being named, so the test binds to whatever
+    is linked at record time; the sprint is that team's lowest-Id
+    ``TeamIteration``. Both are structural selections, because a cassette
+    replays every ``Name`` as a placeholder and a lookup by name would find
+    nothing (``test_live_readwrite_surfaces.py`` states the same rule).
+
+    Re-recording needs a team linked to the sandbox project for the duration
+    of the run, exactly as ``test_team_assignment_create_and_delete`` does:
+    TargetProcess will not put a card in a team's sprint unless that team is
+    assigned to the card's project. Every other run replays offline and needs
+    no link.
+    """
+    domain, token = live_credentials
+    async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READWRITE) as client:
+        links = [
+            link
+            async for link in client.entities.list(
+                "TeamProject", where=f"Project.Id eq {_SANDBOX_PROJECT_ID}"
+            )
+        ]
+        assert links, (
+            "the sandbox project has no TeamProject row - link a team to it for the "
+            "duration of a re-recording run (see this test's docstring)"
+        )
+        # TeamProject is not one of the typed resources, so its references
+        # arrive as raw wire dicts in ``model_extra`` under their PascalCase
+        # names rather than as parsed model fields.
+        team_id = min(links, key=lambda link: link.id).Team["Id"]
+
+        sprints = [
+            sprint async for sprint in client.team_iterations.list(where=f"Team.Id eq {team_id}")
+        ]
+        assert sprints, f"team {team_id} owns no TeamIteration to schedule the parent into"
+        sprint = min(sprints, key=lambda sprint: sprint.id)
+
+        parent = await client.user_stories.create(
+            Name=f"{_NAME_PREFIX} cascade parent story",
+            Description=_CREATED_DESCRIPTION,
+            Project={"Id": _SANDBOX_PROJECT_ID},
+            Team={"Id": team_id},
+            TeamIteration={"Id": sprint.id},
+        )
+        try:
+            # Asserted before the child is made: a TeamIteration TP declined
+            # to store would leave the parent unscheduled, and a clear under an
+            # unscheduled parent is a different scenario entirely - so this
+            # fails here rather than as a puzzling pass three calls later.
+            scheduled = await client.user_stories.get(parent.id, include=["TeamIteration"])
+            assert scheduled.team_iteration is not None
+            assert scheduled.team_iteration.id == sprint.id
+
+            # The child carries the same team and the same sprint as its
+            # parent. The ``Team`` is not optional: TargetProcess holds a
+            # card's sprint through a team assignment, so a child created
+            # without one comes back with no ``TeamIteration`` to clear.
+            child = await client.tasks.create(
+                Name=f"{_NAME_PREFIX} cascade child task",
+                UserStory={"Id": parent.id},
+                Team={"Id": team_id},
+                TeamIteration={"Id": sprint.id},
+            )
+            try:
+                before = await client.tasks.get(child.id, include=["TeamIteration"])
+                assert before.team_iteration is not None
+                assert before.team_iteration.id == sprint.id
+
+                cleared = await client.tasks.clear_team_iteration(child.id)
+
+                # The narrowed re-read, not TP's echo of the write: the echo
+                # carries EntityVersion and a re-read narrowed to one field
+                # does not, which is how the two are told apart.
+                assert cleared.id == child.id
+                assert cleared.team_iteration is None
+                assert cleared.entity_version is None
+            finally:
+                await client.tasks.delete(child.id)
+        finally:
+            await client.user_stories.delete(parent.id)
