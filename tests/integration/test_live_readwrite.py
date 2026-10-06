@@ -37,9 +37,11 @@ echoed structure - the entity's own ``Id`` and ``ResourceType``, the
 therefore the load-bearing evidence that an *update* did something.
 """
 
+from collections.abc import Awaitable
+
 import pytest
 
-from targetprocess_py import ClientMode, TargetProcessClient
+from targetprocess_py import ClientMode, TargetProcessClient, Task
 from targetprocess_py.exceptions import NotFoundError
 
 pytestmark = [pytest.mark.vcr, pytest.mark.integration]
@@ -527,3 +529,138 @@ async def test_clear_team_iteration_lands_on_a_child_of_a_scheduled_parent(
                 await client.tasks.delete(child.id)
         finally:
             await client.user_stories.delete(parent.id)
+
+
+# Stands in for an observation the run never reached, so an early abort reads
+# as "not observed" rather than as an observed ``None``.
+_UNOBSERVED = object()
+
+
+async def _read_after_delete(read: Awaitable[object]) -> object:
+    """Await a re-read of a deleted entity and return what came back.
+
+    A ``NotFoundError`` is the outcome wanted, and is returned rather than
+    raised so that every re-read runs, and is recorded, before any of them is
+    asserted on.
+    """
+    try:
+        return await read
+    except NotFoundError as error:
+        return error
+
+
+@pytest.mark.asyncio
+async def test_clear_team_iteration_lands_on_a_team_only_child_that_inherited_the_parent_sprint(
+    live_credentials,
+) -> None:
+    """``clear_team_iteration`` on a child that holds a ``Team`` but was never given a sprint.
+
+    The parent UserStory is scheduled into its team's sprint. The child Task
+    is created under it with the same ``Team`` and **no** ``TeamIteration``
+    key at all, so any sprint the child shows can only have come from the
+    parent. The child is read, cleared exactly once and read again.
+
+    What TargetProcess did, as recorded:
+
+    - The child inherited the parent's sprint at creation: the create echo
+      already carries it, and so does the read that follows.
+    - The explicit ``null`` landed. ``clear_team_iteration`` returned the
+      verifying re-read rather than raising ``TeamIterationCascadeError``, and
+      an independent re-read afterwards carries ``"TeamIteration": null`` -
+      the key *present* and null, asserted through the model's set fields, so
+      the "a field the re-read does not carry counts as cleared" lenience is
+      not what passed it.
+
+    Every call is made, and the cleanup and its verifying re-reads recorded,
+    before any observation is asserted on: the clear's outcome is captured
+    rather than allowed to raise, so a surprise cannot cut a recorded run
+    short. Team and sprint are selected structurally, exactly as in
+    ``test_clear_team_iteration_lands_on_a_child_of_a_scheduled_parent``, and
+    re-recording needs a team linked to the sandbox project for the same
+    reason.
+    """
+    domain, token = live_credentials
+    async with TargetProcessClient(domain=domain, token=token, mode=ClientMode.READWRITE) as client:
+        links = [
+            link
+            async for link in client.entities.list(
+                "TeamProject", where=f"Project.Id eq {_SANDBOX_PROJECT_ID}"
+            )
+        ]
+        assert links, (
+            "the sandbox project has no TeamProject row - re-recording needs a team "
+            "linked to it (see this test's docstring)"
+        )
+        team_id = min(links, key=lambda link: link.id).Team["Id"]
+
+        sprints = [
+            sprint async for sprint in client.team_iterations.list(where=f"Team.Id eq {team_id}")
+        ]
+        assert sprints, f"team {team_id} owns no TeamIteration to schedule the parent into"
+        sprint = min(sprints, key=lambda sprint: sprint.id)
+
+        parent = await client.user_stories.create(
+            Name=f"{_NAME_PREFIX} team-only child parent story",
+            Description=_CREATED_DESCRIPTION,
+            Project={"Id": _SANDBOX_PROJECT_ID},
+            Team={"Id": team_id},
+            TeamIteration={"Id": sprint.id},
+        )
+        child_id: int | None = None
+        created: object = _UNOBSERVED
+        before: object = _UNOBSERVED
+        outcome: object = _UNOBSERVED
+        after: object = _UNOBSERVED
+        try:
+            # Asserted before the child exists, as in the test above: an
+            # unscheduled parent is a different scenario, so it fails here.
+            scheduled = await client.user_stories.get(parent.id, include=["TeamIteration"])
+            assert scheduled.team_iteration is not None
+            assert scheduled.team_iteration.id == sprint.id
+
+            # No ``TeamIteration`` key in the create body - that absence is
+            # the configuration under test.
+            child = await client.tasks.create(
+                Name=f"{_NAME_PREFIX} team-only child task",
+                UserStory={"Id": parent.id},
+                Team={"Id": team_id},
+            )
+            created = child
+            child_id = child.id
+            try:
+                before = await client.tasks.get(child_id, include=["TeamIteration"])
+                try:
+                    outcome = await client.tasks.clear_team_iteration(child_id)
+                except Exception as error:  # the outcome is the observation
+                    outcome = error
+                after = await client.tasks.get(child_id, include=["TeamIteration"])
+            finally:
+                await client.tasks.delete(child_id)
+        finally:
+            await client.user_stories.delete(parent.id)
+
+        child_gone = await _read_after_delete(client.tasks.get(child_id))
+        parent_gone = await _read_after_delete(client.user_stories.get(parent.id))
+
+    # The child inherited the parent's sprint without being given one.
+    assert isinstance(created, Task)
+    assert created.team_iteration is not None
+    assert created.team_iteration.id == sprint.id
+    assert isinstance(before, Task)
+    assert before.team_iteration is not None
+    assert before.team_iteration.id == sprint.id
+
+    # The clear returned cleanly: the narrowed re-read, not TP's echo of the
+    # write - the echo carries EntityVersion and the narrowed re-read does not.
+    assert isinstance(outcome, Task), f"clear_team_iteration raised {outcome!r}"
+    assert outcome.id == child_id
+    assert outcome.team_iteration is None
+    assert outcome.entity_version is None
+
+    # The independent re-read: the key present and null, not merely absent.
+    assert isinstance(after, Task)
+    assert after.team_iteration is None
+    assert "team_iteration" in after.model_fields_set
+
+    assert isinstance(child_gone, NotFoundError)
+    assert isinstance(parent_gone, NotFoundError)
