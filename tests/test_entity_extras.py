@@ -206,8 +206,9 @@ def test_declared_values_are_normalised_not_echoed() -> None:
 
 def test_assignment_of_undeclared_attribute_lands_in_model_extra() -> None:
     # Deliberate consequence of extra="allow" + validate_assignment, recorded
-    # in SPEC.md: assigning an undeclared attribute (a mistyped field name
-    # included) does not raise; the value lands in model_extra and dumps.
+    # in docs/public-api.md: assigning an undeclared attribute (a mistyped
+    # field name included) does not raise; the value lands in model_extra and
+    # dumps.
     us = UserStory.model_validate({"Id": 1})
     us.efort = 3.0  # deliberately mistyped "effort"
     assert us.effort is None

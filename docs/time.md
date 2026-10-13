@@ -89,7 +89,7 @@ entry = await client.times.create(
 ```
 
 The entry reads back with a null `assignable` and its `custom_activity`
-back-reference set (see [SPEC.md](../SPEC.md#models)). To read a day's entries
+back-reference set (see [public-api.md](public-api.md#models)). To read a day's entries
 against an activity, filter on the window `find_for_day` uses, a day wider on
 each side, then keep the exact day by projecting each `date` into the zone the
 entries were written in:

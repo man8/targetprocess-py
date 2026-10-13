@@ -1,8 +1,10 @@
 """Tests for the verified TeamIteration clear on the work-item managers.
 
-TargetProcess cascades a parent's team iteration onto its children, so a
-child's explicit null is answered with a success status whether it cleared or
-not. ``clear_team_iteration`` sends the clear and checks it, through the same
+A child created with a Team and no sprint inherits its parent's team
+iteration at creation, and an explicit null on it is observed to take effect; a
+discard of that null behind a success status was reported but never
+reproduced, and nothing on the response could reveal it.
+``clear_team_iteration`` sends the clear and checks it, through the same
 verified-write path as any other checked write. Each scenario runs a real client
 over an ``httpx.MockTransport`` whose write echo deliberately differs from the
 re-read, so a test can tell which of the two the method returned.
@@ -72,8 +74,8 @@ async def test_a_clear_that_lands_posts_a_null_then_reads_it_back() -> None:
     assert story.team_iteration is None
 
 
-async def test_a_clear_the_cascade_discards_raises_the_named_error() -> None:
-    """A success status and a field still set: the error names the cascade and the value."""
+async def test_a_clear_that_does_not_land_raises_the_named_error() -> None:
+    """A success status and a field still set: the error names the value and the guard."""
     from targetprocess_py.exceptions import TeamIterationCascadeError
 
     client, log = _client(
@@ -97,12 +99,13 @@ async def test_a_clear_the_cascade_discards_raises_the_named_error() -> None:
     message = str(error)
     assert "UserStory 123 still carries a TeamIteration after the clear" in message
     assert "77" in message
-    assert "cascades a parent's team iteration" in message
-    assert "clear or detach the parent" in message
+    assert "although TargetProcess answered the explicit null with a success status" in message
+    assert "inherited its parent's sprint at creation" in message
+    assert "if the item has a scheduled parent, inspect the parent first." in message
 
 
 async def test_the_named_error_is_a_verification_error() -> None:
-    """A caller handling the general failure catches the cascade too."""
+    """A caller handling the general failure catches the named error too."""
     from targetprocess_py.exceptions import TeamIterationCascadeError
 
     assert issubclass(TeamIterationCascadeError, VerificationError)
