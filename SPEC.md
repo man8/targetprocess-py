@@ -346,21 +346,27 @@ Nothing converts between forms, so a string never matches a number. A
 `Description` sent without the Markdown marker is stored HTML-encoded, so it can
 fail on its own encoding.
 
-### Unscheduling: the TeamIteration cascade
+### Unscheduling: a verified TeamIteration clear
 
-TP cascades a parent's `TeamIteration` onto its children, so a child's explicit
-`null` is answered with a success status whether the field cleared, was
-discarded, or cleared and was immediately re-acquired from the parent - and an
-item that should be unscheduled silently stays scheduled. The six work-item
-managers therefore expose `clear_team_iteration(id) -> T`, which is
-`update(id, TeamIteration=None, verify=True)` and nothing more: the same write,
-the same single narrowed re-read and the same comparison as any other verified
-write, so an absent key counts as cleared and an item that already had none
-verifies. The failure is re-raised as `TeamIterationCascadeError`, because the
-remedy is not a retry but clearing or detaching the parent, or moving the item
-out from under it. There is deliberately no `verify=False`: an unverified clear
-cannot be told from a failed one, which is the method's whole reason for
-existing, so a caller wanting the bare write calls `update` directly.
+A child created with a `Team` and no `TeamIteration` inherits its parent's
+sprint at creation: the create echo and the read that follows carry the
+parent's `TeamIteration`. An explicit `null` on such a child takes effect, as
+it does on a child given the sprint directly - in both recorded configurations
+the verifying re-read carries the key present and null. TP was reported to
+answer a child's explicit `null` under a scheduled parent with a success status
+while discarding it, leaving an item that should be unscheduled silently
+scheduled; no configuration tried has reproduced that, but a success status
+alone could not reveal it. The six work-item managers therefore expose
+`clear_team_iteration(id) -> T`, which is `update(id, TeamIteration=None,
+verify=True)` and nothing more: the same write, the same single narrowed
+re-read and the same comparison as any other verified write, so an absent key
+counts as cleared and an item that already had none verifies. A failure is
+re-raised as `TeamIterationCascadeError`, a defensive guard kept for that
+reported discard, whose remedy would not be a retry: the reported case involved
+a scheduled parent, so where the item has a parent, that is the first thing to
+inspect. There is deliberately no `verify=False`: an unverified clear cannot be
+told from a failed one, which is the method's whole reason for existing, so a
+caller wanting the bare write calls `update` directly.
 
 ### Entity-state transitions
 

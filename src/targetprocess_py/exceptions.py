@@ -238,18 +238,20 @@ class TeamIterationCascadeError(VerificationError):
     """A cleared ``TeamIteration`` came back still carrying one.
 
     Raised by ``AssignableResource.clear_team_iteration`` when the verifying
-    re-read after the write shows the field holding a value. TargetProcess
-    cascades a parent's team iteration onto its children, so an explicit
-    ``null`` on a child is discarded - or applied and immediately re-acquired
-    from the parent - and answered with a success status either way, with
-    nothing on the response to say the field did not clear.
+    re-read after the write shows the field holding a value. A defensive
+    guard: TargetProcess was reported to discard a child's explicit ``null``
+    while its parent is scheduled, answering with a success status and nothing
+    on the response to say the field did not clear, but that discard was never
+    reproduced. What is observed is that a child created with a ``Team`` and no
+    sprint inherits its parent's team iteration at creation, and that an
+    explicit clear on it takes effect.
 
     A :class:`VerificationError`, so a caller already handling "the re-read did
     not show the write" catches this too. The distinct type is for the caller
-    that treats the cascade differently, since the remedy is not a retry:
-    unscheduling a child under a scheduled parent means clearing the parent's
-    iteration as well, or moving the child out from under it. The value the
-    field was observed to hold is in :attr:`VerificationError.mismatches`,
+    that treats a failed unscheduling differently, since a retry is unlikely to
+    help: the reported discard involved a child under a scheduled parent, so
+    where the item has a parent, that is the first thing to inspect. The value
+    the field was observed to hold is in :attr:`VerificationError.mismatches`,
     under ``TeamIteration``, as the observed side of the pair.
     """
 

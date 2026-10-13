@@ -598,13 +598,15 @@ moved and its team level not.
 
 ## Unscheduling an item
 
-TargetProcess cascades a parent's `TeamIteration` onto its children, so an
-explicit `null` on a child is answered with a success status whether the field
-cleared, was discarded, or cleared and was immediately re-acquired from the
-parent. `clear_team_iteration` sends the clear and then checks it, through the
-same verified-write path as any other checked write - one write, one independent
+A child created with a `Team` and no `TeamIteration` inherits its parent's
+sprint at creation, and an explicit `null` on it takes effect.
+`clear_team_iteration` sends the clear and then checks it, through the same
+verified-write path as any other checked write - one write, one independent
 re-read narrowed to the field - and raises `TeamIterationCascadeError` when the
-field is still set:
+field is still set. That error is a defensive guard: TargetProcess was reported
+to answer a child's explicit `null` with a success status while discarding it,
+which no configuration tried has reproduced, but which a success status alone
+could not reveal:
 
 ```python
 from targetprocess_py import TeamIterationCascadeError
@@ -613,12 +615,13 @@ try:
     story = await client.user_stories.clear_team_iteration(123)
     assert story.team_iteration is None
 except TeamIterationCascadeError as exc:
-    # The value the field was observed to hold, from the parent.
+    # The value the field was observed to still hold.
     print(exc.mismatches[123]["TeamIteration"])
 ```
 
-The remedy is not a retry: unscheduling a child under a scheduled parent means
-clearing or detaching the parent as well, or moving the item out from under it.
+If it is ever raised, a retry is unlikely to help: the reported discard involved
+a child under a scheduled parent, so where the item has a parent, that is the
+first thing to inspect.
 `TeamIterationCascadeError` is a `VerificationError`, so a caller already
 handling "the re-read did not show the write" catches it too. The returned model
 is the narrowed re-read, carrying `id`, `resource_type` and `team_iteration`
@@ -773,7 +776,7 @@ catch a specific failure or the base class. HTTP status codes map to types:
 | `ParseError` | a response body failed Pydantic model validation |
 | `ReadOnlyViolation` | a write was attempted on a `READONLY` client |
 | `VerificationError` | a verified write (`verify=True`, or `set_custom_field` by default) read back an entity not showing a requested field; carries `mismatches` |
-| `TeamIterationCascadeError` | a `VerificationError`: `clear_team_iteration` read the field back still set, TargetProcess having cascaded it from the parent |
+| `TeamIterationCascadeError` | a `VerificationError`: `clear_team_iteration` read the field back still set; a defensive guard for a discard that was reported but never reproduced |
 | `SplitTransitionError` | `advance_state` would move one entity-state level without the other; carries `entity_id`, `project_workflow_id` and `team_workflow_id` |
 
 ```python

@@ -62,10 +62,13 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
     ``resources/_derived.py`` for why the refusal is before the request rather
     than a verification after it.
 
-    A ``TeamIteration`` is cascaded onto a work item by its parent, so clearing
-    one is the other shape of silent write failure and needs the opposite
-    treatment - a check *after* the write rather than a refusal before it. Use
-    ``clear_team_iteration``, which verifies the clear landed.
+    A work item created with a ``Team`` and no sprint inherits its parent's
+    ``TeamIteration`` at creation, and an explicit clear is observed to take
+    effect, but a clear answered with a success status and discarded was
+    reported, never reproduced. That makes clearing one the other shape of
+    silent write failure, needing the opposite treatment - a check *after* the
+    write rather than a refusal before it. Use ``clear_team_iteration``, which
+    verifies the clear landed.
 
     Example:
         client = TargetProcessClient(...)
@@ -129,15 +132,17 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
     async def clear_team_iteration(self, id: int) -> T:
         """Unschedule a work item, verifying that the ``TeamIteration`` actually cleared.
 
-        TargetProcess cascades a parent's team iteration onto its children, and
-        a child's explicit ``null`` is answered with a success status whether
-        the field cleared, was discarded, or cleared and was immediately
-        re-acquired from the parent. So the clear is sent and then *checked*:
-        this is ``update(id, TeamIteration=None, verify=True)`` - the same
-        write, the same single narrowed re-read and the same comparison as any
-        other verified write - with the failure reported as
-        ``TeamIterationCascadeError`` rather than a bare
-        ``VerificationError``, because the remedy is not a retry. There is no
+        A child created with a ``Team`` and no sprint inherits its parent's
+        team iteration at creation, and an explicit ``null`` on it is observed
+        to take effect. TargetProcess was reported to answer such a ``null``
+        with a success status while discarding it; that was never reproduced,
+        but a success status alone could not reveal it. So the clear is sent
+        and then *checked*: this is ``update(id, TeamIteration=None,
+        verify=True)`` - the same write, the same single narrowed re-read and
+        the same comparison as any other verified write - with the failure
+        reported as ``TeamIterationCascadeError`` rather than a bare
+        ``VerificationError``, a defensive guard for that reported discard,
+        whose remedy would not be a retry. There is no
         ``verify=False``: an unverified clear is indistinguishable from a
         failed one, which is the whole reason this method exists. A caller who
         wants the write without the check can still call ``update`` directly
@@ -159,8 +164,9 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
         Raises:
             TeamIterationCascadeError: The re-read shows the field still
                 carrying a value. The value is in ``mismatches`` under
-                ``TeamIteration``; clearing or detaching the parent, or moving
-                the item out from under it, is the remedy.
+                ``TeamIteration``; the reported discard involved a child under
+                a scheduled parent, so where the item has a parent, that is the
+                first thing to inspect.
             ReadOnlyViolation: Client is in readonly mode (before the write).
             NotFoundError: Item not found
             RequestValidationError: TP refused the write
@@ -179,9 +185,10 @@ class AssignableResource[T: AssignableEntity](BaseResource[T]):
             observed = mismatch[1] if mismatch else None
             raise TeamIterationCascadeError(
                 f"{self.entity_type} {id} still carries a TeamIteration after the clear "
-                f"({observed!r}); TargetProcess cascades a parent's team iteration onto its "
-                "children and answers a child's explicit null with a success status - clear or "
-                "detach the parent, or move the item out from under it",
+                f"({observed!r}) although TargetProcess answered the explicit null with a "
+                "success status. An explicit clear is otherwise observed to take effect, even on "
+                "a child that inherited its parent's sprint at creation; if the item has a "
+                "scheduled parent, inspect the parent first.",
                 entity_type=self.entity_type,
                 entity_id=id,
                 mismatches=error.mismatches,

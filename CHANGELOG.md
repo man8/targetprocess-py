@@ -12,14 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `clear_team_iteration(id)` on the six work-item managers: it clears an item's
   `TeamIteration` and verifies that the clear landed, raising the new
   `TeamIterationCascadeError` when the field is read back still carrying a
-  value. TargetProcess cascades a parent's team iteration onto its children, so
-  a child's explicit `null` is answered with a success status whether the field
-  cleared, was discarded, or cleared and was immediately re-acquired from the
-  parent — and an item that should be unscheduled silently stays scheduled. The
-  method is the existing verified-write path (`update(..., verify=True)`), with
-  the failure reported under a type of its own because the remedy is not a
-  retry: the parent's iteration has to be cleared or detached, or the item moved
-  out from under it. `TeamIterationCascadeError` subclasses `VerificationError`,
+  value. A child created with a `Team` and no sprint inherits its parent's
+  team iteration at creation, and an explicit `null` on it takes effect.
+  TargetProcess was reported to answer a child's explicit `null` under a
+  scheduled parent with a success status while discarding it, leaving an item
+  that should be unscheduled silently scheduled; that has never been
+  reproduced, but a success status alone could not reveal it. The method is the
+  existing verified-write path (`update(..., verify=True)`), with the failure
+  reported under a type of its own as a defensive guard for that reported
+  discard, whose remedy would not be a retry: the reported case involved a
+  scheduled parent, so where the item has a parent, that is the first thing
+  to inspect.
+  `TeamIterationCascadeError` subclasses `VerificationError`,
   so a caller already handling that catches this too, and the observed value is
   in `mismatches` under `TeamIteration`. There is deliberately no `verify=False`
   — an unverified clear cannot be told from a failed one, which is the reason

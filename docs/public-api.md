@@ -51,9 +51,10 @@ Typed resource managers, each exposed as a property on the client:
 - `delete(id) -> None` (READWRITE only)
 - `create_many(items, *, allow_derived=False) -> list[T]` /
   `update_many(items, *, verify=False, allow_derived=False) -> list[T]`
-  (READWRITE only) - one bulk request for the whole batch; see "Bulk write
-  semantics" below. On a collection the server restricts (next paragraph)
-  they raise `ReadOnlyViolation` in every mode, as the single-item writes do
+  (READWRITE only) - one bulk request for the whole batch; see
+  [SPEC.md § Bulk write semantics](../SPEC.md#bulk-write-semantics). On a
+  collection the server restricts (next paragraph) they raise
+  `ReadOnlyViolation` in every mode, as the single-item writes do
 
 The write surface is bounded by what the server accepts as well as by the
 client mode. Each collection's `/api/v1/{collection}/meta` reports
@@ -71,11 +72,11 @@ The flags are read from `/meta`, never established by probing a write.
 
 A write is bounded at the field level too: `BaseResource.derived_fields` names the
 fields TP computes from another collection, which the four write methods refuse
-with `ValueError` unless the call passes `allow_derived=True` - see "Derived-field
-writes" below.
+with `ValueError` unless the call passes `allow_derived=True` - see
+[SPEC.md § Derived-field writes](../SPEC.md#derived-field-writes).
 
-`times` additionally provides `find_for_day` and `upsert` - see "Time upsert
-semantics" below.
+`times` additionally provides `find_for_day` and `upsert` - see
+[SPEC.md § Time upsert semantics](../SPEC.md#time-upsert-semantics).
 
 `priorities` additionally exposes the entity-type-scoped lookups that make a
 priority name resolvable: `for_entity_type(entity_type) -> list[Priority]`
@@ -474,7 +475,8 @@ All library exceptions extend `TargetProcessError`:
 - `VerificationError` - an update with `verify=True` read back an entity not
   showing a requested field; carries `mismatches` and `verified_ids`.
 - `TeamIterationCascadeError` - a `VerificationError`: `clear_team_iteration`
-  read the `TeamIteration` back still set, TP having cascaded it onto the item
-  from its parent; the observed value is in `mismatches`.
+  read the `TeamIteration` back still set. A defensive guard for a discard of
+  the explicit `null` that was reported but never reproduced; the observed
+  value is in `mismatches`.
 - `SplitTransitionError` - `advance_state` would move one entity-state level
   without the other; carries `entity_id` and both workflow Ids.
