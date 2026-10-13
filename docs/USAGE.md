@@ -302,8 +302,8 @@ Reading values back is `include=["CustomFields"]` on `get` or `list`.
 ### The generic `entities` accessor
 
 For entity types without a typed manager (which ones, and why, is set out in
-[SPEC.md](../SPEC.md) § *Typed versus generic coverage*), `client.entities`
-takes the entity type name as its first argument and returns/yields
+[public-api.md](public-api.md) § *Typed versus generic coverage*),
+`client.entities` takes the entity type name as its first argument and returns/yields
 `NamedEntity` (so you still get `.name`, or `None` for types without a `Name`
 field). It carries the full surface — `get`, `list`, `create`, `update`,
 `delete`, `create_many`, `update_many` — with writes gated by the same
@@ -630,7 +630,7 @@ TeamIteration=None)` directly if you want the write without the check.
 
 `client.relations` reads and writes `Relation` records directly: a
 `RelationType` linking a `Master` to a `Slave`, where the Master is the source
-of the dependency (see [SPEC.md](../SPEC.md#resources)). Relation-type Ids are
+of the dependency (see [public-api.md](public-api.md#resources)). Relation-type Ids are
 instance-specific, so resolve a type by name as under
 [Resolving other lookups by name](#resolving-other-lookups-by-name).
 
@@ -670,8 +670,8 @@ Both arrive as `Items` envelopes in `model_extra`, like every collection
 property. In `MasterRelations` each relation's `Master` is the related item and
 its `Slave` the item that was read, with `RelationType` on the relation itself;
 these are the wire names of the pair the `Relation` model also exposes as
-`inbound` and `outbound`, which SPEC.md recommends for new code. `EntityState`
-is observed not to expand under `Master`, a polymorphic reference, so the
+`inbound` and `outbound`, which [public-api.md](public-api.md#models)
+recommends for new code. `EntityState` is observed not to expand under `Master`, a polymorphic reference, so the
 related items' states come from `InboundAssignables` (the same items, where
 they are assignables, with `EntityState` expanded), joined on `Id`. A `None`
 from `state_by_id.get` means the related item was absent from

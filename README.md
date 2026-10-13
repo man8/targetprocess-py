@@ -186,7 +186,8 @@ Typed coverage is deliberately the common paths plus the lookup and
 configuration collections; the long tail — the polymorphic bases, the people
 and allocation collections, metadata and audit, and the work-item types not
 yet modelled — stays on `entities` by design, and gains a typed manager on
-demand. See [SPEC.md](SPEC.md) § *Typed versus generic coverage*.
+demand. See [docs/public-api.md](docs/public-api.md) § *Typed versus generic
+coverage*.
 
 ### Filtering and field selection
 
@@ -301,7 +302,7 @@ minor releases; every change is recorded in [CHANGELOG.md](CHANGELOG.md).
    and every known case where TargetProcess silently ignores all or part of a
    request has been resolved: the library refuses it before sending, verifies it
    after the write, or SPEC.md documents it as a limitation.
-3. The public surface is frozen: SPEC.md's Public API Surface matches
+3. The public surface is frozen: [docs/public-api.md](docs/public-api.md) matches
    `targetprocess_py.__all__`, a Semantic Versioning promise for that surface is
    stated, and a deprecation policy is written.
 4. Documentation and the recorded test cassettes are current: every public
