@@ -71,7 +71,7 @@ await client.user_stories.create(...)  # Raises ReadOnlyViolation immediately
 
 # Readwrite client - for authorized operations
 client = TargetProcessClient(..., mode="readwrite")
-await client.user_stories.update(id=123, state="Done")  # Works
+await client.user_stories.update(123, Name="Renamed story")  # Works
 ```
 
 The mode is frozen after initialization and cannot be changed, providing defense-in-depth for production workflows.
@@ -449,7 +449,6 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 Built to enable automation workflows against a production TargetProcess instance, and to serve as a foundation for:
 - MCP server for TargetProcess integration
-- Windmill workflow automation wrappers
 - Reporting and analytics tools
 - Bulk operations and data migrations
 
