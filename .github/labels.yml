@@ -1,8 +1,8 @@
 # Issue and pull-request label set for targetprocess-py.
 #
-# GitHub's 9 default labels plus the two Dependabot labels
-# (`dependencies`, `python:uv`) are already present; this file defines the
-# project-specific priority and area labels that sit on top of them.
+# GitHub's ten default labels plus `dependencies` (the only label Dependabot
+# applies) are the baseline; this file defines the project-specific priority
+# and area labels that `scripts/apply_labels.sh` creates on top of them.
 #
 # To (re)apply this set to the repository, run:
 #
