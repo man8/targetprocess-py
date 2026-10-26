@@ -43,10 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   freshly created item was observed to land, but the outcome for an item whose
   `RoleEffort` rows already carry effort is not established. That is why this
   fails before sending rather than being verified afterwards. **Migration:**
-  write the role's own row through `client.role_efforts` — the error message carries the query that
-  finds it — or pass `allow_derived=True` to send the write as before and take
-  the outcome as TargetProcess gives it. `RoleEffort`'s own `Effort` fields are
-  stored as written and are unaffected.
+  write the role's own row through `client.role_efforts` — the error message
+  carries the query that finds it — or pass `allow_derived=True` to send the
+  write as before and take the outcome as TargetProcess gives it. `RoleEffort`'s
+  own `Effort` fields are stored as written and are unaffected.
 
 ## [0.3.0] - 2026-09-20
 
