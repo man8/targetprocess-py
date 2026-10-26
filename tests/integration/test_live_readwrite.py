@@ -61,10 +61,10 @@ _NAME_PREFIX = "Synthetic recording"
 _CREATED_DESCRIPTION = "Synthetic record created by an integration recording run."
 _UPDATED_DESCRIPTION = "Synthetic record updated by an integration recording run."
 
-# Sent on every update so each one can assert TP *applied* it, not merely
-# accepted it. A numeric field is the only kind that can do that job here:
-# the scrubber replaces the Name and Description an update sent, so reading
-# either back would compare a placeholder with itself.
+# Sent on every update so each one has a value its response can be asserted
+# against. A numeric field is the only kind that can do that job here: the
+# scrubber replaces the Name and Description an update sent, so comparing
+# either with the response would compare a placeholder with itself.
 #
 # Effort is the roll-up of an item's RoleEfforts, so the resource layer refuses
 # a direct write to it (see ``resources/_derived.py``) and every send below
@@ -119,9 +119,9 @@ async def test_user_story_create_update_delete_round_trip(live_credentials) -> N
             assert updated.resource_type == "UserStory"
             assert updated.entity_version is not None
             assert updated.entity_version > story.entity_version
-            # Accepted is weaker than applied, and Effort closes the gap:
-            # a numeric field is recorded verbatim by design, so it is the
-            # one thing a test can send and then read back unchanged.
+            # The update response reports the Effort that was sent. That is a
+            # check on the response only, not an independent read of what TP
+            # stored.
             assert updated.effort == _UPDATED_EFFORT
         finally:
             await client.user_stories.delete(story.id)
@@ -248,9 +248,9 @@ async def test_bulk_create_and_update_tasks_under_a_story(live_credentials) -> N
             assert [task.id for task in updated] == [task.id for task in tasks]
             assert all(task.entity_version is not None for task in updated)
             assert all(task.entity_version > created_versions[task.id] for task in updated)
-            # The same applied-not-merely-accepted check the single-entity
-            # round trips make, on the bulk path: every item in the batch
-            # carried the numeric field, so every item must echo it back.
+            # The same response check the single-entity round trips make, on
+            # the bulk path: every item in the batch carried the numeric
+            # field, so every response must echo it back.
             assert all(task.effort == _UPDATED_EFFORT for task in updated)
         finally:
             # Every delete is attempted, whatever the ones before it did: a
