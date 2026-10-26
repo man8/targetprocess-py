@@ -184,12 +184,11 @@ collection rather than stored. A work item's `Effort`, `EffortCompleted` and
 `EffortToDo` are the sums of the corresponding field over its `RoleEffort`
 rows — one per role the process assigns effort to.
 
-A direct write to one is answered with a success status either way, and the
-response cannot tell you which of two things happened: TargetProcess stored the
-value because the item has no `RoleEffort` rows to override it, or it recomputed
-the field from those rows and your write changed nothing. The outcome depends on
-the item's other records, not on the request. So `create`, `update`,
-`create_many` and `update_many` refuse such a field before any request is sent —
+A direct write to one is answered with a success status, and the status does not
+confirm what TargetProcess did with the value. A write to a freshly created item
+was observed to land and to read back as sent; what happens to a write on an item
+whose `RoleEffort` rows already carry effort has not been established. So
+`create`, `update`, `create_many` and `update_many` refuse such a field before any request is sent —
 on the typed work-item managers and on `client.entities` alike — with a
 `ValueError` naming the route that does work:
 
@@ -205,11 +204,12 @@ async for row in client.role_efforts.list(
     await client.role_efforts.update(row.id, Effort=5, verify=True)
 ```
 
-Pass `allow_derived=True` to send the write anyway, when you know the item
-carries no `RoleEffort` rows and you accept the outcome as TargetProcess gives
-it. Only the three roll-ups above are refused; TargetProcess computes other
-numbers too (`Progress`, `TimeSpent`, `TimeRemain`) and those are sent as
-written.
+Pass `allow_derived=True` to send the write anyway, when you accept the outcome
+as TargetProcess gives it and will check the stored value yourself. The recorded
+write fixtures do this on throwaway items they create, and each asserts that the
+value TargetProcess returns equals the value sent. Only the three roll-ups above
+are refused; TargetProcess computes other numbers too (`Progress`, `TimeSpent`,
+`TimeRemain`) and those are sent as written.
 
 ### Verified writes
 

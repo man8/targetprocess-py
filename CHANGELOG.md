@@ -38,13 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   over the item's `RoleEfforts` — and the refusal applies on the six work-item
   managers and on `entities` for every spelling of their collections and of the
   untyped Assignable-derived ones, so the generic accessor is not a way round
-  it. A direct write to such a field is answered with a success status whether
-  TargetProcess stored the value (the item has no `RoleEffort` rows to override
-  it) or recomputed the field from those rows and changed nothing, and the
-  response does not say which: the outcome depends on the entity's other
-  records rather than on the request, which is why this fails before sending
-  rather than being verified afterwards. **Migration:** write the role's own
-  row through `client.role_efforts` — the error message carries the query that
+  it. A direct write to such a field is answered with a success status, and the
+  status does not confirm what TargetProcess did with the value: a write to a
+  freshly created item was observed to land, but the outcome for an item whose
+  `RoleEffort` rows already carry effort is not established. That is why this
+  fails before sending rather than being verified afterwards. **Migration:**
+  write the role's own row through `client.role_efforts` — the error message carries the query that
   finds it — or pass `allow_derived=True` to send the write as before and take
   the outcome as TargetProcess gives it. `RoleEffort`'s own `Effort` fields are
   stored as written and are unaffected.

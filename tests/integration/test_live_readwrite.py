@@ -70,12 +70,12 @@ _UPDATED_DESCRIPTION = "Synthetic record updated by an integration recording run
 # a direct write to it (see ``resources/_derived.py``) and every send below
 # passes ``allow_derived=True``. That is not a way round the guard, it is the
 # case the guard's escape hatch exists for: each entity here is created in this
-# run and carries no RoleEffort, so nothing recomputes the field and TP stores
-# what was sent - which is exactly what makes the read-back provable. These
-# recordings are also the evidence for that claim, and the reason the guard
-# refuses rather than merely warns: the same request against an item that *does*
-# carry RoleEfforts is answered with the same success status and a different
-# outcome, and the caller cannot tell which from the response.
+# run, whose create response reports Effort 0.0, and each test asserts that the
+# value TP returns after the write is the value that was sent, so the outcome is
+# checked rather than assumed. The recordings show the write landing on such fresh
+# items; they do not show a write to an item whose RoleEfforts already carry
+# effort, which is why the guard refuses rather than merely warns: a success
+# status does not confirm what TP did with the value.
 _UPDATED_EFFORT = 3.0
 
 
