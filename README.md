@@ -373,7 +373,7 @@ cd targetprocess-py
 # Install with dev dependencies
 uv sync --all-extras
 
-# Install the git hooks (lint + format on commit, types on push)
+# Install the git hooks (pre-commit, commit-msg and pre-push; see CONTRIBUTING.md, Quality gates)
 uv run pre-commit install
 
 # Run tests
