@@ -61,21 +61,21 @@ _NAME_PREFIX = "Synthetic recording"
 _CREATED_DESCRIPTION = "Synthetic record created by an integration recording run."
 _UPDATED_DESCRIPTION = "Synthetic record updated by an integration recording run."
 
-# Sent on every update so each one can assert TP *applied* it, not merely
-# accepted it. A numeric field is the only kind that can do that job here:
-# the scrubber replaces the Name and Description an update sent, so reading
-# either back would compare a placeholder with itself.
+# Sent on every update so each one has a value its response can be asserted
+# against. A numeric field is the only kind that can do that job here: the
+# scrubber replaces the Name and Description an update sent, so comparing
+# either with the response would compare a placeholder with itself.
 #
 # Effort is the roll-up of an item's RoleEfforts, so the resource layer refuses
 # a direct write to it (see ``resources/_derived.py``) and every send below
 # passes ``allow_derived=True``. That is not a way round the guard, it is the
 # case the guard's escape hatch exists for: each entity here is created in this
-# run and carries no RoleEffort, so nothing recomputes the field and TP stores
-# what was sent - which is exactly what makes the read-back provable. These
-# recordings are also the evidence for that claim, and the reason the guard
-# refuses rather than merely warns: the same request against an item that *does*
-# carry RoleEfforts is answered with the same success status and a different
-# outcome, and the caller cannot tell which from the response.
+# run, whose create response reports Effort 0.0. The update responses report the
+# value that was sent; only the verified-update test also re-reads the item with
+# a separate request, and gets the same value. The recordings do not show a write
+# to an item whose RoleEfforts already carry effort, which is why the guard
+# refuses rather than merely warns: a success status does not confirm what TP did
+# with the value.
 _UPDATED_EFFORT = 3.0
 
 
@@ -119,9 +119,9 @@ async def test_user_story_create_update_delete_round_trip(live_credentials) -> N
             assert updated.resource_type == "UserStory"
             assert updated.entity_version is not None
             assert updated.entity_version > story.entity_version
-            # Accepted is weaker than applied, and Effort closes the gap:
-            # a numeric field is recorded verbatim by design, so it is the
-            # one thing a test can send and then read back unchanged.
+            # The update response reports the Effort that was sent. That is a
+            # check on the response only, not an independent read of what TP
+            # stored.
             assert updated.effort == _UPDATED_EFFORT
         finally:
             await client.user_stories.delete(story.id)
@@ -248,9 +248,9 @@ async def test_bulk_create_and_update_tasks_under_a_story(live_credentials) -> N
             assert [task.id for task in updated] == [task.id for task in tasks]
             assert all(task.entity_version is not None for task in updated)
             assert all(task.entity_version > created_versions[task.id] for task in updated)
-            # The same applied-not-merely-accepted check the single-entity
-            # round trips make, on the bulk path: every item in the batch
-            # carried the numeric field, so every item must echo it back.
+            # The same response check the single-entity round trips make, on
+            # the bulk path: every item in the batch carried the numeric
+            # field, so every response must echo it back.
             assert all(task.effort == _UPDATED_EFFORT for task in updated)
         finally:
             # Every delete is attempted, whatever the ones before it did: a

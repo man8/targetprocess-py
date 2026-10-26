@@ -239,8 +239,8 @@ class AssignableEntity(GeneralEntity):
     records, one per role the process assigns effort to. So they are read here
     and written there - ``client.role_efforts`` - and the resource layer
     refuses a write naming one before any request is sent, because TP answers
-    such a write with a success status whether it stored the value (nothing in
-    the collection overrode it) or recomputed it away.
+    such a write with a success status that does not confirm what TP did with
+    the value.
 
     Attributes:
         effort: Total effort - the sum over the item's RoleEfforts
