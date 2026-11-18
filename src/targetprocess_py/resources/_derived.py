@@ -2,19 +2,16 @@
 
 A derived field is one TP computes from records in another collection rather
 than storing what a write sends. A direct write to one is answered with a
-success status either way, so the response cannot say which of two things
-happened: TP stored the value because the source collection was empty, or TP
-recomputed the field from that collection and the write changed nothing. The
-outcome therefore depends on the entity's other records rather than on the
-request, and a caller cannot tell the cases apart without reading the source
-collection first.
+success status, and the status does not confirm what TP did with the value. A
+write to a freshly created item was observed to land, confirmed by a separate
+re-read; the outcome for an item whose source records already carry values has not been
+established.
 
 That is why the refusal is *before* the request, alongside ``check_include``
 and ``check_where``, rather than the verification that follows a write: a
-re-read distinguishes "stored because nothing overrode it" from "recomputed
-back to the same number" only by luck, and the route named in each message
-writes the source record instead, which is deterministic whatever the
-collection holds.
+success status settles nothing about the stored value, and the route named in
+each message writes the source record itself, which is the record the field is
+computed from.
 
 ``ValueError`` is the exception, as for every other guard that refuses an
 unsupported argument before sending (``check_include``, ``check_where``, the
@@ -23,9 +20,11 @@ answers "this client, or this collection, may not write at all", and a caller
 distinguishing that from "this one field is derived" should not have to read
 the message to do it.
 
-A caller who means the direct write - typically because the source collection
-is known to be empty, which is how this library's own recorded write fixtures
-use it - passes ``allow_derived=True`` and takes the outcome as TP gives it.
+A caller who means the direct write passes ``allow_derived=True`` and takes the
+outcome as TP gives it. This library's own recorded write fixtures do, on
+throwaway items they create in the run: each update response reports the value
+that was sent, and one recording also re-reads the item with a separate request
+and gets the same value.
 
 The declared set is what has been established, not every candidate. An
 Assignable carries other numbers TP computes (``Progress`` from effort,
@@ -50,13 +49,12 @@ def _role_effort_route(field: str) -> str:
         Why TP derives the field, and the RoleEffort route that sets it.
     """
     return (
-        f"TargetProcess derives {field} from the entity's RoleEfforts, so a direct write is "
-        "stored or recomputed away according to whether that collection is empty, and the "
-        "success status says nothing about which; set the role's own row instead - find it "
-        'with client.role_efforts.list(where="Assignable.Id eq <id>", include=["Role"]) and '
-        f"write {field} there with client.role_efforts.update, or create the row with "
-        "client.role_efforts.create for a role that has none. Pass allow_derived=True to "
-        "send the write anyway."
+        f"TargetProcess derives {field} from the entity's RoleEfforts, and the success status of a "
+        "direct write does not confirm what it did with the value; set the role's own row "
+        'instead - find it with client.role_efforts.list(where="Assignable.Id eq <id>", '
+        f'include=["Role"]) and write {field} there with client.role_efforts.update, or create '
+        "the row with client.role_efforts.create for a role that has none. Pass "
+        "allow_derived=True to send the write anyway."
     )
 
 
