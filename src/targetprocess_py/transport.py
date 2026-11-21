@@ -92,7 +92,8 @@ class HTTPTransport:
         if token is not None:
             auth = _QueryTokenAuth(token)
         else:
-            assert basic_auth is not None
+            if basic_auth is None:
+                raise AssertionError
             auth = httpx.BasicAuth(*basic_auth)
 
         self._client = httpx.AsyncClient(
