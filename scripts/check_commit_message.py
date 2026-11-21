@@ -76,6 +76,28 @@ def message_lines(text: str, prefix: str = DEFAULT_COMMENT_PREFIX) -> list[tuple
     return kept
 
 
+def printable(text: str) -> str:
+    """Return ``text`` with every non-printable character shown as an escape.
+
+    Commit messages and pull request titles are contributor-controlled, so a
+    quoted line must not carry control bytes (carriage return, backspace, ESC
+    sequences, C1 controls, bidirectional overrides) to a terminal or a log.
+    """
+    out = []
+    for char in text:
+        if char.isprintable():
+            out.append(char)
+            continue
+        code = ord(char)
+        if code <= 0xFF:
+            out.append(f"\\x{code:02x}")
+        elif code <= 0xFFFF:
+            out.append(f"\\u{code:04x}")
+        else:
+            out.append(f"\\U{code:08x}")
+    return "".join(out)
+
+
 def violations(text: str, prefix: str = DEFAULT_COMMENT_PREFIX) -> list[str]:
     """Return one message per tracker reference in the commit message."""
     messages = []
@@ -83,7 +105,9 @@ def violations(text: str, prefix: str = DEFAULT_COMMENT_PREFIX) -> list[str]:
         for match in REFERENCE.finditer(line):
             if match.group("key") in EXCLUDED_PREFIXES:
                 continue
-            messages.append(f"line {number}: {match.group(0)}: {line.strip()}")
+            messages.append(
+                f"line {number}: {printable(match.group(0))}: {printable(line.strip())}"
+            )
     return messages
 
 
