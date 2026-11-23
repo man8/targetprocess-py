@@ -16,7 +16,7 @@ default_stages: [pre-commit, pre-push]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # frozen: v6.0.0
     hooks:
       - id: check-added-large-files
         # Catches an accidentally committed binary or dump at the point it is
@@ -82,7 +82,7 @@ repos:
   # line above sets up; CI runs the same two over a pull request's title,
   # since squash merge makes the title the commit on main.
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.5.0
+    rev: 33b50eb042bee26eac0ee96ad84aa9c1b4dccdd8 # frozen: v4.5.0
     hooks:
       - id: conventional-pre-commit
         name: commit message follows Conventional Commits
