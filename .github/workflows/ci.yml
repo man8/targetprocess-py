@@ -82,7 +82,7 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
       - run: uv export --all-extras --no-emit-project --format requirements-txt --quiet -o requirements-audit.txt
-      - run: uvx pip-audit --strict --no-deps --disable-pip --progress-spinner off -r requirements-audit.txt
+      - run: uvx pip-audit==2.9.0 --strict --no-deps --disable-pip --progress-spinner off -r requirements-audit.txt
 
   # Proves the package still builds and its metadata still renders on PyPI, on
   # every change rather than only at release time. The smoke step installs the
